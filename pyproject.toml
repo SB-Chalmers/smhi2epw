@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smhi2epw"
+version = "1.1.0"
+description = "Fetch SMHI MetObs + STRÅNG open data and compile EnergyPlus Weather (.epw) AMY files."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "smhi2epw contributors" }]
+keywords = ["smhi", "epw", "energyplus", "weather", "amy", "strang", "metobs"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+]
+dependencies = [
+    "numpy>=1.21",
+    "pandas>=1.3",
+    "requests>=2.25",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+test = ["pytest>=7.0"]
+
+[project.scripts]
+smhi2epw = "smhi2epw.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/example/smhi2epw"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+smhi2epw = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "network: tests that require live access to the SMHI open-data endpoints",
+]
