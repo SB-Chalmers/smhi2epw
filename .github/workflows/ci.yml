@@ -64,6 +64,8 @@ jobs:
           python-version: "3.12"
       - name: Install documentation and tutorial tools
         run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev,docs,tutorials]"
       - name: Validate docstrings and notebooks
