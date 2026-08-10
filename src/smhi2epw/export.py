@@ -87,7 +87,9 @@ def build_header(
         "COMMENTS 1,Generated via smhi2epw hybrid compiler utility.",
         (
             "COMMENTS 2,Thermodynamics via SMHI MetObs. "
-            "Solar Vectors via SMHI STRÅNG Mesoscale Model."
+            "Solar via SMHI STRÅNG (strang.smhi.se). "
+            "STRÅNG data produced with support from the Swedish Radiation "
+            "Protection Authority and the Swedish Environmental Agency."
         ),
         "DATA PERIODS,1,1,Data,Sunday,1/1,12/31",
     ]
