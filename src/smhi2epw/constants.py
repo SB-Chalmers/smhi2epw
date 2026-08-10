@@ -49,11 +49,17 @@ STRANG_BASE = (
 #   118 = Direct *Normal* Irradiance   (W/m^2)  -- already normal, no projection
 #   121 = Direct beam on the horizontal plane (W/m^2)  -- used to close diffuse
 # Diffuse Horizontal is therefore derived as GHI - beam_horizontal (117 - 121).
+#
+# Params 118 and 121 are only available from April 18, 2017 onwards.
+# For earlier years only param 117 (GHI) is fetched; DHI/DNI are estimated
+# via Erbs decomposition.
 STRANG_PARAMETERS = {
     117: "ghi",   # Global Horizontal Irradiance (W/m^2)
     118: "dni",   # Direct Normal Irradiance (W/m^2)
     121: "dirh",  # Direct beam on horizontal plane (W/m^2)
 }
+STRANG_GHI_ONLY_PARAMETERS = {117: "ghi"}   # params available before Apr 2017
+STRANG_DIRECT_AVAILABLE_YEAR = 2017          # conservative cutoff (full years)
 
 # --------------------------------------------------------------------------- #
 # Physical constants

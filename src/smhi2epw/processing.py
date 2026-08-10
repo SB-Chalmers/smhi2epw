@@ -203,17 +203,12 @@ def apply_solar(
 
     **Solar path selection (in priority order):**
 
-    1. **Measured GHI + STRÅNG beam decomposition** — when column
-       ``ghi_measured`` is present (pyranometer data from a MetObs Sol station),
-       it replaces the modelled STRÅNG GHI. STRÅNG's physically-modelled direct
-       beam (param 118 DNI, param 121 beam-horizontal) is retained because
-       empirical decomposition models (e.g. Erbs) underestimate direct radiation
-       in Sweden's persistently cloudy climate. DHI is closed by energy balance
-       as ``max(GHI_measured - beam_horizontal_STRÅNG, 0)``. The clearness index
-       kt = GHI_measured / ETR_h is stored as ``_kt`` for the IR cloud proxy.
-
-    2. **STRÅNG columns only** — fallback when no pyranometer data is available;
-       DNI taken directly from param 118, DHI closed as ``GHI − beam_horizontal``.
+    1. **Measured GHI + STRÅNG beam** — pyranometer GHI with STRÅNG direct-beam
+       (params 118/121); DHI closed as ``max(GHI_measured - beam_horizontal, 0)``.
+    2. **Measured GHI + Erbs** — pyranometer GHI with Erbs decomposition (pre-2017
+       when direct-beam params are unavailable).
+    3. **STRÅNG all-params** — GHI/DNI/dirh directly from STRÅNG (post-2017).
+    4. **STRÅNG GHI + Erbs** — only param 117 available (pre-2017, no Sol station).
     """
     zenith, cos_z = solar_zenith(frame.index, lat, lon)
     etrh, etrn = extraterrestrial_radiation(frame.index, cos_z)
@@ -224,8 +219,14 @@ def apply_solar(
         C.METOBS_RADIATION_COLUMN in frame.columns
         and not frame[C.METOBS_RADIATION_COLUMN].isna().all()
     )
+    has_strang_direct = (
+        "dirh" in frame.columns and not frame["dirh"].isna().all()
+        and "dni" in frame.columns and not frame["dni"].isna().all()
+    )
 
-    if use_measured:
+    below = cos_z <= C.COS_ZENITH_FLOOR
+
+    if use_measured and has_strang_direct:
         ghi_m = np.clip(frame[C.METOBS_RADIATION_COLUMN].to_numpy(dtype=float), 0.0, None)
         # Retain STRÅNG beam decomposition; only the total GHI comes from the sensor.
         dirh = np.clip(frame["dirh"].to_numpy(dtype=float), 0.0, ghi_m)
@@ -233,7 +234,6 @@ def apply_solar(
         frame["dhi"] = np.clip(ghi_m - dirh, 0.0, None)
         # DNI from STRÅNG param 118 (direct normal), floored below horizon.
         dni = np.clip(frame["dni"].to_numpy(dtype=float), 0.0, None)
-        below = cos_z <= C.COS_ZENITH_FLOOR
         frame["dni"] = np.where(below, 0.0, dni)
         if report is not None:
             report.solar_source = "measured+strang_beam"
@@ -241,15 +241,43 @@ def apply_solar(
         etrh_safe = np.where(etrh > 0.0, etrh, 1.0)
         kt = np.clip(np.where(etrh > 0.0, ghi_m / etrh_safe, 0.0), 0.0, 1.0)
         frame["_kt"] = kt
-    else:
-        dni = np.clip(frame["dni"].to_numpy(dtype=float), 0.0, None)
-        below = cos_z <= C.COS_ZENITH_FLOOR
+
+    elif use_measured:
+        # Pre-2017: decompose measured GHI via Erbs (no STRÅNG direct beam).
+        ghi_m = np.clip(frame[C.METOBS_RADIATION_COLUMN].to_numpy(dtype=float), 0.0, None)
+        dhi, dni_erbs = erbs_decomposition(ghi_m, etrh, cos_z)
+        frame["ghi"] = ghi_m
+        frame["dhi"] = np.clip(dhi, 0.0, None)
+        frame["dni"] = np.where(below, 0.0, np.clip(dni_erbs, 0.0, None))
+        if "dirh" not in frame.columns:
+            frame["dirh"] = np.where(below, 0.0,
+                                     np.clip(frame["dni"].to_numpy() * np.clip(cos_z, 0.0, None),
+                                             0.0, None))
         if report is not None:
-            report.clamped_dni_hours = int(np.count_nonzero(below & (dni > 0.0)))
+            report.solar_source = "measured+erbs"
+        etrh_safe = np.where(etrh > 0.0, etrh, 1.0)
+        kt = np.clip(np.where(etrh > 0.0, ghi_m / etrh_safe, 0.0), 0.0, 1.0)
+        frame["_kt"] = kt
+
+    elif has_strang_direct:
+        # Post-2017 STRÅNG-only path.
+        dni = np.clip(frame["dni"].to_numpy(dtype=float), 0.0, None)
         frame["dni"] = np.where(below, 0.0, dni)
         frame["dhi"] = (frame["ghi"] - frame["dirh"]).clip(lower=0.0)
         if report is not None:
             report.solar_source = "strang"
+
+    else:
+        # Pre-2017 STRÅNG GHI-only: decompose via Erbs.
+        ghi = frame["ghi"].to_numpy(dtype=float)
+        dhi, dni_erbs = erbs_decomposition(ghi, etrh, cos_z)
+        frame["dhi"] = np.clip(dhi, 0.0, None)
+        frame["dni"] = np.where(below, 0.0, np.clip(dni_erbs, 0.0, None))
+        frame["dirh"] = np.where(below, 0.0,
+                                  np.clip(frame["dni"].to_numpy() * np.clip(cos_z, 0.0, None),
+                                          0.0, None))
+        if report is not None:
+            report.solar_source = "strang_ghi+erbs"
 
     if report is not None:
         report.clamped_dni_hours = int(

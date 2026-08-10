@@ -468,6 +468,20 @@ def ingest(
     win_end = pd.Timestamp(grid_end) + pd.Timedelta(hours=buffer_hours)
     window = (win_start, win_end)
 
+    # Direct/beam STRÅNG params (118, 121) are only available from Apr 18 2017.
+    if year < C.STRANG_DIRECT_AVAILABLE_YEAR:
+        log.warning(
+            "year %d pre-dates STRÅNG direct/beam parameters (available from "
+            "Apr 2017); DNI and DHI will be estimated via Erbs decomposition "
+            "on STRÅNG GHI only",
+            year,
+        )
+    strang_params = (
+        C.STRANG_PARAMETERS
+        if year >= C.STRANG_DIRECT_AVAILABLE_YEAR
+        else C.STRANG_GHI_ONLY_PARAMETERS
+    )
+
     tasks = {}
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         for param, column in C.METOBS_PARAMETERS.items():
@@ -486,7 +500,7 @@ def ingest(
                 client,
                 accepted_quality,
             )] = C.METOBS_RADIATION_COLUMN
-        for param, column in C.STRANG_PARAMETERS.items():
+        for param, column in strang_params.items():
             tasks[pool.submit(
                 fetch_strang_parameter,
                 meta.latitude,
@@ -509,7 +523,7 @@ def ingest(
     ordered = (
         list(C.METOBS_PARAMETERS.values())
         + ([C.METOBS_RADIATION_COLUMN] if radiation_station_id is not None else [])
-        + list(C.STRANG_PARAMETERS.values())
+        + list(strang_params.values())
     )
     for column in ordered:
         series = collected.get(column, pd.Series(dtype=float, name=column))
