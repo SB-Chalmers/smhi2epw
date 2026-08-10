@@ -13,21 +13,21 @@ METOBS_PERIOD = "corrected-archive"
 # Required parameters are subject to the hard gap-abort policy; optional ones
 # are filled when present but never block compilation if missing.
 METOBS_REQUIRED_PARAMETERS = {
-    1: "dry_bulb",           # Air temperature, instantaneous (degC)
+    1: "dry_bulb",  # Air temperature, instantaneous (degC)
     6: "relative_humidity",  # Relative humidity (%)
-    9: "pressure",           # Air pressure at station level (hPa)
-    4: "wind_speed",         # Wind speed (m/s)
-    3: "wind_direction",     # Wind direction (degrees)
+    9: "pressure",  # Air pressure at station level (hPa)
+    4: "wind_speed",  # Wind speed (m/s)
+    3: "wind_direction",  # Wind direction (degrees)
 }
 METOBS_OPTIONAL_PARAMETERS = {
-    16: "cloud_cover",       # Total cloud cover (octas 0-8)
+    16: "cloud_cover",  # Total cloud cover (octas 0-8)
 }
 METOBS_PARAMETERS = {**METOBS_REQUIRED_PARAMETERS, **METOBS_OPTIONAL_PARAMETERS}
 
 # Radiation (pyranometer) parameter — fetched from a separate "Sol" station when
-# available; dramatically improves GHI accuracy and enables Erbs DNI decomposition.
-METOBS_RADIATION_PARAMETER = 11   # Global Irradiance (W/m², hourly mean)
-METOBS_RADIATION_COLUMN   = "ghi_measured"
+# available and partitioned with STRÅNG beam fractions from 2018 onward.
+METOBS_RADIATION_PARAMETER = 11  # Global Irradiance (W/m², hourly mean)
+METOBS_RADIATION_COLUMN = "ghi_measured"
 
 # metobs quality codes that are accepted as usable observations. Anything else
 # is treated as missing (and therefore eligible for interpolation).
@@ -50,17 +50,16 @@ STRANG_BASE = (
 #   121 = Direct beam on the horizontal plane (W/m^2)  -- used to close diffuse
 # Diffuse Horizontal is therefore derived as GHI - beam_horizontal (117 - 121).
 #
-# Params 118 and 121 are only available from April 18, 2017 onwards.
-# For earlier years only param 117 (GHI) is fetched; DHI/DNI are estimated
-# via Erbs decomposition.
+# Params 118 and 121 are only available from April 18, 2017 onwards. Full-year
+# AMYs therefore use them from 2018; earlier years use GHI + Erbs.
 STRANG_PARAMETERS = {
-    117: "ghi",   # Global Horizontal Irradiance (W/m^2)
-    118: "dni",   # Direct Normal Irradiance (W/m^2)
+    117: "ghi",  # Global Horizontal Irradiance (W/m^2)
+    118: "dni",  # Direct Normal Irradiance (W/m^2)
     121: "dirh",  # Direct beam on horizontal plane (W/m^2)
 }
-STRANG_GHI_ONLY_PARAMETERS = {117: "ghi"}   # params available before Apr 2017
-STRANG_DIRECT_AVAILABLE_YEAR = 2017          # conservative cutoff (full years)
-STRANG_MIN_YEAR = 1999                       # STRÅNG operational since Jan 1999
+STRANG_GHI_ONLY_PARAMETERS = {117: "ghi"}  # params available before Apr 2017
+STRANG_DIRECT_AVAILABLE_YEAR = 2018  # first complete calendar year
+STRANG_MIN_YEAR = 1999  # STRÅNG operational since Jan 1999
 
 # Spatial resolution by era (year-based approximation; exact switch dates are
 # May 2006 and Mar 29 2017).
@@ -81,8 +80,10 @@ SOLAR_CONSTANT = 1367.0  # W/m^2 (mean extraterrestrial irradiance)
 # cos(zenith) <= 0.087 corresponds to a solar elevation below ~5 degrees.
 COS_ZENITH_FLOOR = 0.087
 
-# Imputation policy: maximum contiguous gap (hours) resolved by interpolation.
-MAX_GAP_HOURS = 3
+# Imputation policy. Short gaps are linearly interpolated; longer gaps use the
+# reference day-profile method and are never synthesized beyond two days.
+SHORT_GAP_HOURS = 3
+MAX_GAP_HOURS = 48
 
 # --------------------------------------------------------------------------- #
 # EPW missing-value / default tokens (per EnergyPlus Auxiliary Programs spec)

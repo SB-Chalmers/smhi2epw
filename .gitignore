@@ -16,3 +16,4 @@ venv/
 # smhi2epw
 .smhi_cache/
 *.epw
+/reference/

@@ -11,7 +11,7 @@ import pandas as pd
 
 from . import constants as C
 from .errors import DataGapError
-from .solar import solar_zenith, extraterrestrial_radiation, erbs_decomposition
+from .solar import erbs_decomposition, extraterrestrial_radiation, solar_zenith
 
 log = logging.getLogger("smhi2epw")
 
@@ -26,7 +26,10 @@ class ProcessingReport:
     energy_balance_max_residual: float = 0.0
     missing_columns: List[str] = field(default_factory=list)
     cloud_available: bool = False
-    solar_source: str = "strang"  # "strang" | "measured+erbs"
+    solar_source: str = "strang"
+    linear_filled_hours: Dict[str, int] = field(default_factory=dict)
+    diurnal_filled_hours: Dict[str, int] = field(default_factory=dict)
+    max_gap_hours: Dict[str, int] = field(default_factory=dict)
 
 
 # --------------------------------------------------------------------------- #
@@ -43,20 +46,187 @@ def _max_gap_length(mask: np.ndarray) -> int:
     return int((ends - starts).max())
 
 
+def _gap_runs(mask: np.ndarray) -> List[tuple[int, int]]:
+    """Return ``(start, end)`` pairs for contiguous true runs."""
+    if not mask.any():
+        return []
+    padded = np.concatenate(([False], mask, [False]))
+    edges = np.diff(padded.view(np.int8))
+    starts = np.where(edges == 1)[0]
+    ends = np.where(edges == -1)[0]
+    return [(int(start), int(end)) for start, end in zip(starts, ends)]
+
+
+def _linear_estimate(values: np.ndarray, start: int, end: int) -> Optional[np.ndarray]:
+    """Linearly bridge one gap when at least one endpoint is available."""
+    left = values[start - 1] if start > 0 else np.nan
+    right = values[end] if end < len(values) else np.nan
+    size = end - start
+    if np.isfinite(left) and np.isfinite(right):
+        return np.linspace(left, right, size + 2, dtype=float)[1:-1]
+    if np.isfinite(left):
+        return np.full(size, left, dtype=float)
+    if np.isfinite(right):
+        return np.full(size, right, dtype=float)
+    return None
+
+
+def _profile_estimate(
+    values: np.ndarray, start: int, end: int, direction: int
+) -> Optional[np.ndarray]:
+    """Estimate a gap from the preceding or following valid 24-hour profile.
+
+    The daily profile is repeated through the gap and offset linearly so it
+    meets the observations surrounding the gap, following Lundström (2012)
+    section 4.2.2. ``direction`` is -1 for the preceding profile and +1 for
+    the following profile.
+    """
+    size = end - start
+    if direction < 0:
+        template_start = start - 24
+        if template_start < 0:
+            return None
+        template = values[template_start:start]
+        base = np.resize(template, size)
+        left_base = template[-1]
+        right_base = template[size % 24]
+    else:
+        template_end = end + 24
+        if template_end > len(values):
+            return None
+        template = values[end:template_end]
+        indices = (np.arange(start, end) - end) % 24
+        base = template[indices]
+        left_base = template[(start - 1 - end) % 24]
+        right_base = template[0]
+
+    if len(template) != 24 or not np.isfinite(template).all():
+        return None
+    left = values[start - 1] if start > 0 else np.nan
+    right = values[end] if end < len(values) else np.nan
+    if not np.isfinite(left) and not np.isfinite(right):
+        return None
+
+    left_delta = left - left_base if np.isfinite(left) else np.nan
+    right_delta = right - right_base if np.isfinite(right) else np.nan
+    if not np.isfinite(left_delta):
+        left_delta = right_delta
+    if not np.isfinite(right_delta):
+        right_delta = left_delta
+    offsets = np.linspace(left_delta, right_delta, size + 2, dtype=float)[1:-1]
+    return base + offsets
+
+
+def _fill_scalar_series(
+    series: pd.Series,
+    *,
+    required: bool,
+    solar: bool,
+    short_gap_hours: int,
+    max_gap_hours: int,
+) -> tuple[pd.Series, int, int, int]:
+    """Fill one scalar series and return values plus fill diagnostics."""
+    values = series.to_numpy(dtype=float, copy=True)
+    runs = _gap_runs(np.isnan(values))
+    longest = max((end - start for start, end in runs), default=0)
+    linear_hours = 0
+    diurnal_hours = 0
+
+    for start, end in runs:
+        size = end - start
+        if size > max_gap_hours:
+            if required:
+                raise DataGapError(
+                    f"column '{series.name}' has a {size}-hour gap exceeding the "
+                    f"{max_gap_hours}-hour fill limit"
+                )
+            continue
+
+        estimate: Optional[np.ndarray] = None
+        method = "linear"
+        if solar or size > short_gap_hours:
+            backward = _profile_estimate(values, start, end, -1)
+            forward = _profile_estimate(values, start, end, 1)
+            if backward is not None and forward is not None:
+                estimate = (backward + forward) / 2.0
+            else:
+                estimate = backward if backward is not None else forward
+            method = "diurnal"
+
+        if estimate is None and size <= short_gap_hours:
+            estimate = _linear_estimate(values, start, end)
+            method = "linear"
+        if estimate is None:
+            if required:
+                raise DataGapError(
+                    f"column '{series.name}' has a {size}-hour gap without a valid "
+                    "previous or next daily reference profile"
+                )
+            continue
+
+        values[start:end] = estimate
+        if method == "diurnal":
+            diurnal_hours += size
+        else:
+            linear_hours += size
+
+    if solar:
+        values = np.clip(values, 0.0, None)
+    return (
+        pd.Series(values, index=series.index, name=series.name),
+        linear_hours,
+        diurnal_hours,
+        longest,
+    )
+
+
+def _fill_wind_direction(
+    series: pd.Series, *, required: bool, short_gap_hours: int, max_gap_hours: int
+) -> tuple[pd.Series, int, int, int]:
+    """Fill angular wind direction through unit-vector components."""
+    radians = np.radians(series.to_numpy(dtype=float))
+    missing = series.isna().to_numpy()
+    name = str(series.name) if series.name is not None else "wind_direction"
+    sin_series = pd.Series(
+        np.where(missing, np.nan, np.sin(radians)), index=series.index
+    )
+    cos_series = pd.Series(
+        np.where(missing, np.nan, np.cos(radians)), index=series.index
+    )
+    sin_filled, linear, diurnal, longest = _fill_scalar_series(
+        sin_series.rename(name),
+        required=required,
+        solar=False,
+        short_gap_hours=short_gap_hours,
+        max_gap_hours=max_gap_hours,
+    )
+    cos_filled, _, _, _ = _fill_scalar_series(
+        cos_series.rename(name),
+        required=required,
+        solar=False,
+        short_gap_hours=short_gap_hours,
+        max_gap_hours=max_gap_hours,
+    )
+    direction = np.degrees(np.arctan2(sin_filled, cos_filled)) % 360.0
+    invalid = sin_filled.isna() | cos_filled.isna()
+    direction[invalid] = np.nan
+    return (
+        pd.Series(direction, index=series.index, name=series.name),
+        linear,
+        diurnal,
+        longest,
+    )
+
+
 def impute(
     frame: pd.DataFrame,
     required: List[str],
     optional: Optional[List[str]] = None,
+    short_gap_hours: int = C.SHORT_GAP_HOURS,
     max_gap_hours: int = C.MAX_GAP_HOURS,
     report: Optional[ProcessingReport] = None,
 ) -> ProcessingReport:
-    """Interpolate short gaps with a split required/optional policy.
-
-    Required columns abort with :class:`DataGapError` on any gap longer than
-    ``max_gap_hours``. Optional columns are interpolated where possible but left
-    as NaN across long gaps (they map to EPW "missing" tokens) so they never
-    block compilation. Operates in-place and returns a :class:`ProcessingReport`.
-    """
+    """Fill meteorological gaps using short linear and daily-profile methods."""
     optional = optional or []
     report = report or ProcessingReport()
     total_missing = 0
@@ -80,33 +250,25 @@ def impute(
         total_cells += n
         report.interpolated_fraction[column] = (n_missing / n) if n else 0.0
 
-        if n_missing == 0:
-            continue
-
-        longest = _max_gap_length(missing)
-        if column in required and longest > max_gap_hours:
-            raise DataGapError(
-                f"column '{column}' has a {longest}-hour gap exceeding the "
-                f"{max_gap_hours}-hour interpolation window; refusing to "
-                "generate a corrupted weather file"
+        if column == "wind_direction":
+            filled, linear, diurnal, longest = _fill_wind_direction(
+                series,
+                required=column in required,
+                short_gap_hours=short_gap_hours,
+                max_gap_hours=max_gap_hours,
             )
-
-        limit = None if column in optional else max_gap_hours
-        if column in optional and limit is None:
-            # Diurnal-aware fill for optional columns: same approach as impute_solar.
-            # Linear interpolation across multi-day gaps smears day/night structure;
-            # grouping by hour preserves the diurnal pattern for cloud cover etc.
-            longest = _max_gap_length(missing)
-            if longest > max_gap_hours:
-                hour = series.index.hour
-                filled = series.groupby(hour).transform(
-                    lambda g: g.interpolate(method="linear", limit_direction="both")
-                )
-                frame[column] = filled.bfill().ffill()
-                continue
-        frame[column] = series.interpolate(
-            method="linear", limit=limit, limit_direction="both"
-        )
+        else:
+            filled, linear, diurnal, longest = _fill_scalar_series(
+                series,
+                required=column in required,
+                solar=False,
+                short_gap_hours=short_gap_hours,
+                max_gap_hours=max_gap_hours,
+            )
+        frame[column] = filled
+        report.linear_filled_hours[column] = linear
+        report.diurnal_filled_hours[column] = diurnal
+        report.max_gap_hours[column] = longest
 
     report.total_interpolated_fraction = (
         total_missing / total_cells if total_cells else 0.0
@@ -119,14 +281,7 @@ def impute_solar(
     columns: List[str],
     report: Optional[ProcessingReport] = None,
 ) -> ProcessingReport:
-    """Fill solar gaps using diurnal-aware (same-hour, day-to-day) interpolation.
-
-    STRÅNG occasionally drops whole days of irradiance. Linear interpolation
-    across such a gap would smear daytime values into the night, so instead each
-    hour-of-day series is interpolated independently across adjacent days. Any
-    residual NaN (e.g. a leading/trailing gap) is back/forward filled, and
-    negatives are clipped to zero.
-    """
+    """Fill required solar gaps with the bounded daily-profile method."""
     report = report or ProcessingReport()
     for column in columns:
         if column not in frame.columns:
@@ -139,14 +294,17 @@ def impute_solar(
             raise DataGapError(
                 f"solar column '{column}' is entirely missing; cannot model"
             )
-        if n_missing == 0:
-            continue
-        hour = series.index.hour
-        filled = series.groupby(hour).transform(
-            lambda g: g.interpolate(method="linear", limit_direction="both")
+        filled, linear, diurnal, longest = _fill_scalar_series(
+            series,
+            required=True,
+            solar=True,
+            short_gap_hours=C.SHORT_GAP_HOURS,
+            max_gap_hours=C.MAX_GAP_HOURS,
         )
-        filled = filled.bfill().ffill().clip(lower=0.0)
         frame[column] = filled
+        report.linear_filled_hours[column] = linear
+        report.diurnal_filled_hours[column] = diurnal
+        report.max_gap_hours[column] = longest
     return report
 
 
@@ -171,25 +329,26 @@ def dew_point(dry_bulb: pd.Series, relative_humidity: pd.Series) -> pd.Series:
 
 
 # --------------------------------------------------------------------------- #
-# Horizontal infrared radiation (Berdahl & Martin, with cloud correction)
+# EnergyPlus horizontal infrared radiation with cloud correction
 # --------------------------------------------------------------------------- #
 def horizontal_ir(
     dry_bulb_c: pd.Series,
     dew_point_c: pd.Series,
-    opaque_fraction: Optional[pd.Series] = None,
+    cloud_cover_tenths: Optional[pd.Series] = None,
 ) -> pd.Series:
-    """Down-welling longwave sky radiation (W/m^2).
+    """EnergyPlus-compatible down-welling longwave sky radiation (W/m²).
 
-    Clear-sky emissivity follows Berdahl & Martin; when an opaque cloud
-    fraction ``N`` in [0, 1] is supplied, the standard cubic cloud-amplification
-    factor ``1 + 0.0224 N - 0.0035 N^2 + 0.00028 N^3`` raises emissivity toward
-    unity under overcast skies.
+    SMHI parameter 16 is total rather than opaque cloud cover. When supplied,
+    it is used only as an explicit proxy in the cloud-amplification term; the
+    EPW opaque-cover field remains missing.
     """
-    eps_sky = 0.741 + 0.0062 * dew_point_c
-    if opaque_fraction is not None:
-        n = opaque_fraction.clip(lower=0.0, upper=1.0)
-        eps_sky = eps_sky * (1.0 + 0.0224 * n - 0.0035 * n**2 + 0.00028 * n**3)
-        eps_sky = eps_sky.clip(upper=1.0)
+    dew_k = (dew_point_c + C.KELVIN).clip(lower=1.0)
+    eps_sky = 0.787 + 0.764 * np.log(dew_k / 273.0)
+    if cloud_cover_tenths is not None:
+        n = cloud_cover_tenths.clip(lower=0.0, upper=10.0)
+        cloud_factor = 1.0 + 0.0224 * n - 0.0035 * n**2 + 0.00028 * n**3
+        eps_sky = eps_sky * cloud_factor.fillna(1.0)
+    eps_sky = eps_sky.clip(lower=0.0, upper=1.0)
     t_dry_k = dry_bulb_c + C.KELVIN
     return eps_sky * C.STEFAN_BOLTZMANN * t_dry_k**4
 
@@ -211,21 +370,28 @@ def sky_cover_tenths(cloud_octas: pd.Series) -> pd.Series:
 # Solar transformation: finalize EPW solar fields
 # --------------------------------------------------------------------------- #
 def apply_solar(
-    frame: pd.DataFrame, lat: float, lon: float, report: Optional[ProcessingReport] = None
+    frame: pd.DataFrame,
+    lat: float,
+    lon: float,
+    report: Optional[ProcessingReport] = None,
 ) -> None:
     """Finalize DNI, DHI and extraterrestrial EPW fields in-place.
 
     **Solar path selection (in priority order):**
 
-    1. **Measured GHI + STRÅNG beam** — pyranometer GHI with STRÅNG direct-beam
-       (params 118/121); DHI closed as ``max(GHI_measured - beam_horizontal, 0)``.
-    2. **Measured GHI + Erbs** — pyranometer GHI with Erbs decomposition (pre-2017
+    1. **Measured GHI + STRÅNG partition** — pyranometer GHI scaled by the
+       STRÅNG direct-horizontal fraction; DNI/DHI are closed to measured GHI.
+    2. **Measured GHI + Erbs** — pyranometer GHI with Erbs decomposition (through 2017
        when direct-beam params are unavailable).
-    3. **STRÅNG all-params** — GHI/DNI/dirh directly from STRÅNG (post-2017).
-    4. **STRÅNG GHI + Erbs** — only param 117 available (pre-2017, no Sol station).
+    3. **STRÅNG all-params** — GHI/DNI/dirh directly from STRÅNG (2018+).
+    4. **STRÅNG GHI + Erbs** — only param 117 available (through 2017, no Sol station).
     """
-    zenith, cos_z = solar_zenith(frame.index, lat, lon)
-    etrh, etrn = extraterrestrial_radiation(frame.index, cos_z)
+    # EPW radiation represents the interval preceding the timestamp. STRÅNG is
+    # converted to that interval during ingestion, so geometry belongs at the
+    # interval midpoint rather than at the full-hour label.
+    midpoint_index = pd.DatetimeIndex(frame.index) - pd.Timedelta(minutes=30)
+    _, cos_z = solar_zenith(midpoint_index, lat, lon)
+    etrh, etrn = extraterrestrial_radiation(midpoint_index, cos_z)
     frame["etrh"] = etrh
     frame["etrn"] = etrn
 
@@ -234,81 +400,111 @@ def apply_solar(
         and not frame[C.METOBS_RADIATION_COLUMN].isna().all()
     )
     has_strang_direct = (
-        "dirh" in frame.columns and not frame["dirh"].isna().all()
-        and "dni" in frame.columns and not frame["dni"].isna().all()
+        "dirh" in frame.columns
+        and not frame["dirh"].isna().all()
+        and "dni" in frame.columns
+        and not frame["dni"].isna().all()
     )
 
     below = cos_z <= C.COS_ZENITH_FLOOR
+    original_dni = np.zeros(len(frame), dtype=float)
 
     if use_measured and has_strang_direct:
-        ghi_m = np.clip(frame[C.METOBS_RADIATION_COLUMN].to_numpy(dtype=float), 0.0, None)
-        # Retain STRÅNG beam decomposition; only the total GHI comes from the sensor.
-        dirh = np.clip(frame["dirh"].to_numpy(dtype=float), 0.0, ghi_m)
+        ghi_m = np.clip(
+            frame[C.METOBS_RADIATION_COLUMN].to_numpy(dtype=float), 0.0, None
+        )
+        ghi_model = np.clip(frame["ghi"].to_numpy(dtype=float), 0.0, None)
+        dirh_model = np.clip(frame["dirh"].to_numpy(dtype=float), 0.0, None)
+        beam_fraction = np.divide(
+            dirh_model,
+            ghi_model,
+            out=np.zeros_like(dirh_model),
+            where=ghi_model > 0.0,
+        )
+        beam_fraction = np.clip(beam_fraction, 0.0, 1.0)
+        beam_h = ghi_m * beam_fraction
+        cos_safe = np.where(~below, cos_z, 1.0)
+        dni = np.where(~below, beam_h / cos_safe, 0.0)
+        original_dni = dni.copy()
+        dni = np.minimum(np.clip(dni, 0.0, None), etrn)
+        beam_h = np.minimum(dni * np.clip(cos_z, 0.0, None), ghi_m)
         frame["ghi"] = ghi_m
-        frame["dhi"] = np.clip(ghi_m - dirh, 0.0, None)
-        # DNI from STRÅNG param 118 (direct normal), floored below horizon.
-        dni = np.clip(frame["dni"].to_numpy(dtype=float), 0.0, None)
-        frame["dni"] = np.where(below, 0.0, dni)
+        frame["dni"] = dni
+        frame["dhi"] = np.clip(ghi_m - beam_h, 0.0, None)
         if report is not None:
-            report.solar_source = "measured+strang_beam"
-        # kt proxy for IR cloud correction.
-        etrh_safe = np.where(etrh > 0.0, etrh, 1.0)
-        kt = np.clip(np.where(etrh > 0.0, ghi_m / etrh_safe, 0.0), 0.0, 1.0)
-        frame["_kt"] = kt
+            report.solar_source = "measured+strang_partition"
 
     elif use_measured:
-        # Pre-2017: decompose measured GHI via Erbs (no STRÅNG direct beam).
-        ghi_m = np.clip(frame[C.METOBS_RADIATION_COLUMN].to_numpy(dtype=float), 0.0, None)
-        dhi, dni_erbs = erbs_decomposition(ghi_m, etrh, cos_z)
+        # Through 2017: decompose measured GHI via Erbs (no full-year beam data).
+        ghi_m = np.clip(
+            frame[C.METOBS_RADIATION_COLUMN].to_numpy(dtype=float), 0.0, None
+        )
+        _, dni_erbs = erbs_decomposition(ghi_m, etrh, cos_z)
+        original_dni = np.clip(dni_erbs, 0.0, None)
+        dni_final = np.where(below, 0.0, np.minimum(original_dni, etrn))
+        beam_h = np.minimum(dni_final * np.clip(cos_z, 0.0, None), ghi_m)
         frame["ghi"] = ghi_m
-        frame["dhi"] = np.clip(dhi, 0.0, None)
-        frame["dni"] = np.where(below, 0.0, np.clip(dni_erbs, 0.0, None))
+        frame["dhi"] = np.clip(ghi_m - beam_h, 0.0, None)
+        frame["dni"] = dni_final
         if "dirh" not in frame.columns:
-            frame["dirh"] = np.where(below, 0.0,
-                                     np.clip(frame["dni"].to_numpy() * np.clip(cos_z, 0.0, None),
-                                             0.0, None))
+            frame["dirh"] = beam_h
         if report is not None:
             report.solar_source = "measured+erbs"
-        etrh_safe = np.where(etrh > 0.0, etrh, 1.0)
-        kt = np.clip(np.where(etrh > 0.0, ghi_m / etrh_safe, 0.0), 0.0, 1.0)
-        frame["_kt"] = kt
 
     elif has_strang_direct:
-        # Post-2017 STRÅNG-only path.
-        dni = np.clip(frame["dni"].to_numpy(dtype=float), 0.0, None)
-        frame["dni"] = np.where(below, 0.0, dni)
-        frame["dhi"] = (frame["ghi"] - frame["dirh"]).clip(lower=0.0)
+        # 2018+ STRÅNG-only path.
+        ghi = np.clip(frame["ghi"].to_numpy(dtype=float), 0.0, None)
+        original_dni = np.clip(frame["dni"].to_numpy(dtype=float), 0.0, None)
+        dni = np.where(below, 0.0, np.minimum(original_dni, etrn))
+        beam_h = np.minimum(dni * np.clip(cos_z, 0.0, None), ghi)
+        frame["ghi"] = ghi
+        frame["dni"] = np.divide(
+            beam_h,
+            np.where(~below, cos_z, 1.0),
+            out=np.zeros_like(beam_h),
+            where=~below,
+        )
+        frame["dhi"] = np.clip(ghi - beam_h, 0.0, None)
         if report is not None:
             report.solar_source = "strang"
 
     else:
-        # Pre-2017 STRÅNG GHI-only: decompose via Erbs.
+        # Through 2017 STRÅNG GHI-only: decompose via Erbs.
         ghi = frame["ghi"].to_numpy(dtype=float)
-        dhi, dni_erbs = erbs_decomposition(ghi, etrh, cos_z)
-        frame["dhi"] = np.clip(dhi, 0.0, None)
-        frame["dni"] = np.where(below, 0.0, np.clip(dni_erbs, 0.0, None))
-        frame["dirh"] = np.where(below, 0.0,
-                                  np.clip(frame["dni"].to_numpy() * np.clip(cos_z, 0.0, None),
-                                          0.0, None))
+        _, dni_erbs = erbs_decomposition(ghi, etrh, cos_z)
+        original_dni = np.clip(dni_erbs, 0.0, None)
+        dni_final = np.where(below, 0.0, np.minimum(original_dni, etrn))
+        beam_h = np.minimum(dni_final * np.clip(cos_z, 0.0, None), ghi)
+        frame["dhi"] = np.clip(ghi - beam_h, 0.0, None)
+        frame["dni"] = dni_final
+        frame["dirh"] = beam_h
         if report is not None:
             report.solar_source = "strang_ghi+erbs"
 
     if report is not None:
         report.clamped_dni_hours = int(
-            np.count_nonzero(frame["dni"].to_numpy(dtype=float) == 0.0)
+            np.count_nonzero(frame["dni"].to_numpy(dtype=float) < original_dni - 1e-9)
         )
         beam_h = frame["dni"].to_numpy(dtype=float) * np.clip(cos_z, 0.0, None)
         residual = np.abs(
             frame["ghi"].to_numpy(dtype=float)
             - (frame["dhi"].to_numpy(dtype=float) + beam_h)
         )
-        report.energy_balance_max_residual = float(np.nanmax(residual)) if len(residual) else 0.0
+        report.energy_balance_max_residual = (
+            float(np.nanmax(residual)) if len(residual) else 0.0
+        )
 
 
 # --------------------------------------------------------------------------- #
 # Orchestration
 # --------------------------------------------------------------------------- #
-def process(frame: pd.DataFrame, lat: float, lon: float) -> ProcessingReport:
+def process(
+    frame: pd.DataFrame,
+    lat: float,
+    lon: float,
+    *,
+    measured_required: bool = False,
+) -> ProcessingReport:
     """Run the full processing pipeline in-place and return diagnostics.
 
     Adds ``dew_point``, ``horizontal_ir``, ``dni``, ``dhi``, ``etrh``/``etrn``
@@ -321,38 +517,56 @@ def process(frame: pd.DataFrame, lat: float, lon: float) -> ProcessingReport:
 
     report = impute(frame, required, optional)
     impute_solar(frame, solar_columns, report)
+
+    measured_column = C.METOBS_RADIATION_COLUMN
+    if measured_column in frame.columns and not frame[measured_column].isna().all():
+        measured = frame[measured_column]
+        report.interpolated_fraction[measured_column] = float(measured.isna().mean())
+        try:
+            filled, linear, diurnal, longest = _fill_scalar_series(
+                measured,
+                required=True,
+                solar=True,
+                short_gap_hours=C.SHORT_GAP_HOURS,
+                max_gap_hours=C.MAX_GAP_HOURS,
+            )
+        except DataGapError:
+            if measured_required:
+                raise
+            log.warning(
+                "auto-selected measured GHI has an unfillable gap; falling back to STRÅNG"
+            )
+            frame[measured_column] = np.nan
+        else:
+            frame[measured_column] = filled
+            report.linear_filled_hours[measured_column] = linear
+            report.diurnal_filled_hours[measured_column] = diurnal
+            report.max_gap_hours[measured_column] = longest
+    elif measured_required:
+        raise DataGapError(
+            "configured radiation station has no measured GHI for the year"
+        )
+
     convert_units(frame)
 
     frame["dew_point"] = dew_point(frame["dry_bulb"], frame["relative_humidity"])
 
     # --- Cloud opacity for the longwave IR model ---
-    # Priority: (1) param 16 octas, (2) kt-based proxy from measured GHI (after
-    # apply_solar stores _kt), (3) clear-sky only (no correction).
-    opaque_fraction = None
+    # Parameter 16 is total cover. It is used as an explicit IR-only proxy;
+    # opaque cover remains missing in the exported EPW.
+    cloud_tenths = None
     if "cloud_cover" in frame.columns and not frame["cloud_cover"].isna().all():
         report.cloud_available = True
-        opaque_fraction = (frame["cloud_cover"] / 8.0).clip(lower=0.0, upper=1.0)
         frame["sky_cover"] = sky_cover_tenths(frame["cloud_cover"])
+        cloud_tenths = frame["sky_cover"]
 
-    # apply_solar runs first so _kt is available as kt proxy.
     apply_solar(frame, lat, lon, report)
 
-    if opaque_fraction is None and "_kt" in frame.columns:
-        # kt close to 1 → clear sky (low clouds); kt close to 0 → overcast.
-        # Linear mapping: opaque ≈ 1 − kt (only during daytime hours).
-        kt = frame["_kt"]
-        daytime = kt > 0.0
-        proxy = (1.0 - kt).clip(lower=0.0, upper=1.0)
-        proxy[~daytime] = np.nan  # no meaningful kt at night → IR unchanged
-        if proxy.notna().any():
-            opaque_fraction = proxy
-            report.cloud_available = True   # proxy counts as cloud info
-            frame["sky_cover"] = sky_cover_tenths(
-                (proxy * 8.0).clip(lower=0.0, upper=8.0)
-            )
-        del frame["_kt"]
-
     frame["horizontal_ir"] = horizontal_ir(
-        frame["dry_bulb"], frame["dew_point"], opaque_fraction
+        frame["dry_bulb"], frame["dew_point"], cloud_tenths
     )
+    if report.interpolated_fraction:
+        report.total_interpolated_fraction = float(
+            np.mean(list(report.interpolated_fraction.values()))
+        )
     return report

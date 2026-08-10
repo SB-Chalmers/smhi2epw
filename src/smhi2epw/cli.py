@@ -32,11 +32,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Local Standard Time offset in hours (DST ignored; default 1.0)",
     )
     parser.add_argument(
-        "--lat", "--latitude", dest="latitude", type=float, default=None,
+        "--lat",
+        "--latitude",
+        dest="latitude",
+        type=float,
+        default=None,
         help="latitude for nearest-station search and STRÅNG solar query",
     )
     parser.add_argument(
-        "--lon", "--longitude", dest="longitude", type=float, default=None,
+        "--lon",
+        "--longitude",
+        dest="longitude",
+        type=float,
+        default=None,
         help="longitude for nearest-station search and STRÅNG solar query",
     )
     parser.add_argument(
@@ -56,14 +64,21 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         dest="radiation_station_id",
         help=(
-            "MetObs Sol (pyranometer) station id for measured GHI + Erbs "
-            "decomposition (auto-discovered by default)"
+            "MetObs Sol (pyranometer) station id for measured GHI "
+            "(auto-discovered by default)"
         ),
     )
     parser.add_argument(
         "--no-radiation",
         action="store_true",
         help="disable auto-discovery of radiation station; use STRÅNG solar only",
+    )
+    parser.add_argument(
+        "--radiation-station-max-distance",
+        type=float,
+        default=50.0,
+        metavar="KM",
+        help=("maximum distance for auto-selected pyranometer data (default 50 km)"),
     )
     return parser
 
@@ -72,7 +87,9 @@ def main(argv=None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.station is None and (args.latitude is None or args.longitude is None):
-        parser.error("provide --station, or both --lat and --lon for nearest-station search")
+        parser.error(
+            "provide --station, or both --lat and --lon for nearest-station search"
+        )
     config = EPWConfig(
         station_id=args.station,
         year=args.year,
@@ -88,6 +105,7 @@ def main(argv=None) -> int:
         refresh=args.refresh,
         radiation_station_id=args.radiation_station_id,
         radiation_station_auto=not args.no_radiation,
+        radiation_station_max_distance_km=args.radiation_station_max_distance,
     )
     try:
         result = compile_epw(config)

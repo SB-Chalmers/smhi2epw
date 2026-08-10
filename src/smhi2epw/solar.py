@@ -57,9 +57,9 @@ def solar_zenith(index: pd.DatetimeIndex, latitude: float, longitude: float):
     hour_angle = np.radians(tst / 4.0 - 180.0)
 
     lat_rad = np.radians(latitude)
-    cos_zenith = np.sin(lat_rad) * np.sin(decl) + np.cos(lat_rad) * np.cos(decl) * np.cos(
-        hour_angle
-    )
+    cos_zenith = np.sin(lat_rad) * np.sin(decl) + np.cos(lat_rad) * np.cos(
+        decl
+    ) * np.cos(hour_angle)
     cos_zenith = np.clip(cos_zenith, -1.0, 1.0)
     zenith = np.degrees(np.arccos(cos_zenith))
     return zenith, cos_zenith
@@ -122,4 +122,7 @@ def erbs_decomposition(ghi, etrh, cos_zenith):
     cos_z_safe = np.where(cos_z > C.COS_ZENITH_FLOOR, cos_z, 1.0)
     dni = np.where(cos_z > C.COS_ZENITH_FLOOR, (ghi - dhi) / cos_z_safe, 0.0)
     dni = np.clip(dni, 0.0, None)
+    # Once direct normal is suppressed near/below the horizon, assign the full
+    # global horizontal value to diffuse so the energy balance still closes.
+    dhi = np.where(cos_z > C.COS_ZENITH_FLOOR, dhi, ghi)
     return dhi, dni

@@ -12,11 +12,12 @@ import json
 import logging
 import math
 import os
+import tempfile
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional, Tuple
+from datetime import datetime, timezone
+from typing import Dict, Optional, Tuple
 
 import pandas as pd
 import requests
@@ -25,7 +26,7 @@ from requests.adapters import HTTPAdapter
 try:  # urllib3 ships with requests; import defensively.
     from urllib3.util.retry import Retry
 except Exception:  # pragma: no cover
-    Retry = None
+    Retry = None  # type: ignore[misc,assignment]
 
 from . import constants as C
 from .errors import IngestionError
@@ -84,7 +85,7 @@ class CachedClient:
         self.timeout = timeout
         self.session = session or self._build_session(max_retries)
         self.cache_ttl = cache_ttl  # seconds; None = never expire
-        self.refresh = refresh       # force re-fetch, ignore cached entries
+        self.refresh = refresh  # force re-fetch, ignore cached entries
         if cache_dir:
             os.makedirs(cache_dir, exist_ok=True)
 
@@ -131,12 +132,37 @@ class CachedClient:
             raise IngestionError(f"request failed: {url}: {exc}") from exc
         text = resp.text
         if path:
-            with open(path, "w", encoding="utf-8") as fh:
-                fh.write(text)
+            tmp_path = None
+            try:
+                with tempfile.NamedTemporaryFile(
+                    "w",
+                    encoding="utf-8",
+                    dir=os.path.dirname(path),
+                    prefix=".smhi2epw-",
+                    delete=False,
+                ) as fh:
+                    tmp_path = fh.name
+                    fh.write(text)
+                os.replace(tmp_path, path)
+            finally:
+                if tmp_path and os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
         return text
 
     def get_json(self, url: str) -> object:
-        return json.loads(self.get_text(url, suffix="json"))
+        try:
+            return json.loads(self.get_text(url, suffix="json"))
+        except json.JSONDecodeError:
+            # A process may have been interrupted while writing an older cache
+            # entry. Remove it and retry the endpoint exactly once.
+            path = self._cache_path(url, "json")
+            if path and os.path.exists(path) and not self.refresh:
+                try:
+                    os.unlink(path)
+                    return json.loads(self.get_text(url, suffix="json"))
+                except (OSError, json.JSONDecodeError) as exc:
+                    raise IngestionError(f"invalid JSON response: {url}") from exc
+            raise IngestionError(f"invalid JSON response: {url}")
 
 
 # --------------------------------------------------------------------------- #
@@ -151,10 +177,7 @@ def _select_position(positions: list, year: int) -> dict:
     if not positions:
         raise IngestionError("no position metadata for station")
     mid_ms = int(datetime(year, 7, 1, tzinfo=timezone.utc).timestamp() * 1000)
-    covering = [
-        p for p in positions
-        if p.get("from", 0) <= mid_ms <= p.get("to", 0)
-    ]
+    covering = [p for p in positions if p.get("from", 0) <= mid_ms <= p.get("to", 0)]
     if covering:
         return covering[0]
     return max(positions, key=lambda p: p.get("to", 0))
@@ -208,7 +231,8 @@ def get_station_metadata(
         latitude=float(pos["latitude"]),
         longitude=float(pos["longitude"]),
         elevation=float(pos.get("height", 0.0) or 0.0),
-        wmo_id=str(payload.get("key", station_id)),
+        # The MetObs ``key`` is an SMHI station ID, not a WMO identifier.
+        wmo_id=str(payload.get("wmo") or "999999"),
     )
 
 
@@ -224,7 +248,9 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return 2 * r * math.asin(min(1.0, math.sqrt(a)))
 
 
-def _stations_for_parameter(param: int, client: CachedClient) -> Dict[int, Tuple[float, float, int, int]]:
+def _stations_for_parameter(
+    param: int, client: CachedClient
+) -> Dict[int, Tuple[float, float, int, int]]:
     """Return ``{station_id: (lat, lon, from_ms, to_ms)}`` for a parameter."""
     url = f"{C.METOBS_BASE}/parameter/{param}.json"
     payload = client.get_json(url)
@@ -245,8 +271,19 @@ def _stations_for_parameter(param: int, client: CachedClient) -> Dict[int, Tuple
     return out
 
 
+def _year_bounds_ms(year: int) -> Tuple[int, int]:
+    start = datetime(year, 1, 1, tzinfo=timezone.utc)
+    end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+    return int(start.timestamp() * 1000), int(end.timestamp() * 1000) - 1
+
+
+def _covers_year(record: Tuple[float, float, int, int], year: int) -> bool:
+    start_ms, end_ms = _year_bounds_ms(year)
+    return record[2] <= start_ms and record[3] >= end_ms
+
+
 def find_nearest_station(
-    lat: float, lon: float, year: int, client: CachedClient, max_candidates: int = 25
+    lat: float, lon: float, year: int, client: CachedClient
 ) -> StationMeta:
     """Find the nearest metobs station carrying all required parameters in ``year``.
 
@@ -258,25 +295,28 @@ def find_nearest_station(
     if not base:
         raise IngestionError("could not list metobs stations")
 
-    year_ms = int(datetime(year, 7, 1, tzinfo=timezone.utc).timestamp() * 1000)
     other = {p: _stations_for_parameter(p, client) for p in required[1:]}
 
     ranked = sorted(
         base.items(), key=lambda kv: _haversine_km(lat, lon, kv[1][0], kv[1][1])
     )
-    for sid, (slat, slon, sfrom, sto) in ranked[:max_candidates]:
-        if not (sfrom <= year_ms <= sto):
+    for sid, base_record in ranked:
+        slat, slon, _, _ = base_record
+        if not _covers_year(base_record, year):
             continue
         ok = True
         for p in required[1:]:
             rec = other.get(p, {}).get(sid)
-            if rec is None or not (rec[2] <= year_ms <= rec[3]):
+            if rec is None or not _covers_year(rec, year):
                 ok = False
                 break
         if ok:
             log.info(
                 "nearest station: %s @ %.4f,%.4f (%.1f km)",
-                sid, slat, slon, _haversine_km(lat, lon, slat, slon),
+                sid,
+                slat,
+                slon,
+                _haversine_km(lat, lon, slat, slon),
             )
             return get_station_metadata(sid, client, year=year)
 
@@ -301,23 +341,41 @@ def find_nearest_radiation_station(
         return None
     if not isinstance(payload, dict):
         return None
-    year_ms = int(datetime(year, 7, 1, tzinfo=timezone.utc).timestamp() * 1000)
+    start_ms, end_ms = _year_bounds_ms(year)
     candidates = [
-        s for s in payload.get("station", [])
-        if s.get("from", 0) <= year_ms <= s.get("to", 0)
+        s
+        for s in payload.get("station", [])
+        if s.get("from", 0) <= start_ms and s.get("to", 0) >= end_ms
     ]
     if not candidates:
         return None
     nearest = min(
         candidates,
-        key=lambda s: _haversine_km(lat, lon, float(s["latitude"]), float(s["longitude"])),
+        key=lambda s: _haversine_km(
+            lat, lon, float(s["latitude"]), float(s["longitude"])
+        ),
     )
-    dist = _haversine_km(lat, lon, float(nearest["latitude"]), float(nearest["longitude"]))
+    dist = _haversine_km(
+        lat, lon, float(nearest["latitude"]), float(nearest["longitude"])
+    )
     log.info(
         "nearest radiation station: %s (%s) @ %.1f km",
-        nearest["key"], nearest.get("name", "?"), dist,
+        nearest["key"],
+        nearest.get("name", "?"),
+        dist,
     )
     return int(nearest["key"]), dist
+
+
+def radiation_station_distance(
+    station_id: int, lat: float, lon: float, year: int, client: CachedClient
+) -> Optional[float]:
+    """Return the distance to an explicit radiation station when listed."""
+    stations = _stations_for_parameter(C.METOBS_RADIATION_PARAMETER, client)
+    record = stations.get(station_id)
+    if record is None or not _covers_year(record, year):
+        return None
+    return _haversine_km(lat, lon, record[0], record[1])
 
 
 # --------------------------------------------------------------------------- #
@@ -453,13 +511,16 @@ def ingest(
     utc_offset: float = 0.0,
     accepted_quality: Optional[set] = None,
     radiation_station_id: Optional[int] = None,
+    solar_latitude: Optional[float] = None,
+    solar_longitude: Optional[float] = None,
+    radiation_required: bool = False,
 ) -> pd.DataFrame:
     """Query both endpoints in parallel and return a UTC-indexed DataFrame.
 
     When ``radiation_station_id`` is given, MetObs parameter 11 (measured global
     radiation from a pyranometer "Sol" station) is fetched alongside the other
     parameters and stored as column ``ghi_measured``. The processing layer will
-    then prefer Erbs decomposition over the STRÅNG modelled solar fields.
+    then prefer measured GHI with either STRÅNG partitioning or Erbs.
     """
     buffer_hours = int(math.ceil(abs(utc_offset))) + 1
     grid_start = datetime(year, 1, 1, tzinfo=timezone.utc)
@@ -468,7 +529,11 @@ def ingest(
     win_end = pd.Timestamp(grid_end) + pd.Timedelta(hours=buffer_hours)
     window = (win_start, win_end)
 
-    # Direct/beam STRÅNG params (118, 121) are only available from Apr 18 2017.
+    solar_lat = meta.latitude if solar_latitude is None else solar_latitude
+    solar_lon = meta.longitude if solar_longitude is None else solar_longitude
+
+    # Direct/beam STRÅNG params (118, 121) are only available from Apr 18 2017,
+    # so 2018 is the first complete AMY that can use them.
     if year < C.STRANG_DIRECT_AVAILABLE_YEAR:
         log.warning(
             "year %d pre-dates STRÅNG direct/beam parameters (available from "
@@ -485,36 +550,53 @@ def ingest(
     tasks = {}
     with ThreadPoolExecutor(max_workers=max_workers) as pool:
         for param, column in C.METOBS_PARAMETERS.items():
-            tasks[pool.submit(
-                fetch_metobs_parameter,
-                meta.station_id, param, column, window, client, accepted_quality,
-            )] = column
+            tasks[
+                pool.submit(
+                    fetch_metobs_parameter,
+                    meta.station_id,
+                    param,
+                    column,
+                    window,
+                    client,
+                    accepted_quality,
+                )
+            ] = (column, param in C.METOBS_REQUIRED_PARAMETERS)
         # Optionally fetch measured GHI from a dedicated Sol (pyranometer) station.
         if radiation_station_id is not None:
-            tasks[pool.submit(
-                fetch_metobs_parameter,
-                radiation_station_id,
-                C.METOBS_RADIATION_PARAMETER,
-                C.METOBS_RADIATION_COLUMN,
-                window,
-                client,
-                accepted_quality,
-            )] = C.METOBS_RADIATION_COLUMN
+            tasks[
+                pool.submit(
+                    fetch_metobs_parameter,
+                    radiation_station_id,
+                    C.METOBS_RADIATION_PARAMETER,
+                    C.METOBS_RADIATION_COLUMN,
+                    window,
+                    client,
+                    accepted_quality,
+                )
+            ] = (C.METOBS_RADIATION_COLUMN, radiation_required)
         for param, column in strang_params.items():
-            tasks[pool.submit(
-                fetch_strang_parameter,
-                meta.latitude,
-                meta.longitude,
-                param,
-                column,
-                window,
-                client,
-            )] = column
+            tasks[
+                pool.submit(
+                    fetch_strang_parameter,
+                    solar_lat,
+                    solar_lon,
+                    param,
+                    column,
+                    window,
+                    client,
+                )
+            ] = (column, True)
 
         collected: Dict[str, pd.Series] = {}
         for future in as_completed(tasks):
-            column = tasks[future]
-            collected[column] = future.result()
+            column, required = tasks[future]
+            try:
+                collected[column] = future.result()
+            except Exception as exc:
+                if required:
+                    raise
+                log.warning("optional source '%s' unavailable: %s", column, exc)
+                collected[column] = pd.Series(dtype=float, name=column)
 
     # Continuous hourly UTC grid spanning the year plus the boundary buffer.
     grid = pd.date_range(start=win_start, end=win_end, freq="h", tz="UTC")

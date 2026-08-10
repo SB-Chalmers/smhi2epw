@@ -22,36 +22,41 @@ import pandas as pd
 # EPW column definitions (35 fields, 1-based as in the spec)
 # --------------------------------------------------------------------------- #
 EPW_COLS = [
-    "year", "month", "day", "hour", "minute", "flags",
-    "dry_bulb",            #  7 (°C, tenths)
-    "dew_point",           #  8 (°C, tenths)
-    "relative_humidity",   #  9 (%)
-    "pressure",            # 10 (Pa)
-    "etrh",                # 11 (Wh/m²)
-    "etrn",                # 12 (Wh/m²)
-    "horizontal_ir",       # 13 (Wh/m²)
-    "ghi",                 # 14 (Wh/m²)
-    "dni",                 # 15 (Wh/m²)
-    "dhi",                 # 16 (Wh/m²)
-    "global_illum",        # 17
-    "direct_illum",        # 18
-    "diffuse_illum",       # 19
-    "zenith_lum",          # 20
-    "wind_dir",            # 21 (°)
-    "wind_speed",          # 22 (m/s, tenths)
-    "total_sky_cover",     # 23 (tenths)
-    "opaque_sky_cover",    # 24 (tenths)
-    "visibility",          # 25
-    "ceiling_height",      # 26
-    "weather_obs",         # 27
-    "weather_codes",       # 28
-    "precip_water",        # 29
-    "aerosol_opt_depth",   # 30
-    "snow_depth",          # 31
-    "days_since_snow",     # 32
-    "albedo",              # 33
-    "liquid_precip",       # 34
-    "liquid_precip_qty",   # 35
+    "year",
+    "month",
+    "day",
+    "hour",
+    "minute",
+    "flags",
+    "dry_bulb",  #  7 (°C, tenths)
+    "dew_point",  #  8 (°C, tenths)
+    "relative_humidity",  #  9 (%)
+    "pressure",  # 10 (Pa)
+    "etrh",  # 11 (Wh/m²)
+    "etrn",  # 12 (Wh/m²)
+    "horizontal_ir",  # 13 (Wh/m²)
+    "ghi",  # 14 (Wh/m²)
+    "dni",  # 15 (Wh/m²)
+    "dhi",  # 16 (Wh/m²)
+    "global_illum",  # 17
+    "direct_illum",  # 18
+    "diffuse_illum",  # 19
+    "zenith_lum",  # 20
+    "wind_dir",  # 21 (°)
+    "wind_speed",  # 22 (m/s, tenths)
+    "total_sky_cover",  # 23 (tenths)
+    "opaque_sky_cover",  # 24 (tenths)
+    "visibility",  # 25
+    "ceiling_height",  # 26
+    "weather_obs",  # 27
+    "weather_codes",  # 28
+    "precip_water",  # 29
+    "aerosol_opt_depth",  # 30
+    "snow_depth",  # 31
+    "days_since_snow",  # 32
+    "albedo",  # 33
+    "liquid_precip",  # 34
+    "liquid_precip_qty",  # 35
 ]
 
 
@@ -108,7 +113,9 @@ def compare(amy_path: Path, tmy_path: Path) -> None:
     print(f"  AMY  : {amy_path.name}")
     print(f"  TMYx : {tmy_path.name}")
     print("=" * 78)
-    print(f"  {'Variable':<28}  {'AMY mean  ±std':>18}  {'TMY mean  ±std':>18}  {'Δ mean':>8}")
+    print(
+        f"  {'Variable':<28}  {'AMY mean  ±std':>18}  {'TMY mean  ±std':>18}  {'Δ mean':>8}"
+    )
     print("-" * 78)
 
     # --- Temperature ---
@@ -174,13 +181,17 @@ def compare(amy_path: Path, tmy_path: Path) -> None:
 
     amy_ghi = annual_kwh(amy, "ghi", 9999)
     tmy_ghi = annual_kwh(tmy, "ghi", 9999)
-    print(f"    GHI annual sum (kWh/m²)  : AMY {amy_ghi:7.1f}   TMY {tmy_ghi:7.1f}"
-          f"   Δ {amy_ghi - tmy_ghi:+.1f}")
+    print(
+        f"    GHI annual sum (kWh/m²)  : AMY {amy_ghi:7.1f}   TMY {tmy_ghi:7.1f}"
+        f"   Δ {amy_ghi - tmy_ghi:+.1f}"
+    )
 
     amy_dni = annual_kwh(amy, "dni", 9999)
     tmy_dni = annual_kwh(tmy, "dni", 9999)
-    print(f"    DNI annual sum (kWh/m²)  : AMY {amy_dni:7.1f}   TMY {tmy_dni:7.1f}"
-          f"   Δ {amy_dni - tmy_dni:+.1f}")
+    print(
+        f"    DNI annual sum (kWh/m²)  : AMY {amy_dni:7.1f}   TMY {tmy_dni:7.1f}"
+        f"   Δ {amy_dni - tmy_dni:+.1f}"
+    )
 
     def hdd(df, base=18.0):
         t = df["dry_bulb"].replace(9999, np.nan)
@@ -194,10 +205,14 @@ def compare(amy_path: Path, tmy_path: Path) -> None:
     th = hdd(tmy)
     ac = cdd(amy)
     tc = cdd(tmy)
-    print(f"    HDD18 (°C·h)             : AMY {ah:7.0f}   TMY {th:7.0f}"
-          f"   Δ {ah - th:+.0f}")
-    print(f"    CDD22 (°C·h)             : AMY {ac:7.0f}   TMY {tc:7.0f}"
-          f"   Δ {ac - tc:+.0f}")
+    print(
+        f"    HDD18 (°C·h)             : AMY {ah:7.0f}   TMY {th:7.0f}"
+        f"   Δ {ah - th:+.0f}"
+    )
+    print(
+        f"    CDD22 (°C·h)             : AMY {ac:7.0f}   TMY {tc:7.0f}"
+        f"   Δ {ac - tc:+.0f}"
+    )
 
     print()
 

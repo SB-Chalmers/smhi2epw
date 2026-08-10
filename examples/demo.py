@@ -28,7 +28,6 @@ from smhi2epw import constants as C
 from smhi2epw import processing, solar
 from smhi2epw.compiler import EPWConfig, compile_epw
 from smhi2epw.ingestion import (
-    CachedClient,
     find_nearest_station,
     get_station_metadata,
 )
@@ -76,7 +75,7 @@ def _solar_components() -> dict[str, np.ndarray]:
     daylight = cos_z > C.COS_ZENITH_FLOOR
 
     ghi = np.where(daylight, 1100.0 * 0.75 * cos_z, 0.0)
-    beam_h = 0.7 * ghi                       # direct beam on the horizontal
+    beam_h = 0.7 * ghi  # direct beam on the horizontal
     dni = np.where(daylight, beam_h / np.clip(cos_z, 1e-3, None), 0.0)
     return {"ghi": ghi, "dni": dni, "dirh": beam_h}
 
@@ -107,7 +106,9 @@ class DemoClient:
 
     def get_text(self, url: str, suffix: str = "txt") -> str:
         if "/parameter/1/" in url and "station" in url and url.endswith(".csv"):
-            return _metobs_csv("Lufttemperatur", 8.0, self.BAD_TEMP_HOURS, seasonal=10.0)
+            return _metobs_csv(
+                "Lufttemperatur", 8.0, self.BAD_TEMP_HOURS, seasonal=10.0
+            )
         if "/parameter/6/" in url:
             return _metobs_csv("Relativ Luftfuktighet", 75.0)
         if "/parameter/9/" in url:
@@ -128,11 +129,21 @@ class DemoClient:
                 "key": "024640",
                 "position": [
                     # Older, now-retired position (wrong for 2023).
-                    {"from": 0, "to": 1262304000000,
-                     "latitude": 57.70, "longitude": 11.95, "height": 5.0},
+                    {
+                        "from": 0,
+                        "to": 1262304000000,
+                        "latitude": 57.70,
+                        "longitude": 11.95,
+                        "height": 5.0,
+                    },
                     # Position valid during 2023.
-                    {"from": 1262304000000, "to": 4102444800000,
-                     "latitude": LAT, "longitude": LON, "height": 3.04},
+                    {
+                        "from": 1262304000000,
+                        "to": 4102444800000,
+                        "latitude": LAT,
+                        "longitude": LON,
+                        "height": 3.04,
+                    },
                 ],
             }
         if url.endswith("/parameter/1.json") or any(
@@ -140,18 +151,30 @@ class DemoClient:
         ):
             return {
                 "station": [
-                    {"key": str(STATION_ID), "latitude": LAT, "longitude": LON,
-                     "from": 0, "to": 4102444800000},
-                    {"key": "99999", "latitude": LAT + 4.0, "longitude": LON + 4.0,
-                     "from": 0, "to": 4102444800000},
+                    {
+                        "key": str(STATION_ID),
+                        "latitude": LAT,
+                        "longitude": LON,
+                        "from": 0,
+                        "to": 4102444800000,
+                    },
+                    {
+                        "key": "99999",
+                        "latitude": LAT + 4.0,
+                        "longitude": LON + 4.0,
+                        "from": 0,
+                        "to": 4102444800000,
+                    },
                 ]
             }
         if "/parameter/117/" in url:
-            return json.loads(_strang_json("ghi", self.MISSING_SOLAR_DAY))    # GHI
+            return json.loads(_strang_json("ghi", self.MISSING_SOLAR_DAY))  # GHI
         if "/parameter/118/" in url:
-            return json.loads(_strang_json("dni", self.MISSING_SOLAR_DAY))    # DNI
+            return json.loads(_strang_json("dni", self.MISSING_SOLAR_DAY))  # DNI
         if "/parameter/121/" in url:
-            return json.loads(_strang_json("dirh", self.MISSING_SOLAR_DAY))   # beam-horiz
+            return json.loads(
+                _strang_json("dirh", self.MISSING_SOLAR_DAY)
+            )  # beam-horiz
         raise AssertionError(f"unexpected json url: {url}")
 
 
@@ -171,10 +194,12 @@ def banner(title: str) -> None:
 def demo_station_metadata(client) -> None:
     banner("1. Station metadata: title cleaning + year-aware position")
     meta = get_station_metadata(STATION_ID, client, year=YEAR)
-    print(f"  raw title  : 'Lufttemperatur - Goteborg A: Valj tidsutsnitt'")
+    print("  raw title  : 'Lufttemperatur - Goteborg A: Valj tidsutsnitt'")
     print(f"  clean name : {meta.name!r}")
-    print(f"  position   : {meta.latitude:.4f}, {meta.longitude:.4f} "
-          f"(elevation {meta.elevation:.2f} m)")
+    print(
+        f"  position   : {meta.latitude:.4f}, {meta.longitude:.4f} "
+        f"(elevation {meta.elevation:.2f} m)"
+    )
     print("  -> the 2023-valid position was chosen over the retired one.")
 
 
@@ -203,8 +228,9 @@ def demo_quality_and_solar_cleaning(client) -> None:
     sentinel_count = int((frame[["ghi", "dni", "dirh"]] <= -990).sum().sum())
     raw_min = float(np.nanmin(frame[["ghi", "dni", "dirh"]].to_numpy()))
     print(f"  STRÅNG -999 sentinels surviving ingestion : {sentinel_count}")
-    print(f"  minimum solar value after cleaning        : {raw_min:.1f} "
-          f"(no -999 leakage)")
+    print(
+        f"  minimum solar value after cleaning        : {raw_min:.1f} (no -999 leakage)"
+    )
 
 
 def demo_processing(client) -> None:
@@ -215,22 +241,33 @@ def demo_processing(client) -> None:
     frame = ingest(meta, YEAR, client, utc_offset=1.0)
     report = processing.process(frame, meta.latitude, meta.longitude)
 
-    print("  derived columns added:",
-          ", ".join(c for c in ("dew_point", "horizontal_ir", "dhi", "etrh",
-                                "etrn", "sky_cover") if c in frame.columns))
+    print(
+        "  derived columns added:",
+        ", ".join(
+            c
+            for c in ("dew_point", "horizontal_ir", "dhi", "etrh", "etrn", "sky_cover")
+            if c in frame.columns
+        ),
+    )
     print(f"  cloud data available        : {report.cloud_available}")
-    print(f"  total interpolated fraction : "
-          f"{report.total_interpolated_fraction * 100:.3f}%")
-    print(f"  clamped sub-horizon DNI hrs : {report.clamped_dni_hours}")
-    print(f"  max energy-balance residual : "
-          f"{report.energy_balance_max_residual:.1f} W/m^2 (should be small)")
+    print(
+        f"  total interpolated fraction : "
+        f"{report.total_interpolated_fraction * 100:.3f}%"
+    )
+    print(f"  physically clamped DNI hours: {report.clamped_dni_hours}")
+    print(
+        f"  max energy-balance residual : "
+        f"{report.energy_balance_max_residual:.1f} W/m^2 (should be small)"
+    )
 
     # Show that the fully-missing solar day was reconstructed, not left blank.
     day = DemoClient.MISSING_SOLAR_DAY
     mask = frame.index.dayofyear == day
     rebuilt_noon = float(frame.loc[mask, "ghi"].max())
-    print(f"  GHI peak on the once-missing day {day}: {rebuilt_noon:.0f} W/m^2 "
-          f"(rebuilt diurnally)")
+    print(
+        f"  GHI peak on the once-missing day {day}: {rebuilt_noon:.0f} W/m^2 "
+        f"(rebuilt diurnally)"
+    )
 
 
 def demo_cloud_ir() -> None:
@@ -238,11 +275,12 @@ def demo_cloud_ir() -> None:
     dry = pd.Series([10.0])
     dew = pd.Series([6.0])
     clear = processing.horizontal_ir(dry, dew).iloc[0]
-    overcast = processing.horizontal_ir(dry, dew, opaque_fraction=pd.Series([1.0])).iloc[0]
+    overcast = processing.horizontal_ir(
+        dry, dew, cloud_cover_tenths=pd.Series([10.0])
+    ).iloc[0]
     print(f"  clear sky   : {clear:6.1f} W/m^2")
     print(f"  overcast    : {overcast:6.1f} W/m^2")
-    print(f"  cloud uplift: {overcast - clear:+.1f} W/m^2 "
-          f"(Berdahl & Martin cloud term)")
+    print(f"  cloud uplift: {overcast - clear:+.1f} W/m^2 (EnergyPlus cloud term)")
 
 
 def demo_extraterrestrial() -> None:
@@ -276,8 +314,10 @@ def demo_compile() -> Path:
     print(f"  file lines          : {len(lines)} (8 header + data)")
     print(f"  header[0]           : {lines[0][:60]}...")
     midday = lines[8 + 24 * 120 + 12].split(",")  # ~ day 121, hour 13
-    print(f"  sample row fields   : dry_bulb={midday[6]}  dew={midday[7]}  "
-          f"etrn={midday[11]}  GHI={midday[13]}  sky_cover={midday[22]}")
+    print(
+        f"  sample row fields   : dry_bulb={midday[6]}  dew={midday[7]}  "
+        f"etrn={midday[11]}  GHI={midday[13]}  sky_cover={midday[22]}"
+    )
     print(f"  output file         : {out}")
     return out
 
@@ -294,21 +334,23 @@ def demo_required_vs_optional() -> None:
         },
         index=idx,
     )
-    # A 20-hour gap in an OPTIONAL column is tolerated.
-    frame.iloc[40:60, frame.columns.get_loc("cloud_cover")] = np.nan
+    # A 49-hour gap in an OPTIONAL column remains missing and is tolerated.
+    frame.iloc[40:89, frame.columns.get_loc("cloud_cover")] = np.nan
     report = processing.impute(frame, ["dry_bulb"], optional=["cloud_cover"])
-    print(f"  optional 20-h cloud gap tolerated; "
-          f"cloud interp fraction = "
-          f"{report.interpolated_fraction['cloud_cover'] * 100:.2f}%")
+    print(
+        f"  optional 49-h cloud gap tolerated; "
+        f"cloud interp fraction = "
+        f"{report.interpolated_fraction['cloud_cover'] * 100:.2f}%"
+    )
 
-    # The same gap in a REQUIRED column aborts.
+    # The same gap in a REQUIRED column aborts because it exceeds 48 hours.
     frame2 = pd.DataFrame({"dry_bulb": np.arange(len(idx), dtype=float)}, index=idx)
-    frame2.iloc[40:60, 0] = np.nan
+    frame2.iloc[40:89, 0] = np.nan
     try:
         processing.impute(frame2, ["dry_bulb"])
         print("  required gap: NOT aborted (unexpected)")
     except DataGapError as exc:
-        print(f"  required 20-h gap correctly rejected: {str(exc)[:55]}...")
+        print(f"  required 49-h gap correctly rejected: {str(exc)[:55]}...")
 
 
 def main() -> int:
