@@ -105,6 +105,18 @@ def compile_epw(config: EPWConfig, client: Optional[CachedClient] = None) -> Com
     else:
         request_lat, request_lon = meta.latitude, meta.longitude
     distance = meta.distance_km(request_lat, request_lon)
+
+    # STRÅNG is optimised for Sweden; accuracy degrades outside it (Lundström 2012 §3.1.1).
+    _SE_LAT = (55.0, 69.5)
+    _SE_LON = (10.0, 24.5)
+    if not (_SE_LAT[0] <= request_lat <= _SE_LAT[1] and _SE_LON[0] <= request_lon <= _SE_LON[1]):
+        log.warning(
+            "solar query point (%.4f, %.4f) is outside Sweden; STRÅNG accuracy "
+            "may be significantly reduced (hourly GHI RMSD up to 30-40%% for "
+            "coastal/Atlantic/high-altitude/Baltic locations)",
+            request_lat, request_lon,
+        )
+
     log.info(
         "station %s (%s) @ %.4f,%.4f; solar query point %.4f,%.4f (%.2f km)",
         meta.station_id,
