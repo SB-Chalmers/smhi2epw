@@ -34,11 +34,13 @@ class ProcessingReport:
 # --------------------------------------------------------------------------- #
 def _max_gap_length(mask: np.ndarray) -> int:
     """Length (in samples) of the longest run of ``True`` values."""
-    longest = run = 0
-    for flag in mask:
-        run = run + 1 if flag else 0
-        longest = max(longest, run)
-    return longest
+    if not mask.any():
+        return 0
+    padded = np.concatenate(([False], mask, [False]))
+    edges = np.diff(padded.view(np.int8))
+    starts = np.where(edges == 1)[0]
+    ends = np.where(edges == -1)[0]
+    return int((ends - starts).max())
 
 
 def impute(
