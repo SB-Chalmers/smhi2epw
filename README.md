@@ -70,6 +70,7 @@ print("max solar energy-balance residual:",
       result.report.energy_balance_max_residual, "W/m^2")
 ```
 
+
 ## Pipeline
 
 | Layer | Responsibility |
@@ -99,6 +100,18 @@ print("max solar energy-balance residual:",
 - STRÅNG parameter semantics are resolved against the live `strang1g` v1 API:
   `117` = global horizontal, `118` = direct *normal*, `121` = direct beam on
   the horizontal plane; diffuse horizontal is derived as `117 − 121`.
+  Params 118 and 121 are only available from April 2017; for earlier years
+  DNI and DHI are estimated via Erbs (1982) decomposition on GHI only.
+- STRÅNG values are instantaneous irradiance at the full hour. The pipeline
+  converts them to EPW interval-averaged irradiance (preceding-hour mean) by
+  averaging adjacent samples, reducing hourly RMSD by ~5 pp (Lundström 2012).
+- `result.report.solar_source` reports which solar path was used:
+  `"strang"` (post-2017, STRÅNG all params),
+  `"measured+strang_beam"` (post-2017 with Sol pyranometer station),
+  `"strang_ghi+erbs"` (pre-2017, Erbs on STRÅNG GHI),
+  `"measured+erbs"` (pre-2017 with Sol pyranometer station).
+- A warning is logged when the solar query point is outside Sweden (~55–69.5°N,
+  10–24.5°E), where STRÅNG accuracy degrades (RMSD up to 30–40% for GHI).
 
 ## Development
 
