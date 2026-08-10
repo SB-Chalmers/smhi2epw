@@ -1,4 +1,12 @@
-"""High-level compiler orchestrating ingestion, processing and export."""
+"""Orchestrate station discovery, ingestion, processing, and EPW export.
+
+Most users interact with :func:`compile_epw` and :class:`EPWConfig` rather
+than calling the lower-level modules directly.  The compiler deliberately
+validates all local configuration before making a network request, resolves
+the meteorological and optional radiation stations, asks :mod:`processing` to
+derive the weather fields, and delegates the final atomic write to
+:mod:`export`.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +33,64 @@ log = logging.getLogger("smhi2epw")
 
 @dataclass
 class EPWConfig:
-    """Configuration for an EPW compilation run."""
+    """Describe one Actual Meteorological Year compilation.
+
+    Attributes
+    ----------
+    year
+        Calendar year to compile. STRÅNG coverage begins in 1999.
+    output_path
+        Destination EPW path. Its parent directory must already exist.
+    station_id
+        Explicit SMHI MetObs station identifier. If omitted, ``latitude`` and
+        ``longitude`` are used to locate the nearest station that covers the
+        full year for every required parameter.
+    city, region, country
+        Human-readable EPW location fields. They must not contain commas or
+        newlines; ``country`` is normally an ISO-style code such as ``"SWE"``.
+    utc_offset
+        Whole-hour offset from UTC to Local Standard Time. Daylight saving is
+        intentionally ignored. Nordic locations normally use ``1.0``.
+    cache_dir
+        Directory for raw API responses, or ``None`` to disable caching.
+    max_workers
+        Positive number of concurrent parameter requests.
+    latitude, longitude
+        Optional requested coordinates in decimal degrees. When supplied,
+        they control the STRÅNG query, solar geometry, and EPW location even
+        if an explicit meteorological station is used.
+    refresh
+        Ignore otherwise valid cached responses when ``True``.
+    cache_ttl
+        Maximum cache age in seconds, or ``None`` for no age limit.
+    radiation_station_id
+        Explicit SMHI Sol station for measured GHI. Unlike automatic
+        selection, an unusable explicit station causes compilation to fail.
+    radiation_station_auto
+        Discover a nearby full-year Sol station when no explicit ID is given.
+    radiation_station_max_distance_km
+        Maximum automatic Sol-station distance in kilometres. ``None``
+        disables the radius; the default is 50 km.
+
+    Examples
+    --------
+    Compile by station ID while evaluating solar radiation at the requested
+    city-centre coordinates::
+
+        config = EPWConfig(
+            year=2023,
+            output_path="gothenburg_2023.epw",
+            station_id=71420,
+            city="Gothenburg",
+            latitude=57.7156,
+            longitude=11.9924,
+        )
+
+    Notes
+    -----
+    Configuration is a plain dataclass. Validation occurs in
+    :func:`compile_epw`, before the first network request.
+    """
 
     year: int
     output_path: str
@@ -51,7 +116,34 @@ class EPWConfig:
 
 @dataclass
 class CompileResult:
-    """Summary returned by :func:`compile_epw`."""
+    """Summarize a completed compilation and its quality diagnostics.
+
+    Attributes
+    ----------
+    output_path
+        Path of the validated EPW file.
+    rows
+        Number of hourly rows written: 8760 or 8784.
+    station
+        Meteorological station used for observed parameters and elevation.
+    interpolated_fraction
+        Mean fraction of samples filled across processed input columns.
+    coordinate_distance_km
+        Distance from the meteorological station to the requested solar point.
+    report
+        Detailed filling, solar-source, cloud, and energy-closure diagnostics.
+    radiation_station_id
+        Selected Sol station identifier, if measured GHI was requested.
+    radiation_station_distance_km
+        Distance from that Sol station to the requested point, in kilometres.
+
+    Examples
+    --------
+    The result is intended to be inspected rather than ignored::
+
+        result = compile_epw(config)  # doctest: +SKIP
+        print(result.rows, result.report.solar_source)  # doctest: +SKIP
+    """
 
     output_path: str
     rows: int
@@ -64,7 +156,24 @@ class CompileResult:
 
 
 def _validate_config(config: EPWConfig) -> None:
-    """Reject invalid or unsupported configuration before network access."""
+    """Reject invalid or unsupported configuration before network access.
+
+    Parameters
+    ----------
+    config
+        Candidate compiler configuration.
+
+    Raises
+    ------
+    IngestionError
+        If identifiers, coordinates, worker/cache settings, year, or Local
+        Standard Time offset cannot be represented safely by the pipeline.
+
+    Notes
+    -----
+    This function runs before constructing :class:`CachedClient`; configuration
+    mistakes therefore never trigger an SMHI request.
+    """
     if not isinstance(config.year, int) or isinstance(config.year, bool):
         raise IngestionError("year must be an integer")
     if config.year < C.STRANG_MIN_YEAR:
@@ -112,6 +221,12 @@ def _validate_config(config: EPWConfig) -> None:
 
 
 def _configure_logging() -> None:
+    """Install a compact default package logger when the caller has not.
+
+    Applications that configure the ``smhi2epw`` logger themselves keep full
+    control: the helper only adds a handler when that logger has none. Calling
+    it repeatedly is consequently idempotent.
+    """
     if not logging.getLogger("smhi2epw").handlers:
         handler = logging.StreamHandler()
         handler.setFormatter(logging.Formatter("[smhi2epw] %(message)s"))
@@ -122,10 +237,53 @@ def _configure_logging() -> None:
 def compile_epw(
     config: EPWConfig, client: Optional[CachedClient] = None
 ) -> CompileResult:
-    """Fetch, process and write an EPW file as described by ``config``.
+    """Compile one year of SMHI weather into a validated EPW file.
 
-    Returns a :class:`CompileResult` with validation diagnostics. A summary is
-    also emitted to the ``smhi2epw`` logger.
+    Parameters
+    ----------
+    config
+        Location, year, cache, station-selection, and output settings.
+    client
+        Optional HTTP/cache client. Supplying a compatible test double makes
+        the complete pipeline deterministic and offline.
+
+    Returns
+    -------
+    CompileResult
+        Output location, station choices, interpolation metrics, and solar
+        quality diagnostics.
+
+    Raises
+    ------
+    IngestionError
+        If configuration, station coverage, HTTP access, or source payloads
+        are invalid.
+    DataGapError
+        If a required observation gap cannot be filled under the 48-hour rule.
+    ValidationError
+        If the processed year cannot be represented as a strict EPW file.
+
+    Notes
+    -----
+    Requested coordinates and station coordinates have different roles. The
+    requested point drives STRÅNG, solar geometry, and the EPW header; the
+    selected MetObs station supplies observed weather and elevation.
+
+    The output is replaced atomically only after all 35 fields and all
+    8760/8784 rows pass validation.
+
+    Examples
+    --------
+    >>> from smhi2epw import EPWConfig, compile_epw
+    >>> config = EPWConfig(2023, "gothenburg.epw", station_id=71420)
+    >>> result = compile_epw(config)  # doctest: +SKIP
+    >>> result.rows  # doctest: +SKIP
+    8760
+
+    See Also
+    --------
+    smhi2epw.read_epw
+        Load the generated file for analysis.
     """
     _configure_logging()
     _validate_config(config)

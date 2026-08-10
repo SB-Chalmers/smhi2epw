@@ -1,4 +1,11 @@
-"""Processing & modeling layer: imputation, conversions and derived physics."""
+"""Fill source gaps and derive the physical quantities required by EPW.
+
+Ingestion intentionally preserves missing observations. This module decides
+which gaps can be reconstructed transparently, converts source units, derives
+dew point and longwave radiation, and reconciles four possible solar-data
+paths. All transformations operate on a continuous hourly UTC frame; Local
+Standard Time conversion belongs to :mod:`smhi2epw.export`.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +25,31 @@ log = logging.getLogger("smhi2epw")
 
 @dataclass
 class ProcessingReport:
-    """Diagnostics produced by the processing stage."""
+    """Record data filling and solar-quality diagnostics.
+
+    Attributes
+    ----------
+    interpolated_fraction
+        Original missing fraction for each processed source column.
+    total_interpolated_fraction
+        Mean of the per-column missing fractions.
+    clamped_dni_hours
+        Hours whose positive DNI was reduced by horizon or extraterrestrial
+        limits. Routine nighttime zeros are not counted.
+    energy_balance_max_residual
+        Maximum absolute residual of ``GHI - (DHI + DNI*cos(zenith))`` in W/m².
+    missing_columns
+        Optional source columns that were absent or entirely missing.
+    cloud_available
+        Whether observed SMHI total cloud cover was available.
+    solar_source
+        One of ``"strang"``, ``"measured+strang_partition"``,
+        ``"strang_ghi+erbs"``, or ``"measured+erbs"``.
+    linear_filled_hours, diurnal_filled_hours
+        Filled-hour counts by column and method.
+    max_gap_hours
+        Longest originally detected gap by column.
+    """
 
     interpolated_fraction: Dict[str, float] = field(default_factory=dict)
     total_interpolated_fraction: float = 0.0
@@ -36,7 +67,13 @@ class ProcessingReport:
 # Imputation
 # --------------------------------------------------------------------------- #
 def _max_gap_length(mask: np.ndarray) -> int:
-    """Length (in samples) of the longest run of ``True`` values."""
+    """Return the longest contiguous run of true values.
+
+    Examples
+    --------
+    >>> _max_gap_length(np.array([False, True, True, False, True]))
+    2
+    """
     if not mask.any():
         return 0
     padded = np.concatenate(([False], mask, [False]))
@@ -47,7 +84,13 @@ def _max_gap_length(mask: np.ndarray) -> int:
 
 
 def _gap_runs(mask: np.ndarray) -> List[tuple[int, int]]:
-    """Return ``(start, end)`` pairs for contiguous true runs."""
+    """Return half-open index pairs for all contiguous true runs.
+
+    Examples
+    --------
+    >>> _gap_runs(np.array([True, True, False, True]))
+    [(0, 2), (3, 4)]
+    """
     if not mask.any():
         return []
     padded = np.concatenate(([False], mask, [False]))
@@ -58,7 +101,18 @@ def _gap_runs(mask: np.ndarray) -> List[tuple[int, int]]:
 
 
 def _linear_estimate(values: np.ndarray, start: int, end: int) -> Optional[np.ndarray]:
-    """Linearly bridge one gap when at least one endpoint is available."""
+    """Estimate a half-open gap from its immediate endpoint observations.
+
+    Two endpoints produce a linear bridge; a single boundary endpoint produces
+    a constant one-sided estimate. ``None`` is returned when neither endpoint
+    exists, allowing the caller to raise or leave an optional gap missing.
+
+    Examples
+    --------
+    >>> values = np.array([0.0, np.nan, np.nan, 3.0])
+    >>> _linear_estimate(values, 1, 3)
+    array([1., 2.])
+    """
     left = values[start - 1] if start > 0 else np.nan
     right = values[end] if end < len(values) else np.nan
     size = end - start
@@ -76,6 +130,24 @@ def _profile_estimate(
 ) -> Optional[np.ndarray]:
     """Estimate a gap from the preceding or following valid 24-hour profile.
 
+    Parameters
+    ----------
+    values
+        Numeric hourly values containing the gap.
+    start, end
+        Half-open gap bounds.
+    direction
+        ``-1`` selects the preceding valid day; ``+1`` selects the following
+        valid day.
+
+    Returns
+    -------
+    numpy.ndarray or None
+        Endpoint-adjusted repeated profile, or ``None`` when a complete
+        reference day or gap endpoint is unavailable.
+
+    Notes
+    -----
     The daily profile is repeated through the gap and offset linearly so it
     meets the observations surrounding the gap, following Lundström (2012)
     section 4.2.2. ``direction`` is -1 for the preceding profile and +1 for
@@ -125,7 +197,37 @@ def _fill_scalar_series(
     short_gap_hours: int,
     max_gap_hours: int,
 ) -> tuple[pd.Series, int, int, int]:
-    """Fill one scalar series and return values plus fill diagnostics."""
+    """Fill one scalar series and calculate method-specific diagnostics.
+
+    Parameters
+    ----------
+    series
+        Hourly scalar values.
+    required
+        Raise when a gap cannot be reconstructed; otherwise retain ``NaN``.
+    solar
+        Use daily profiles for every gap and clamp results nonnegative.
+    short_gap_hours
+        Maximum size assigned to linear interpolation for non-solar data.
+    max_gap_hours
+        Absolute fill ceiling.
+
+    Returns
+    -------
+    tuple
+        Filled series, linearly filled hours, diurnally filled hours, and
+        longest original gap.
+
+    Raises
+    ------
+    DataGapError
+        If a required gap exceeds the ceiling or lacks a valid estimate.
+
+    Notes
+    -----
+    For longer gaps, valid previous and next profiles are blended 50/50. A
+    single valid side is accepted, which is important near year boundaries.
+    """
     values = series.to_numpy(dtype=float, copy=True)
     runs = _gap_runs(np.isnan(values))
     longest = max((end - start for start, end in runs), default=0)
@@ -183,7 +285,28 @@ def _fill_scalar_series(
 def _fill_wind_direction(
     series: pd.Series, *, required: bool, short_gap_hours: int, max_gap_hours: int
 ) -> tuple[pd.Series, int, int, int]:
-    """Fill angular wind direction through unit-vector components."""
+    """Fill angular wind direction through unit-vector components.
+
+    Direct interpolation would treat 359° and 1° as roughly 180°. Converting
+    directions to sine/cosine components preserves circular continuity; the
+    filled vector is converted back to degrees in ``[0, 360)``.
+
+    Returns
+    -------
+    tuple
+        Filled direction and the same diagnostics as
+        :func:`_fill_scalar_series`.
+
+    Examples
+    --------
+    >>> index = pd.date_range("2023-01-01", periods=3, freq="h")
+    >>> values = pd.Series([359.0, np.nan, 1.0], index=index)
+    >>> filled, *_ = _fill_wind_direction(
+    ...     values, required=True, short_gap_hours=3, max_gap_hours=48
+    ... )
+    >>> round(float(filled.iloc[1])) in {0, 360}
+    True
+    """
     radians = np.radians(series.to_numpy(dtype=float))
     missing = series.isna().to_numpy()
     name = str(series.name) if series.name is not None else "wind_direction"
@@ -226,7 +349,39 @@ def impute(
     max_gap_hours: int = C.MAX_GAP_HOURS,
     report: Optional[ProcessingReport] = None,
 ) -> ProcessingReport:
-    """Fill meteorological gaps using short linear and daily-profile methods."""
+    """Fill meteorological gaps and update diagnostics in-place.
+
+    Parameters
+    ----------
+    frame
+        Continuous hourly data frame modified in-place.
+    required
+        Columns whose unfillable gaps abort processing.
+    optional
+        Columns that may remain partially or entirely missing.
+    short_gap_hours
+        Linear interpolation ceiling, three hours by default.
+    max_gap_hours
+        Daily-profile fill ceiling, 48 hours by default.
+    report
+        Existing report to extend, or ``None`` to create one.
+
+    Returns
+    -------
+    ProcessingReport
+        Per-column missing fractions, methods, and maximum gaps.
+
+    Raises
+    ------
+    DataGapError
+        If a required column is absent or a required gap is unfillable.
+
+    Notes
+    -----
+    Required 1--3 hour gaps are linear. Required 4--48 hour gaps use the
+    endpoint-adjusted daily-profile method. Optional gaps beyond the same
+    ceiling remain missing for honest EPW sentinel output.
+    """
     optional = optional or []
     report = report or ProcessingReport()
     total_missing = 0
@@ -281,7 +436,12 @@ def impute_solar(
     columns: List[str],
     report: Optional[ProcessingReport] = None,
 ) -> ProcessingReport:
-    """Fill required solar gaps with the bounded daily-profile method."""
+    """Fill solar gaps without bridging night and day linearly.
+
+    Solar gaps up to 48 hours always use same-hour daily profiles, even when
+    only one hour long. Values are clipped nonnegative after filling. Entirely
+    missing required solar columns raise :class:`DataGapError`.
+    """
     report = report or ProcessingReport()
     for column in columns:
         if column not in frame.columns:
@@ -312,7 +472,18 @@ def impute_solar(
 # Unit conversions
 # --------------------------------------------------------------------------- #
 def convert_units(frame: pd.DataFrame) -> None:
-    """Apply EPW-facing unit conversions in-place (hPa -> Pa)."""
+    """Convert source units to EPW units in-place.
+
+    Currently MetObs station pressure is converted from hPa to Pa. Missing
+    columns are ignored so the helper remains safe for focused examples.
+
+    Examples
+    --------
+    >>> frame = pd.DataFrame({"pressure": [1013.25]})
+    >>> convert_units(frame)
+    >>> float(frame.loc[0, "pressure"])
+    101325.0
+    """
     if "pressure" in frame.columns:
         frame["pressure"] = frame["pressure"] * 100.0  # hPa -> Pa
 
@@ -321,7 +492,31 @@ def convert_units(frame: pd.DataFrame) -> None:
 # Dew point (Magnus formula)
 # --------------------------------------------------------------------------- #
 def dew_point(dry_bulb: pd.Series, relative_humidity: pd.Series) -> pd.Series:
-    """Dew-point temperature (degC) from dry-bulb (degC) and RH (%)."""
+    """Calculate dew-point temperature with the Magnus approximation.
+
+    Parameters
+    ----------
+    dry_bulb
+        Air temperature in degrees Celsius.
+    relative_humidity
+        Relative humidity in percent. Values are clipped to 1--100% to avoid
+        logarithm singularities and supersaturated output.
+
+    Returns
+    -------
+    pandas.Series
+        Dew-point temperature in degrees Celsius, aligned to the inputs.
+
+    Notes
+    -----
+    The coefficients ``b=17.625`` and ``c=243.04 °C`` provide a common Magnus
+    approximation over normal near-surface weather conditions.
+
+    Examples
+    --------
+    >>> round(float(dew_point(pd.Series([20.0]), pd.Series([50.0])).iloc[0]), 1)
+    9.3
+    """
     b, c = 17.625, 243.04
     rh = relative_humidity.clip(lower=1.0, upper=100.0) / 100.0
     alpha = np.log(rh) + (b * dry_bulb) / (c + dry_bulb)
@@ -338,9 +533,31 @@ def horizontal_ir(
 ) -> pd.Series:
     """EnergyPlus-compatible down-welling longwave sky radiation (W/m²).
 
-    SMHI parameter 16 is total rather than opaque cloud cover. When supplied,
+    Parameters
+    ----------
+    dry_bulb_c, dew_point_c
+        Dry-bulb and dew-point temperature in degrees Celsius.
+    cloud_cover_tenths
+        Optional total sky cover on the EPW 0--10 scale.
+
+    Returns
+    -------
+    pandas.Series
+        Horizontal infrared radiation intensity in W/m².
+
+    Notes
+    -----
+    EnergyPlus estimates clear-sky emissivity as
+    ``0.787 + 0.764*ln(Tdew/273)`` and applies a cubic cloud multiplier. SMHI
+    parameter 16 is total rather than opaque cloud cover. When supplied,
     it is used only as an explicit proxy in the cloud-amplification term; the
     EPW opaque-cover field remains missing.
+
+    Examples
+    --------
+    >>> value = horizontal_ir(pd.Series([20.0]), pd.Series([10.0])).iloc[0]
+    >>> round(float(value), 1)
+    341.2
     """
     dew_k = (dew_point_c + C.KELVIN).clip(lower=1.0)
     eps_sky = 0.787 + 0.764 * np.log(dew_k / 273.0)
@@ -361,6 +578,11 @@ def sky_cover_tenths(cloud_octas: pd.Series) -> pd.Series:
 
     Values are rounded to the nearest tenth and clamped to [0, 10]. NaNs are
     preserved so the exporter can emit the EPW missing token.
+
+    Examples
+    --------
+    >>> sky_cover_tenths(pd.Series([0.0, 4.0, 8.0])).tolist()
+    [0.0, 5.0, 10.0]
     """
     tenths = (cloud_octas / 8.0 * 10.0).round()
     return tenths.clip(lower=0.0, upper=10.0)
@@ -377,7 +599,25 @@ def apply_solar(
 ) -> None:
     """Finalize DNI, DHI and extraterrestrial EPW fields in-place.
 
-    **Solar path selection (in priority order):**
+    Parameters
+    ----------
+    frame
+        Hourly UTC frame modified in-place. It must contain GHI and may contain
+        measured GHI, STRÅNG DNI, and direct-horizontal irradiance.
+    lat, lon
+        Requested solar coordinates in decimal degrees.
+    report
+        Optional diagnostics object updated with source, clamping, and closure.
+
+    Notes
+    -----
+    Solar geometry is evaluated 30 minutes before each timestamp because EPW
+    radiation describes the preceding-hour interval. At solar elevations below
+    roughly 5° (``cos(zenith) <= 0.087``), DNI is zero and GHI is assigned to
+    diffuse radiation. DNI is capped by extraterrestrial direct-normal
+    radiation and DHI is recomputed so the energy balance closes exactly.
+
+    Solar path selection, in priority order:
 
     1. **Measured GHI + STRÅNG partition** — pyranometer GHI scaled by the
        STRÅNG direct-horizontal fraction; DNI/DHI are closed to measured GHI.
@@ -385,6 +625,12 @@ def apply_solar(
        when direct-beam params are unavailable).
     3. **STRÅNG all-params** — GHI/DNI/dirh directly from STRÅNG (2018+).
     4. **STRÅNG GHI + Erbs** — only param 117 available (through 2017, no Sol station).
+
+    Raises
+    ------
+    KeyError
+        If no usable GHI column exists; callers normally prevent this through
+        :func:`impute_solar`.
     """
     # EPW radiation represents the interval preceding the timestamp. STRÅNG is
     # converted to that interval during ingestion, so geometry belongs at the
@@ -507,9 +753,35 @@ def process(
 ) -> ProcessingReport:
     """Run the full processing pipeline in-place and return diagnostics.
 
+    Parameters
+    ----------
+    frame
+        Continuous hourly UTC ingestion frame, modified in-place.
+    lat, lon
+        Requested solar point in decimal degrees.
+    measured_required
+        If ``True``, unfillable measured GHI raises instead of falling back to
+        STRÅNG.
+
+    Returns
+    -------
+    ProcessingReport
+        Complete gap, cloud, source, clamp, and closure diagnostics.
+
+    Raises
+    ------
+    DataGapError
+        If required meteorological/solar data cannot satisfy the fill policy.
+
+    Notes
+    -----
     Adds ``dew_point``, ``horizontal_ir``, ``dni``, ``dhi``, ``etrh``/``etrn``
     and (when cloud data is present) ``sky_cover`` columns, and converts units.
     The input ``frame`` must be indexed by a continuous hourly UTC grid.
+
+    Measured GHI from an automatically selected station is opportunistic: an
+    unfillable series is discarded with a warning and STRÅNG remains usable.
+    Explicit measured GHI is a user requirement and therefore fails clearly.
     """
     required = list(C.METOBS_REQUIRED_PARAMETERS.values())
     optional = list(C.METOBS_OPTIONAL_PARAMETERS.values())

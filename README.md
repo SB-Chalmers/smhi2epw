@@ -21,11 +21,23 @@ EPW file.
 ## Install
 
 ```bash
-pip install -e .
+python -m pip install smhi2epw
 ```
 
 Dependencies are limited to `numpy`, `pandas`, and `requests`.
 Python 3.11 or newer is required.
+
+For the executable, student-friendly notebooks:
+
+```bash
+python -m pip install "smhi2epw[tutorials]"
+jupyter lab
+```
+
+Contributors working from a checkout can use
+`python -m pip install -e ".[dev,docs,tutorials]"`. See the
+[installation guide](docs/installation.rst) for virtual-environment and kernel
+setup on Windows, macOS, and Linux.
 
 ## Usage
 
@@ -84,6 +96,60 @@ print(
 print("diurnally filled hours:", result.report.diurnal_filled_hours)
 ```
 
+### Reading and analysing EPW files
+
+```python
+from smhi2epw import read_epw
+
+weather = read_epw("gothenburg_2023.epw")
+print(weather[["dry_bulb", "ghi", "wind_speed"]].describe())
+print(weather.attrs["location"])
+```
+
+`read_epw()` names all 35 fields, recognizes field-specific missing tokens, and
+accepts both chronological AMYs and composite-year TMYs. The original eight
+headers remain available in `weather.attrs["header"]`.
+
+## Tutorials and documentation
+
+The [numbered notebook curriculum](examples/README.md) starts with one minimal
+weather file, then covers EPW inspection, location/year comparisons, heat-wave
+detection, AMY-versus-TMY analysis, gap filling, solar components, and batch
+generation. Network and external-data requirements are stated at the top of
+every notebook.
+
+### Build and view the documentation locally
+
+From a source checkout, install the documentation and tutorial dependencies
+into your active virtual environment:
+
+```bash
+python -m pip install -e ".[docs,tutorials]"
+```
+
+Build the complete Sphinx site, including the API reference and rendered
+notebooks, with warnings treated as errors:
+
+```bash
+python -m sphinx -W --keep-going -b html docs docs/_build/html
+```
+
+The generated home page is `docs/_build/html/index.html`. For the most reliable
+navigation and search behavior, serve the directory over a local HTTP server:
+
+```bash
+python -m http.server 8000 --directory docs/_build/html
+```
+
+Then open [http://localhost:8000](http://localhost:8000) in a browser. Stop the
+server with <kbd>Ctrl</kbd>+<kbd>C</kbd>. You can also open the HTML file directly
+with `open docs/_build/html/index.html` on macOS, `xdg-open
+docs/_build/html/index.html` on Linux, or `start docs\_build\html\index.html` in
+Windows Command Prompt.
+
+Notebook outputs are not executed during the documentation build, so building
+the site does not contact SMHI or OneBuilding. The generated `docs/_build/`
+tree is local-only and ignored by Git.
 
 ## Pipeline
 
@@ -145,6 +211,8 @@ ruff check src tests examples
 ruff format --check src tests examples
 mypy src/smhi2epw
 python -m build && twine check dist/*
+pytest --doctest-modules src/smhi2epw
+python -m sphinx -W --keep-going -b html docs docs/_build/html
 ```
 
 The default test suite runs fully offline using a synthetic SMHI client;

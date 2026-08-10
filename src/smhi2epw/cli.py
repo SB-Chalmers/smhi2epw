@@ -1,4 +1,10 @@
-"""Command-line interface for smhi2epw."""
+"""Expose the high-level compiler as the ``smhi2epw`` shell command.
+
+The CLI is intentionally a thin adapter: :func:`build_parser` owns argument
+spelling and help text, while :func:`main` translates parsed values into an
+:class:`~smhi2epw.compiler.EPWConfig`.  Scientific work remains in the package
+modules, so CLI and Python users receive identical results.
+"""
 
 from __future__ import annotations
 
@@ -10,6 +16,21 @@ from .errors import Smhi2EpwError
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Construct the command-line argument parser.
+
+    Returns
+    -------
+    argparse.ArgumentParser
+        Parser for station selection, target coordinates, caching, radiation
+        selection, and Local Standard Time settings.
+
+    Examples
+    --------
+    >>> parser = build_parser()
+    >>> args = parser.parse_args(["2023", "out.epw", "--station", "71420"])
+    >>> (args.year, args.station)
+    (2023, 71420)
+    """
     parser = argparse.ArgumentParser(
         prog="smhi2epw",
         description="Compile SMHI MetObs + STRÅNG data into an EnergyPlus .epw file.",
@@ -84,6 +105,30 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv=None) -> int:
+    """Run the command-line compiler and return a process exit code.
+
+    Parameters
+    ----------
+    argv
+        Optional argument sequence without the program name. ``None`` reads
+        :data:`sys.argv`, matching normal console-script behavior.
+
+    Returns
+    -------
+    int
+        ``0`` after a successful write or ``1`` for a handled package error.
+        Invalid argparse syntax raises :class:`SystemExit` with code ``2``.
+
+    Examples
+    --------
+    Programmatic callers can test help without starting a subprocess::
+
+        main(["--help"])  # raises SystemExit(0)
+
+    A real compilation contacts SMHI and writes the requested path::
+
+        main(["2023", "out.epw", "--station", "71420"])  # doctest: +SKIP
+    """
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.station is None and (args.latitude is None or args.longitude is None):

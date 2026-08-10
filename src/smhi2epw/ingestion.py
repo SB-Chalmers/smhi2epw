@@ -1,7 +1,11 @@
-"""Hybrid SMHI ingestion layer (metobs + STRÅNG) with local caching.
+"""Retrieve and align observed MetObs and modelled STRÅNG weather data.
 
-Provides a multi-threaded query manager that fetches station observations and
-grid-modeled solar irradiance, returning UTC-indexed hourly ``pandas`` series.
+SMHI exposes station observations and gridded solar radiation through separate
+APIs with different payloads and missing-value conventions. This module hides
+those transport details: it discovers full-year stations, filters observation
+quality flags, converts ``-999`` STRÅNG sentinels to missing values, and aligns
+all sources on one continuous hourly UTC grid. Raw responses can be cached
+atomically to make repeated educational and production runs kind to the APIs.
 """
 
 from __future__ import annotations
@@ -39,7 +43,21 @@ log = logging.getLogger("smhi2epw")
 # --------------------------------------------------------------------------- #
 @dataclass
 class StationMeta:
-    """Geographic and identifying metadata for a metobs station."""
+    """Describe the MetObs station supplying observed weather.
+
+    Attributes
+    ----------
+    station_id
+        Positive SMHI station identifier.
+    name
+        Human-readable station name with API instruction text removed.
+    latitude, longitude
+        Station coordinates in decimal degrees.
+    elevation
+        Station height in metres above sea level.
+    wmo_id
+        Genuine WMO identifier, or ``"999999"`` when SMHI supplies none.
+    """
 
     station_id: int
     name: str
@@ -49,7 +67,25 @@ class StationMeta:
     wmo_id: str = "999999"
 
     def distance_km(self, lat: float, lon: float) -> float:
-        """Great-circle distance (km) from the station to ``(lat, lon)``."""
+        """Calculate great-circle distance to a target coordinate.
+
+        Parameters
+        ----------
+        lat, lon
+            Target latitude and longitude in decimal degrees.
+
+        Returns
+        -------
+        float
+            Haversine distance in kilometres, using mean Earth radius
+            6371.0088 km.
+
+        Examples
+        --------
+        >>> station = StationMeta(71420, "Göteborg A", 57.7156, 11.9924)
+        >>> station.distance_km(57.7156, 11.9924)
+        0.0
+        """
         r = 6371.0088
         p1, p2 = math.radians(self.latitude), math.radians(lat)
         dphi = math.radians(lat - self.latitude)
@@ -67,9 +103,31 @@ class StationMeta:
 class CachedClient:
     """Thin ``requests`` wrapper that caches raw payloads on disk.
 
-    Caching makes recompilation idempotent and avoids redundant heavy queries
-    against the SMHI open-data endpoints. Transient HTTP failures are retried
-    with exponential backoff, and cached entries can optionally expire.
+    Caching makes recompilation repeatable and avoids redundant heavy queries
+    against SMHI. Transient HTTP failures are retried with exponential
+    backoff, cached entries can optionally expire, and writes use temporary
+    sibling files followed by atomic replacement.
+
+    Parameters
+    ----------
+    cache_dir
+        Cache directory or ``None`` to disable disk caching.
+    timeout
+        Per-request timeout in seconds.
+    session
+        Optional preconfigured :class:`requests.Session`, useful for tests.
+    max_retries
+        Retry count for GET responses with status 429, 500, 502, 503, or 504.
+    cache_ttl
+        Maximum cache age in seconds, or ``None`` for no expiry.
+    refresh
+        Ignore cached responses when ``True``.
+
+    Examples
+    --------
+    >>> client = CachedClient(cache_dir=".smhi_cache", cache_ttl=86400)
+    >>> isinstance(client.session, requests.Session)
+    True
     """
 
     def __init__(
@@ -81,6 +139,11 @@ class CachedClient:
         cache_ttl: Optional[float] = None,
         refresh: bool = False,
     ) -> None:
+        """Initialize HTTP retry, timeout, and cache policy.
+
+        See the class-level documentation for parameter semantics. The cache
+        directory is created eagerly so later worker threads only write files.
+        """
         self.cache_dir = cache_dir
         self.timeout = timeout
         self.session = session or self._build_session(max_retries)
@@ -91,6 +154,18 @@ class CachedClient:
 
     @staticmethod
     def _build_session(max_retries: int) -> requests.Session:
+        """Construct a GET-only retrying HTTP session.
+
+        Parameters
+        ----------
+        max_retries
+            Total retry budget. Values at or below zero disable adapters.
+
+        Returns
+        -------
+        requests.Session
+            Session with identical retry adapters for HTTP and HTTPS.
+        """
         session = requests.Session()
         if Retry is not None and max_retries > 0:
             retry = Retry(
@@ -106,12 +181,19 @@ class CachedClient:
         return session
 
     def _cache_path(self, url: str, suffix: str) -> Optional[str]:
+        """Map a URL to a stable, filesystem-safe cache path.
+
+        The first 24 hexadecimal SHA-256 characters avoid exposing query
+        strings in filenames while making the same URL deterministic.
+        ``None`` is returned when caching is disabled.
+        """
         if not self.cache_dir:
             return None
         key = hashlib.sha256(url.encode("utf-8")).hexdigest()[:24]
         return os.path.join(self.cache_dir, f"{key}.{suffix}")
 
     def _cache_valid(self, path: str) -> bool:
+        """Return whether a cache file exists and satisfies refresh/TTL policy."""
         if self.refresh or not os.path.exists(path):
             return False
         if self.cache_ttl is None:
@@ -119,6 +201,30 @@ class CachedClient:
         return (time.time() - os.path.getmtime(path)) < self.cache_ttl
 
     def get_text(self, url: str, suffix: str = "txt") -> str:
+        """Return a text response from cache or HTTP.
+
+        Parameters
+        ----------
+        url
+            Absolute SMHI endpoint URL.
+        suffix
+            Cache filename suffix identifying the payload representation.
+
+        Returns
+        -------
+        str
+            UTF-8 cached text or :attr:`requests.Response.text`.
+
+        Raises
+        ------
+        IngestionError
+            If all HTTP attempts fail.
+
+        Notes
+        -----
+        Cache writes are atomic. Readers therefore observe either the previous
+        complete payload or the new complete payload, never a partial write.
+        """
         path = self._cache_path(url, suffix)
         if path and self._cache_valid(path):
             log.debug("cache hit: %s", url)
@@ -150,6 +256,12 @@ class CachedClient:
         return text
 
     def get_json(self, url: str) -> object:
+        """Fetch and decode JSON, repairing one malformed cache entry.
+
+        A cached payload that cannot be decoded is deleted and fetched once
+        more. A second malformed response raises :class:`IngestionError`
+        instead of entering an unbounded retry loop.
+        """
         try:
             return json.loads(self.get_text(url, suffix="json"))
         except json.JSONDecodeError:
@@ -171,8 +283,22 @@ class CachedClient:
 def _select_position(positions: list, year: int) -> dict:
     """Pick the station position record valid during ``year``.
 
-    Falls back to the most recent record if none of the intervals cover the
-    requested year (e.g. for very old or future years).
+    Parameters
+    ----------
+    positions
+        SMHI position records with millisecond ``from`` and ``to`` bounds.
+    year
+        Year whose July midpoint selects the historically valid location.
+
+    Returns
+    -------
+    dict
+        Matching position, or the most recent record as a documented fallback.
+
+    Raises
+    ------
+    IngestionError
+        If the station exposes no position records.
     """
     if not positions:
         raise IngestionError("no position metadata for station")
@@ -189,6 +315,13 @@ def _clean_station_name(title: object, station_id: int) -> str:
     Titles look like ``"Lufttemperatur - Göteborg A: Välj tidsutsnitt"``; the
     station name is the segment between the parameter prefix (" - ") and the
     trailing ": ..." instruction.
+
+    Examples
+    --------
+    >>> _clean_station_name("Lufttemperatur - Göteborg A: Välj", 71420)
+    'Göteborg A'
+    >>> _clean_station_name(None, 71420)
+    'Station 71420'
     """
     if not title:
         return f"Station {station_id}"
@@ -206,8 +339,29 @@ def get_station_metadata(
 ) -> StationMeta:
     """Resolve a station's name, coordinates and elevation from metobs.
 
-    When ``year`` is given, the position/elevation valid for that year is used;
-    otherwise the most recent position is selected.
+    Parameters
+    ----------
+    station_id
+        SMHI MetObs station identifier.
+    client
+        Cache-aware transport used for the metadata request.
+    year
+        Optional historical year used to select the correct position record.
+
+    Returns
+    -------
+    StationMeta
+        Cleaned station identity and year-aware coordinates/elevation.
+
+    Raises
+    ------
+    IngestionError
+        If the payload shape or position metadata is unusable.
+
+    Notes
+    -----
+    The SMHI ``key`` field is not assumed to be a WMO number. Missing genuine
+    WMO metadata is represented by the EPW fallback ``"999999"``.
     """
     url = f"{C.METOBS_BASE}/parameter/1/station/{station_id}.json"
     payload = client.get_json(url)
@@ -240,6 +394,13 @@ def get_station_metadata(
 # Nearest-station resolver
 # --------------------------------------------------------------------------- #
 def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Return great-circle distance in kilometres between two coordinates.
+
+    Examples
+    --------
+    >>> round(_haversine_km(57.7, 12.0, 59.3, 18.1))
+    396
+    """
     r = 6371.0088
     p1, p2 = math.radians(lat1), math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
@@ -251,7 +412,12 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 def _stations_for_parameter(
     param: int, client: CachedClient
 ) -> Dict[int, Tuple[float, float, int, int]]:
-    """Return ``{station_id: (lat, lon, from_ms, to_ms)}`` for a parameter."""
+    """List stations exposing one MetObs parameter.
+
+    Malformed individual entries are ignored so one bad metadata record does
+    not make every station undiscoverable. A non-dictionary response yields an
+    empty mapping for the caller to handle.
+    """
     url = f"{C.METOBS_BASE}/parameter/{param}.json"
     payload = client.get_json(url)
     out: Dict[int, Tuple[float, float, int, int]] = {}
@@ -272,12 +438,21 @@ def _stations_for_parameter(
 
 
 def _year_bounds_ms(year: int) -> Tuple[int, int]:
+    """Return inclusive UTC millisecond bounds for a calendar year.
+
+    Examples
+    --------
+    >>> start, end = _year_bounds_ms(2020)
+    >>> end > start
+    True
+    """
     start = datetime(year, 1, 1, tzinfo=timezone.utc)
     end = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
     return int(start.timestamp() * 1000), int(end.timestamp() * 1000) - 1
 
 
 def _covers_year(record: Tuple[float, float, int, int], year: int) -> bool:
+    """Return whether a station metadata record covers every instant of a year."""
     start_ms, end_ms = _year_bounds_ms(year)
     return record[2] <= start_ms and record[3] >= end_ms
 
@@ -287,8 +462,30 @@ def find_nearest_station(
 ) -> StationMeta:
     """Find the nearest metobs station carrying all required parameters in ``year``.
 
-    Stations are ranked by great-circle distance to ``(lat, lon)``; the closest
-    one whose record covers ``year`` for every required parameter is returned.
+    Parameters
+    ----------
+    lat, lon
+        Requested point in decimal degrees.
+    year
+        Calendar year that every required parameter must fully cover.
+    client
+        Cache-aware metadata transport.
+
+    Returns
+    -------
+    StationMeta
+        Closest qualifying station with year-aware metadata.
+
+    Raises
+    ------
+    IngestionError
+        If station lists are unavailable or no station covers all required
+        temperature, humidity, pressure, speed, and direction records.
+
+    Notes
+    -----
+    No arbitrary candidate-count cutoff is applied: all stations are ranked
+    and examined until a full-year match is found.
     """
     required = list(C.METOBS_REQUIRED_PARAMETERS)
     base = _stations_for_parameter(required[0], client)
@@ -331,8 +528,21 @@ def find_nearest_radiation_station(
 ) -> Optional[Tuple[int, float]]:
     """Return ``(station_id, distance_km)`` for the nearest Sol (pyranometer) station.
 
-    Returns ``None`` when no station covers ``year`` or the parameter list is
-    unavailable (network failure, empty response, etc.).
+    Parameters
+    ----------
+    lat, lon
+        Solar query point in decimal degrees.
+    year
+        Full year that measured GHI must cover.
+    client
+        Cache-aware metadata transport.
+
+    Returns
+    -------
+    tuple of int and float or None
+        Station ID and distance in kilometres, or ``None`` when automatic
+        measured radiation is unavailable. Distance policy is applied later by
+        :func:`smhi2epw.compiler.compile_epw`.
     """
     url = f"{C.METOBS_BASE}/parameter/{C.METOBS_RADIATION_PARAMETER}.json"
     try:
@@ -370,7 +580,12 @@ def find_nearest_radiation_station(
 def radiation_station_distance(
     station_id: int, lat: float, lon: float, year: int, client: CachedClient
 ) -> Optional[float]:
-    """Return the distance to an explicit radiation station when listed."""
+    """Return distance to a full-year explicit radiation station.
+
+    ``None`` means the station is absent from parameter 11 metadata or fails to
+    cover the full requested year; the compiler treats that as a hard error for
+    an explicitly requested station.
+    """
     stations = _stations_for_parameter(C.METOBS_RADIATION_PARAMETER, client)
     record = stations.get(station_id)
     if record is None or not _covers_year(record, year):
@@ -389,9 +604,32 @@ def _parse_metobs_csv(
 ) -> pd.Series:
     """Parse a corrected-archive CSV into a UTC-indexed series.
 
-    Values whose quality flag is not in ``accepted_quality`` are dropped (set
-    to NaN downstream) so they can be interpolated. Rows are restricted to the
-    half-open ``[start, end]`` UTC window.
+    Parameters
+    ----------
+    text
+        Corrected-archive semicolon-delimited response, including preamble.
+    column
+        Canonical output series name.
+    window
+        Inclusive UTC start/end timestamps retained from the response.
+    accepted_quality
+        Accepted SMHI quality codes; defaults to ``{"G", "Y"}``.
+
+    Returns
+    -------
+    pandas.Series
+        Sorted, duplicate-free, timezone-aware observations. Rejected quality
+        values remain ``NaN`` so processing diagnostics see the gap.
+
+    Raises
+    ------
+    IngestionError
+        If no data header or value column can be identified.
+
+    Notes
+    -----
+    Decimal commas are accepted. Duplicate timestamps keep the final published
+    value, matching corrected-archive semantics.
     """
     if accepted_quality is None:
         accepted_quality = C.METOBS_ACCEPTED_QUALITY
@@ -453,7 +691,12 @@ def fetch_metobs_parameter(
     client: CachedClient,
     accepted_quality: Optional[set] = None,
 ) -> pd.Series:
-    """Fetch and parse a single metobs parameter for one station."""
+    """Fetch one station parameter from the corrected MetObs archive.
+
+    Parameters mirror :func:`_parse_metobs_csv`; ``param`` and ``station_id``
+    form the endpoint URL. The returned series is hourly UTC where supplied by
+    SMHI, but final resampling and grid alignment occur in :func:`ingest`.
+    """
     url = (
         f"{C.METOBS_BASE}/parameter/{param}/station/{station_id}"
         f"/period/{C.METOBS_PERIOD}/data.csv"
@@ -473,7 +716,32 @@ def fetch_strang_parameter(
     window: Tuple[pd.Timestamp, pd.Timestamp],
     client: CachedClient,
 ) -> pd.Series:
-    """Fetch a single STRÅNG parameter for one point/window as a UTC series."""
+    """Fetch one STRÅNG irradiance parameter for a point and UTC window.
+
+    Parameters
+    ----------
+    lat, lon
+        Requested solar coordinates in decimal degrees.
+    param
+        STRÅNG parameter ID, such as 117 for GHI.
+    column
+        Canonical series name.
+    window
+        Inclusive UTC start and end timestamps.
+    client
+        Cache-aware JSON transport.
+
+    Returns
+    -------
+    pandas.Series
+        Sorted UTC irradiance values in W/m². STRÅNG's ``-999`` sentinel is
+        converted to ``NaN``.
+
+    Raises
+    ------
+    IngestionError
+        If the endpoint does not return the expected list payload.
+    """
     start_ts, end_ts = window
     start = start_ts.strftime("%Y-%m-%dT%H:%M:%S")
     end = end_ts.strftime("%Y-%m-%dT%H:%M:%S")
@@ -517,10 +785,47 @@ def ingest(
 ) -> pd.DataFrame:
     """Query both endpoints in parallel and return a UTC-indexed DataFrame.
 
-    When ``radiation_station_id`` is given, MetObs parameter 11 (measured global
-    radiation from a pyranometer "Sol" station) is fetched alongside the other
-    parameters and stored as column ``ghi_measured``. The processing layer will
-    then prefer measured GHI with either STRÅNG partitioning or Erbs.
+    Parameters
+    ----------
+    meta
+        Station supplying required meteorological observations.
+    year
+        Actual meteorological year.
+    client
+        Cache-aware SMHI transport.
+    max_workers
+        Maximum concurrent parameter requests.
+    utc_offset
+        Whole-hour LST offset used only to size the year-boundary buffer.
+    accepted_quality
+        Optional override for usable MetObs quality flags.
+    radiation_station_id
+        Optional Sol station supplying measured GHI.
+    solar_latitude, solar_longitude
+        Requested STRÅNG point; station coordinates are fallbacks when absent.
+    radiation_required
+        Make measured-GHI failure fatal for an explicit radiation station.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Continuous hourly UTC frame spanning the year plus boundary buffer.
+
+    Raises
+    ------
+    IngestionError
+        If a required source request or payload fails.
+
+    Notes
+    -----
+    Requests run concurrently but columns are assembled in deterministic
+    canonical order. Optional cloud and automatically selected GHI failures are
+    represented as missing columns. STRÅNG point values are instantaneous at
+    the full hour, so adjacent samples are averaged to represent the preceding
+    EPW interval.
+
+    Before 2018 only full-year GHI is requested because direct parameters begin
+    partway through 2017; downstream processing uses Erbs decomposition.
     """
     buffer_hours = int(math.ceil(abs(utc_offset))) + 1
     grid_start = datetime(year, 1, 1, tzinfo=timezone.utc)

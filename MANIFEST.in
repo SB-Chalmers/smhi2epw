@@ -1,0 +1,3 @@
+include .readthedocs.yaml
+recursive-include docs *.nblink *.py *.rst
+recursive-include examples *.ipynb *.md

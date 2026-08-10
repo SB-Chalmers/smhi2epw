@@ -1,4 +1,10 @@
-"""Export layer: UTC-to-LST shift, EPW formatting, validation, and atomic writes."""
+"""Convert processed hourly data into a strict EnergyPlus Weather file.
+
+EPW stores weather in Local Standard Time using hour-ending labels 1--24. This
+module maps the UTC processing frame onto that grid without daylight-saving
+transitions, formats all 35 fields, validates the complete document, and uses
+an atomic replacement so an interrupted write cannot leave a partial file.
+"""
 
 from __future__ import annotations
 
@@ -22,10 +28,36 @@ log = logging.getLogger("smhi2epw")
 
 
 def is_leap_year(year: int) -> bool:
+    """Return whether ``year`` is a Gregorian leap year.
+
+    Parameters
+    ----------
+    year
+        Four-digit Gregorian calendar year.
+
+    Returns
+    -------
+    bool
+        ``True`` for years containing February 29.
+
+    Examples
+    --------
+    >>> is_leap_year(2020), is_leap_year(2100), is_leap_year(2000)
+    (True, False, True)
+    """
     return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
 
 
 def expected_rows(year: int) -> int:
+    """Return the number of hourly EPW records required for ``year``.
+
+    Examples
+    --------
+    >>> expected_rows(2023)
+    8760
+    >>> expected_rows(2020)
+    8784
+    """
     return 8784 if is_leap_year(year) else 8760
 
 
@@ -35,9 +67,40 @@ def expected_rows(year: int) -> int:
 def shift_to_lst(frame: pd.DataFrame, year: int, utc_offset: float) -> pd.DataFrame:
     """Relabel a UTC-indexed frame onto the target-year LST hour grid.
 
+    Parameters
+    ----------
+    frame
+        Hourly, timezone-aware source data indexed in UTC. It must include the
+        boundary hours needed after applying ``utc_offset``.
+    year
+        Target calendar year.
+    utc_offset
+        Whole-hour Local Standard Time offset from UTC. DST is not applied.
+
+    Returns
+    -------
+    pandas.DataFrame
+        Copy indexed by timezone-naive LST hour-ending timestamps.
+
+    Raises
+    ------
+    ValidationError
+        If the input is timezone-naive, the offset is fractional, or any
+        required source hour is missing.
+
     The grid runs from ``year-01-01 01:00`` to ``year+1-01-01 00:00`` so that
     each calendar day is represented by hours 1..24, where hour 24 is midnight
     at the end of the day. DST is intentionally ignored (constant offset).
+
+    Examples
+    --------
+    >>> source_index = pd.date_range(
+    ...     "2020-12-31", periods=8786, freq="h", tz="UTC"
+    ... )
+    >>> source = pd.DataFrame({"temperature": 0.0}, index=source_index)
+    >>> shifted = shift_to_lst(source, 2021, 1)
+    >>> (len(shifted), shifted.index[0].hour)
+    (8760, 1)
     """
     frame_index = pd.DatetimeIndex(frame.index)
     if frame_index.tz is None:
@@ -64,12 +127,33 @@ def shift_to_lst(frame: pd.DataFrame, year: int, utc_offset: float) -> pd.DataFr
 # Field formatting helpers
 # --------------------------------------------------------------------------- #
 def _fmt_float(value: Any, missing: float, decimals: int = 1) -> str:
+    """Format a floating EPW field or its field-specific missing sentinel.
+
+    ``None``, ``NaN``, and pandas missing values all produce ``missing`` with
+    the requested number of decimal places.
+
+    Examples
+    --------
+    >>> _fmt_float(3.141, 99.9)
+    '3.1'
+    >>> _fmt_float(float("nan"), 99.9)
+    '99.9'
+    """
     if value is None or bool(pd.isna(value)):
         return f"{missing:.{decimals}f}"
     return f"{float(value):.{decimals}f}"
 
 
 def _fmt_int(value: Any, missing: float) -> str:
+    """Round and format an integer EPW field or its missing sentinel.
+
+    Examples
+    --------
+    >>> _fmt_int(70.6, 999)
+    '71'
+    >>> _fmt_int(None, 999)
+    '999'
+    """
     if value is None or bool(pd.isna(value)):
         return str(int(missing))
     return str(int(round(float(value))))
@@ -90,7 +174,51 @@ def build_header(
     year: int,
     station_id: int,
 ) -> List[str]:
-    """Return the 8 mandatory EPW header lines."""
+    """Build the eight mandatory EPW header lines.
+
+    Parameters
+    ----------
+    city, region, country
+        Location labels written verbatim to the ``LOCATION`` line.
+    wmo_id
+        Genuine WMO identifier, or ``"999999"`` when none is available.
+    latitude, longitude
+        Requested solar-point coordinates in decimal degrees.
+    time_zone
+        Whole-hour LST offset from UTC.
+    elevation
+        Meteorological-station elevation in metres above sea level.
+    year
+        Actual meteorological year; used to calculate January 1's weekday.
+    station_id
+        SMHI MetObs identifier recorded in provenance comments.
+
+    Returns
+    -------
+    list of str
+        Ordered header lines without trailing newline characters.
+
+    Raises
+    ------
+    ValidationError
+        If a text field contains a comma or newline that would corrupt CSV.
+
+    Notes
+    -----
+    The comments preserve the required STRÅNG funding acknowledgment and make
+    clear that the WMO field and SMHI station ID are different identifiers.
+
+    Examples
+    --------
+    >>> header = build_header(
+    ...     "Gothenburg", "VG", "SWE", "999999", 57.7156, 11.9924,
+    ...     1.0, 3.0, 2023, 71420,
+    ... )
+    >>> len(header)
+    8
+    >>> header[-1].startswith("DATA PERIODS,1,1,Data,Sunday")
+    True
+    """
     text_fields = (city, region, country, wmo_id)
     if any(
         "," in str(value) or "\n" in str(value) or "\r" in str(value)
@@ -127,7 +255,25 @@ def build_header(
 # EPW data rows
 # --------------------------------------------------------------------------- #
 def _row_iter(frame: pd.DataFrame) -> Iterable[str]:
-    """Yield formatted EPW data lines from an LST-gridded frame."""
+    """Yield 35-field EPW records from an LST hour-ending frame.
+
+    Parameters
+    ----------
+    frame
+        Validated LST-indexed data using the package's canonical weather
+        column names.
+
+    Yields
+    ------
+    str
+        One comma-separated EPW record without a trailing newline.
+
+    Notes
+    -----
+    A timestamp at midnight belongs to hour 24 of the preceding calendar day.
+    Unavailable secondary fields use EnergyPlus sentinels rather than invented
+    measurements.
+    """
     index = pd.DatetimeIndex(frame.index)
     is_midnight = index.hour == 0
     label = index.where(~is_midnight, index - pd.Timedelta(hours=1))
@@ -192,7 +338,35 @@ def write_epw(
     frame: pd.DataFrame,
     year: int,
 ) -> int:
-    """Validate and atomically write an EPW file."""
+    """Validate and atomically write a complete EPW file.
+
+    Parameters
+    ----------
+    path
+        Destination path. Its parent directory must exist.
+    header_lines
+        Eight lines produced by :func:`build_header` or an equivalent source.
+    frame
+        Complete target-year LST data frame.
+    year
+        Calendar year used for row count and exact-index validation.
+
+    Returns
+    -------
+    int
+        Number of data rows written.
+
+    Raises
+    ------
+    ValidationError
+        If headers, frame, formatted rows, or filesystem operations fail.
+
+    Notes
+    -----
+    Data is first written to a temporary sibling file. :func:`os.replace` only
+    updates the destination after every row has been formatted and validated,
+    preserving an existing valid file if an earlier step fails.
+    """
     _validate_header(header_lines)
     _validate_frame(frame, year)
     expected = expected_rows(year)
@@ -236,6 +410,19 @@ def write_epw(
 
 
 def _validate_header(header_lines: List[str]) -> None:
+    """Validate EPW header count, order, and line integrity.
+
+    Parameters
+    ----------
+    header_lines
+        Candidate EPW header without newline terminators.
+
+    Raises
+    ------
+    ValidationError
+        If there are not exactly eight lines, a required keyword is misplaced,
+        or an embedded line break is present.
+    """
     expected_keywords = [
         "LOCATION,",
         "DESIGN CONDITIONS,",
@@ -260,6 +447,27 @@ def _validate_header(header_lines: List[str]) -> None:
 
 
 def _validate_frame(frame: pd.DataFrame, year: int) -> None:
+    """Validate a processed frame before any output bytes are replaced.
+
+    Parameters
+    ----------
+    frame
+        Candidate LST frame containing all required physical fields.
+    year
+        Calendar year determining the expected index and cardinality.
+
+    Raises
+    ------
+    ValidationError
+        If the exact LST grid, required columns, finiteness, physical ranges,
+        or dew-point consistency check fails.
+
+    Notes
+    -----
+    Required radiation must be nonnegative, wind speed is limited to the EPW
+    range, and dew point may exceed dry bulb by at most 0.2 °C to tolerate
+    one-decimal output rounding.
+    """
     expected = expected_rows(year)
     if len(frame) != expected:
         raise ValidationError(

@@ -12,8 +12,15 @@ venv/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.ipynb_checkpoints/
+
+# Locally built documentation
+docs/_build/
+docs/.doctrees/
+docs/_autosummary/
 
 # smhi2epw
 .smhi_cache/
 *.epw
+examples/output/
 /reference/

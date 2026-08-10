@@ -1,4 +1,14 @@
-"""Project-wide constants: API endpoints, parameter codes and EPW tokens."""
+"""Centralize API semantics, physical constants, and EPW sentinel values.
+
+Keeping these values in one dependency-free module makes the assumptions used
+by ingestion, processing, and export easy to audit. Parameter mappings translate
+SMHI numeric IDs to canonical internal column names. Missing-value dictionaries
+are field-specific because EPW does not use one universal missing token.
+
+The STRÅNG direct parameters begin on 18 April 2017, so 2018 is intentionally
+the first complete year allowed to use them. Earlier years request GHI only and
+use Erbs decomposition downstream.
+"""
 
 from __future__ import annotations
 

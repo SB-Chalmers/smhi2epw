@@ -1,7 +1,9 @@
-"""Solar geometry helpers (NOAA solar-position algorithm).
+"""Calculate solar geometry and split global irradiance into EPW components.
 
-Implemented with numpy only so the package keeps zero heavy dependencies.
-All inputs are UTC; outputs are returned for each timestamp in the index.
+The vectorized helpers use the NOAA fractional-year approximation and the Erbs
+hourly diffuse-fraction correlation. They depend only on NumPy and pandas,
+keeping the core package lightweight. Timestamps must be timezone-aware; the
+compiler evaluates them at preceding-hour interval midpoints.
 """
 
 from __future__ import annotations
@@ -11,11 +13,44 @@ import pandas as pd
 
 
 def solar_zenith(index: pd.DatetimeIndex, latitude: float, longitude: float):
-    """Return ``(zenith_degrees, cos_zenith)`` for a UTC ``DatetimeIndex``.
+    """Calculate solar zenith angle for timezone-aware timestamps.
 
-    Uses the NOAA general solar-position equations. ``longitude`` is east
-    positive, ``latitude`` is north positive. Because timestamps are UTC the
-    timezone correction term is zero.
+    Parameters
+    ----------
+    index
+        Timezone-aware timestamps. They are converted to UTC internally.
+    latitude, longitude
+        Observer coordinates in decimal degrees; north and east are positive.
+
+    Returns
+    -------
+    tuple of numpy.ndarray
+        Zenith angle in degrees and its cosine, one value per timestamp.
+
+    Raises
+    ------
+    ValueError
+        If ``index`` is timezone-naive.
+
+    Notes
+    -----
+    Zenith is 0° when the sun is directly overhead and exceeds 90° below the
+    geometric horizon. The NOAA general solar-position approximation computes
+    fractional year, equation of time, declination, and hour angle. Because the
+    timestamps are converted to UTC, the timezone term is zero.
+
+    Examples
+    --------
+    >>> index = pd.DatetimeIndex(["2023-06-21 12:00"], tz="UTC")
+    >>> zenith, cosine = solar_zenith(index, 57.7156, 11.9924)
+    >>> bool(30 < zenith[0] < 40)
+    True
+    >>> bool(cosine[0] > 0)
+    True
+
+    References
+    ----------
+    NOAA Global Monitoring Laboratory, *Solar Calculation Details*.
     """
     if index.tz is None:
         raise ValueError("solar_zenith requires a timezone-aware (UTC) index")
@@ -66,10 +101,31 @@ def solar_zenith(index: pd.DatetimeIndex, latitude: float, longitude: float):
 
 
 def extraterrestrial_radiation(index: pd.DatetimeIndex, cos_zenith):
-    """Return ``(horizontal, direct_normal)`` extraterrestrial irradiance (W/m^2).
+    """Calculate extraterrestrial horizontal and direct-normal irradiance.
+
+    Parameters
+    ----------
+    index
+        Timezone-aware timestamps used for Earth--Sun distance correction.
+    cos_zenith
+        Cosine of solar zenith for each timestamp.
+
+    Returns
+    -------
+    tuple of numpy.ndarray
+        Extraterrestrial horizontal and direct-normal irradiance in W/m².
 
     Direct-normal is the solar constant scaled by the Earth-Sun distance
     correction; horizontal is that projected onto the horizontal plane (>= 0).
+    Both quantities are zero when the sun is below the horizon, matching EPW
+    convention.
+
+    Examples
+    --------
+    >>> index = pd.DatetimeIndex(["2023-06-21 12:00"], tz="UTC")
+    >>> horizontal, normal = extraterrestrial_radiation(index, [0.8])
+    >>> round(float(horizontal[0] / normal[0]), 1)
+    0.8
     """
     from . import constants as C
 
@@ -84,16 +140,46 @@ def extraterrestrial_radiation(index: pd.DatetimeIndex, cos_zenith):
 
 
 def erbs_decomposition(ghi, etrh, cos_zenith):
-    """Erbs (1982) GHI → DHI + DNI decomposition.
+    """Estimate diffuse-horizontal and direct-normal irradiance from GHI.
+
+    Parameters
+    ----------
+    ghi
+        Global horizontal irradiance in W/m².
+    etrh
+        Extraterrestrial horizontal irradiance in W/m².
+    cos_zenith
+        Cosine of solar zenith.
+
+    Returns
+    -------
+    tuple of numpy.ndarray
+        Diffuse horizontal irradiance (DHI) and direct normal irradiance (DNI)
+        in W/m².
 
     Given measured global horizontal irradiance ``ghi`` (W/m²), the
     extraterrestrial horizontal ``etrh`` (W/m²) and the cosine of the solar
     zenith angle, estimate the diffuse-horizontal (DHI) and direct-normal
     (DNI) components.
 
-    Reference: Erbs, Klein & Duffie (1982), *Estimation of the diffuse radiation
-    fraction for hourly, daily and monthly-average global radiation*, Solar Energy
-    29(4), 369-378.
+    Notes
+    -----
+    The clearness index ``kt = GHI/ETRH`` selects one of three empirical diffuse
+    fractions. DNI follows from ``GHI = DHI + DNI*cos(zenith)``. Near or below
+    the horizon, DNI is set to zero and all GHI is assigned to DHI so closure is
+    retained.
+
+    Examples
+    --------
+    >>> dhi, dni = erbs_decomposition([500.0], [800.0], [0.7])
+    >>> round(float(dhi[0] + dni[0] * 0.7), 6)
+    500.0
+
+    References
+    ----------
+    Erbs, D. G., Klein, S. A., & Duffie, J. A. (1982). *Estimation of
+    the diffuse radiation fraction for hourly, daily and monthly-average
+    global radiation*. Solar Energy, 28(4), 293--302.
     """
     from . import constants as C
 
