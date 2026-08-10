@@ -60,6 +60,7 @@ STRANG_PARAMETERS = {
 }
 STRANG_GHI_ONLY_PARAMETERS = {117: "ghi"}   # params available before Apr 2017
 STRANG_DIRECT_AVAILABLE_YEAR = 2017          # conservative cutoff (full years)
+STRANG_MIN_YEAR = 1999                       # STRÅNG operational since Jan 1999
 
 # --------------------------------------------------------------------------- #
 # Physical constants

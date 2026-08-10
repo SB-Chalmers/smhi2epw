@@ -75,6 +75,13 @@ def compile_epw(config: EPWConfig, client: Optional[CachedClient] = None) -> Com
     also emitted to the ``smhi2epw`` logger.
     """
     _configure_logging()
+
+    if config.year < C.STRANG_MIN_YEAR:
+        raise IngestionError(
+            f"STRÅNG solar data is only available from {C.STRANG_MIN_YEAR}; "
+            f"requested year {config.year} is out of range"
+        )
+
     client = client or CachedClient(
         cache_dir=config.cache_dir,
         refresh=config.refresh,
