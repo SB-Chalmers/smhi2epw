@@ -92,6 +92,18 @@ def impute(
             )
 
         limit = None if column in optional else max_gap_hours
+        if column in optional and limit is None:
+            # Diurnal-aware fill for optional columns: same approach as impute_solar.
+            # Linear interpolation across multi-day gaps smears day/night structure;
+            # grouping by hour preserves the diurnal pattern for cloud cover etc.
+            longest = _max_gap_length(missing)
+            if longest > max_gap_hours:
+                hour = series.index.hour
+                filled = series.groupby(hour).transform(
+                    lambda g: g.interpolate(method="linear", limit_direction="both")
+                )
+                frame[column] = filled.bfill().ffill()
+                continue
         frame[column] = series.interpolate(
             method="linear", limit=limit, limit_direction="both"
         )
