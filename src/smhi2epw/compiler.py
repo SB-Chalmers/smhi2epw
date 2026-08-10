@@ -189,6 +189,11 @@ def compile_epw(config: EPWConfig, client: Optional[CachedClient] = None) -> Com
     rows = export.write_epw(config.output_path, header, lst_frame, config.year)
     log.info("wrote %d rows -> %s (validated)", rows, config.output_path)
 
+    strang_res = next(
+        label for cutoff, label in C.STRANG_RESOLUTION_BY_YEAR if config.year >= cutoff
+    )
+    log.info("STRÅNG spatial resolution for %d: %s", config.year, strang_res)
+
     return CompileResult(
         output_path=config.output_path,
         rows=rows,

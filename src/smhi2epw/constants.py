@@ -62,6 +62,14 @@ STRANG_GHI_ONLY_PARAMETERS = {117: "ghi"}   # params available before Apr 2017
 STRANG_DIRECT_AVAILABLE_YEAR = 2017          # conservative cutoff (full years)
 STRANG_MIN_YEAR = 1999                       # STRÅNG operational since Jan 1999
 
+# Spatial resolution by era (year-based approximation; exact switch dates are
+# May 2006 and Mar 29 2017).
+STRANG_RESOLUTION_BY_YEAR = [
+    (2017, "~2.5 × 2.5 km"),
+    (2006, "~11 × 11 km"),
+    (1999, "~22 × 22 km"),
+]
+
 # --------------------------------------------------------------------------- #
 # Physical constants
 # --------------------------------------------------------------------------- #
