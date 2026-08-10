@@ -517,4 +517,10 @@ def ingest(
             series = series.resample("h").mean()
         frame[column] = series.reindex(grid)
 
+    # STRÅNG values are instantaneous at the full hour; EPW expects the mean
+    # over the *preceding* hour.  Average adjacent samples: EPW[t] = (t-1 + t) / 2.
+    for col in C.STRANG_PARAMETERS.values():
+        if col in frame.columns:
+            frame[col] = (frame[col] + frame[col].shift(1)) / 2
+
     return frame
