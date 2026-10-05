@@ -22,6 +22,29 @@ Processing
    :private-members:
    :no-index:
 
+Observation recovery and provenance
+-----------------------------------
+
+.. automodule:: smhi2epw.gap_recovery
+   :members:
+   :private-members:
+   :no-index:
+
+.. automodule:: smhi2epw.reanalysis
+   :members:
+   :private-members:
+   :no-index:
+
+.. automodule:: smhi2epw.automatic
+   :members:
+   :private-members:
+   :no-index:
+
+.. automodule:: smhi2epw.provenance
+   :members:
+   :private-members:
+   :no-index:
+
 Solar geometry
 --------------
 

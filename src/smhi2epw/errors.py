@@ -26,11 +26,13 @@ class IngestionError(Smhi2EpwError):
 
 
 class DataGapError(Smhi2EpwError):
-    """Raised when an observation gap exceeds the interpolation window.
+    """Report required weather that remains missing after permitted recovery.
 
-    Required fields are never synthesized across gaps longer than 48 hours or
-    when no valid daily reference profile exists. Aborting is safer than
-    producing a weather file whose apparent precision hides missing evidence.
+    Temporal reconstruction remains limited to 48 hours. Automatic weather
+    policy can fill longer gaps with assessed observations or same-year
+    reanalysis; strict policy retains errors when its permitted sources cannot
+    supply the required hours. Neither policy fabricates a successful file
+    when every available source is incomplete.
     """
 
 

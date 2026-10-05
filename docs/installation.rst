@@ -5,7 +5,8 @@ Requirements
 ------------
 
 ``smhi2epw`` requires Python 3.11 or newer and internet access when compiling
-live SMHI data. Reading an existing EPW file works offline. A virtual
+live SMHI data and, when automatic recovery needs it, Open-Meteo ERA5 data.
+Reading an existing EPW file works offline. A virtual
 environment is strongly recommended so the package and notebook tools do not
 interfere with other projects.
 
@@ -61,4 +62,3 @@ The following commands should report a version and display CLI help::
 Inside Jupyter, verify that ``import sys; print(sys.executable)`` points to the
 same virtual environment. If it does not, select the matching Python kernel or
 register one with ``python -m ipykernel install --user --name smhi2epw``.
-

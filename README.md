@@ -12,7 +12,14 @@ It uses a **hybrid ingestion** approach:
 - **STRÅNG** mesoscale model → grid-modeled solar irradiance
   (global / direct-horizontal / diffuse), queried at the requested coordinates.
 
-The two streams are synchronized on a continuous hourly **UTC** index, processed
+Automatic recovery preserves usable observations, fills short gaps, assesses
+nearby SMHI donors before using daily profiles, and fills unresolved required
+hours with **same-year ERA5 via Open-Meteo**.
+Warnings and a provenance sidecar describe the reconstruction. Use explicit
+strict mode when incomplete source data should fail. Supported requests cover
+completed calendar years from 1999 onward.
+
+The source streams are synchronized on a continuous hourly **UTC** index, processed
 (gap-filled, unit-converted, and augmented with derived dew point, cloud-aware
 horizontal infrared, extraterrestrial radiation, and direct-normal irradiance),
 shifted to **Local Standard Time**, and written out as a row-cardinality-validated
@@ -53,6 +60,9 @@ smhi2epw 2023 gothenburg_2023.epw --lat 57.7156 --lon 11.9924 --city Gothenburg
 # Force a fresh fetch, ignoring the on-disk cache:
 smhi2epw 2023 gothenburg_2023.epw --station 71420 --refresh
 
+# Retain source-coverage and gap failures:
+smhi2epw 2023 gothenburg_2023.epw --station 71420 --weather-policy strict
+
 # Change the 50 km automatic pyranometer limit:
 smhi2epw 2023 gothenburg_2023.epw --station 71420 \
   --radiation-station-max-distance 25
@@ -78,22 +88,22 @@ result = compile_epw(
         utc_offset=1.0,  # Local Standard Time; DST ignored
         cache_dir=".smhi_cache",
         refresh=False,  # set True to bypass the cache
+        weather_policy="automatic",  # default; strict disables ERA5 recovery
     )
 )
 
-print(
-    result.rows,
-    "rows,",
-    f"{result.interpolated_fraction:.2%} interpolated,",
-    f"{result.coordinate_distance_km:.1f} km",
-)
-print("observed cloud data available:", result.report.cloud_available)
+print(result.rows, "rows,", f"{result.interpolated_fraction:.2%} interpolated")
+if result.coordinate_distance_km is not None:
+    print(f"{result.coordinate_distance_km:.1f} km from the primary station")
+print("cloud data available:", result.report.cloud_available)
 print(
     "max solar energy-balance residual:",
     result.report.energy_balance_max_residual,
     "W/m^2",
 )
 print("diurnally filled hours:", result.report.diurnal_filled_hours)
+print("recovery warnings:", result.report.warnings)
+# Automatic policy writes gothenburg_2023.epw.json by default.
 ```
 
 ### Reading and analysing EPW files
@@ -148,23 +158,26 @@ docs/_build/html/index.html` on Linux, or `start docs\_build\html\index.html` in
 Windows Command Prompt.
 
 Notebook outputs are not executed during the documentation build, so building
-the site does not contact SMHI or OneBuilding. The generated `docs/_build/`
-tree is local-only and ignored by Git.
+the site does not contact SMHI, Open-Meteo or OneBuilding. The generated
+`docs/_build/` tree is local-only and ignored by Git.
 
 ## Pipeline
 
 | Layer | Responsibility |
 | --- | --- |
-| Ingestion | Multi-threaded dual-endpoint query manager, station mapping (year-aware position), nearest-station resolver, quality-flag filtering, HTTP retry/backoff, boundary-buffer UTC grid, local caching with optional TTL/refresh |
-| Processing | Linear filling for 1–3 h gaps; endpoint-adjusted previous/next-day profiles for 4–48 h gaps; circular wind interpolation; bounded solar filling; unit conversion; dew point; EnergyPlus-compatible horizontal IR; interval-midpoint solar geometry; physically closed DNI/DHI |
-| Export | Exact UTC→LST constant shift, hour 1–24 formatting, standards-compliant headers and 35-field rows, strict range/cardinality validation, atomic 8760/8784-row output |
+| Ingestion | Concurrent primary-source retrieval, year-aware station metadata, quality filtering, request retries, buffered hourly UTC grid, local caching, same-year ERA5 fallback |
+| Processing | Short interpolation, assessed donor transfer with optional median bias correction, bounded daily profiles, circular winds, source warnings and physical checks, pressure conversion, dew point and longwave derivation, closed solar components |
+| Export | Exact UTC→LST constant shift, hour 1–24 formatting, standards-compliant headers and 35-field rows, strict range/calendar validation, atomic 8760/8784-row output, recovery comments and JSON provenance |
 
 ## Notes
 
-- Required gaps of 1–3 hours are interpolated. Gaps of 4–48 hours use the
-  previous/next valid daily profile with endpoint correction and 50/50 mixing.
-  Longer required gaps raise `DataGapError`; optional fields degrade to EPW
-  missing tokens instead of being synthesized beyond 48 hours.
+- Required gaps of 1–3 hours use interpolation, circularly for wind direction.
+  Longer gaps and unfillable short wind gaps first use assessed same-year
+  donors. Remaining gaps up to 48 hours use previous/next valid daily profiles
+  with endpoint correction and 50/50 mixing, then automatic mode uses ERA5.
+  Strict mode permits donors only when explicitly enabled and has no ERA5
+  fallback. Neither policy extends temporal filling beyond 48 hours.
+  Solar recovery has no donor stage.
 - Observations are filtered by MetObs quality flag; only accepted grades
   (`G`, `Y`) are used, others are treated as gaps.
 - STRÅNG `-999` missing sentinels are removed and back-filled with a
@@ -172,7 +185,9 @@ tree is local-only and ignored by Git.
   cycle.
 - When total cloud cover (MetObs parameter 16) is available, it populates total
   sky cover and acts as a documented proxy only in the longwave IR calculation.
-  Opaque sky cover remains missing because SMHI does not provide it.
+  Opaque sky cover remains missing because SMHI does not provide it. ERA5 can
+  supply missing cloud cover only at hours where it replaces required
+  meteorology or GHI; usable cloud values and other hours are preserved.
 - Daylight Savings Time is intentionally ignored to keep solar angles
   continuous. A small UTC buffer is ingested around each year end so the LST
   shift uses real observations at the boundary.
@@ -191,11 +206,13 @@ tree is local-only and ignored by Git.
   `"strang"` (2018+, STRÅNG all params),
   `"measured+strang_partition"` (2018+ with a nearby Sol station; measured GHI
   with the normalized STRÅNG beam fraction),
-  `"strang_ghi+erbs"` (through 2017, Erbs on STRÅNG GHI),
-  `"measured+erbs"` (through 2017 with a Sol pyranometer station).
+  `"strang_ghi+erbs"` (Erbs on STRÅNG GHI when direct components are absent),
+  `"measured+erbs"` (Erbs on measured GHI), `"era5"` (ERA5 solar fallback), or
+  `"mixed"` (multiple solar sources).
 - Automatic pyranometer discovery is limited to 50 km by default. If its data
   cannot satisfy the 48-hour policy, compilation falls back to STRÅNG.
-  Explicitly requested radiation stations fail instead of falling back.
+  Explicitly requested radiation stations fail in strict mode; automatic mode
+  records the failure and continues solar recovery.
 - Only whole-hour Local Standard Time offsets are supported. This covers the
   Nordic STRÅNG region without silently resampling hourly source data.
 - A warning is logged when the solar query point is outside Sweden (~55–69.5°N,
@@ -206,7 +223,7 @@ tree is local-only and ignored by Git.
 ```bash
 pip install -e ".[dev]"
 pytest               # offline suite (synthetic SMHI client)
-pytest -m network    # live integration tests against the SMHI endpoints
+pytest -m network    # live integration tests against weather-source endpoints
 ruff check src tests examples
 ruff format --check src tests examples
 mypy src/smhi2epw
@@ -216,7 +233,8 @@ python -m sphinx -W --keep-going -b html docs docs/_build/html
 ```
 
 The default test suite runs fully offline using a synthetic SMHI client;
-network-marked tests are skipped unless explicitly requested.
+network-marked tests are skipped unless explicitly requested. Provider access
+and quotas apply to live SMHI and Open-Meteo requests.
 
 ## License
 
@@ -242,34 +260,60 @@ need to patch headers after compilation. Previously exported or pinned study
 files are not modified; regenerate in a fresh directory when migrating.
 
 
-### Reproducible reconstruction provenance
+### Automatic recovery, warnings and provenance
 
-Pass `--provenance PATH.json` to the CLI, or set `EPWConfig.provenance_path`, to write an atomic provenance sidecar after a successful EPW compilation. It records reconstruction configuration, package/source identity, output checksum and hashes of the actual consumed response text. Cached responses and live responses follow the same receipt contract; unrelated cache files are excluded. The output and provenance paths must differ. A custom client without response receipts is explicitly marked incomplete. This records weather reconstruction evidence without collecting additional building observations.
+`EPWConfig.weather_policy="automatic"` and CLI `--weather-policy automatic`
+are the defaults. Preserve usable primary data, interpolate gaps up to three
+hours, assess at most three nearby stations within 75 km for longer or unfillable
+short wind gaps, then use bounded daily profiles through 48 hours. Same-year
+ERA5 at the requested point recovers required hours still missing. Source failures
+and recovery decisions are visible in `result.report.warnings` and the CLI summary.
+Valid primary extreme temperatures are retained; physically impossible values are
+recovered, and abrupt source transitions produce warnings. Hourly solar inputs
+outside 0–2,000 W/m² are discarded as broadly implausible; this engineering guard
+does not clip plausible heatwave temperatures. When ERA5 is used, overlap with
+original observations is reported and substantial disagreement produces warnings
+without rejecting otherwise usable primary extremes. Recovery cannot guarantee
+an event's peak intensity or persistence. A single-year sensitivity experiment
+motivated trying assessed donors before daily profiles; it does not establish a
+universally most accurate method.
 
-### Recovering missing meteorological observations
+Donors are checked against original same-variable overlap near each gap, using
+held-out complete days. A scalar median offset is applied only when it improves
+validation MAE by at least 10%; wind directions are assessed without rotation.
+Insufficient overlap and excessive error reject a donor. These checks establish
+agreement with a station during overlap, not building-site accuracy during the
+outage. Model estimates may miss local microclimates and extreme intensity.
 
-Short scalar gaps (up to 3 hours) use linear interpolation; gaps up to 48 hours
-use the nearest complete daily reference within seven days. Reconstructed
-humidity, wind speed and cloud cover are bounded without clipping observed values.
+Automatic mode writes `OUTPUT.epw.json` beside the EPW. Set
+`EPWConfig.provenance_path` or CLI `--provenance PATH.json` to choose its path.
+The receipt records warnings, sources and recovery fractions, donor assessments,
+reanalysis metadata, configuration, code identity, output checksum and hashes
+of consumed responses. Cached and live payloads follow the same contract;
+receipts are isolated for each compilation even when a client is reused.
+`reanalysis_filled_hours` includes recovered cloud hours; `source_fractions`
+currently describes required meteorology and GHI, excluding optional cloud cover.
+Custom clients without scoped response receipts are marked incomplete. Paths
+must differ and their parent directories must exist. Automatic mode returns the
+valid EPW with a `provenance_write_failed` warning if a later sidecar-write
+filesystem failure prevents saving its audit trail. Keep that warning visible.
 
-Opt in with `EPWConfig(metobs_gap_fallback=True)` or `--metobs-gap-fallback`.
-Unfillable gaps can then use quality-filtered observations for the **same hours**
-from at most three nearby stations within 75 km of the requested location.
-Use `gap_fallback_max_distance_km` and `gap_fallback_max_stations` to adjust these
-explicit limits. Invalid primary meteorological observations are treated as gaps
-and counted. Solar data remains at the requested location. Unrecoverable gaps
-still fail; the 48-hour temporal interpolation ceiling is unchanged.
+Use `weather_policy="strict"` or `--weather-policy strict` for the earlier
+failure behavior. The legacy `metobs_gap_fallback=True` / `--metobs-gap-fallback`
+flag enables assessed donors in strict mode; automatic mode already uses them.
+`gap_fallback_max_distance_km` and `gap_fallback_max_stations` limit donor search
+in either policy. Strict mode writes a sidecar only when explicitly requested.
 
-The processing report records original missing/invalid hours, donor station
-positions and distances, replaced UTC intervals, and overlap differences against
-valid primary observations. `required_reconstructed_fraction` counts reconstructed
-cells across the five required meteorological variables; the existing
-`interpolated_fraction` describes subsequent temporal filling. These diagnostics
-must be reviewed before using heavily reconstructed weather for qualification.
-Pass `provenance_path` (CLI `--provenance`) to retain raw-response and code hashes.
-Nearby observations do not guarantee identical site weather, especially for wind
-and elevation-sensitive temperature; overlap diagnostics are evidence, not a
-correction or accuracy guarantee. EPSM workflows opt into this policy explicitly.
+Automatic recovery still fails on invalid configuration, unknown coordinates,
+unavailable weather from all sources, incomplete future-year data,
+unrecoverable physical inconsistencies and filesystem errors. It never
+substitutes another year or claims success without a complete valid calendar.
+The Open-Meteo adapter uses the public noncommercial service; check
+[current access limits](https://open-meteo.com/en/pricing) before batch or
+commercial use, and acknowledge Open-Meteo and Copernicus Climate Change Service
+ERA5. See the [Historical Weather API documentation](https://open-meteo.com/en/docs/historical-weather-api)
+for source definitions.
 
-See [the detailed weather-recovery guide](docs/weather_recovery.rst) for policy,
-API/CLI examples, diagnostic definitions, replay evidence and limitations.
+See [the weather-recovery guide](docs/weather_recovery.rst) for assessment
+thresholds, source units, diagnostic definitions, strict-mode examples,
+historical replay evidence and limitations.

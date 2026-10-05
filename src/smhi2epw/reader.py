@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import csv
 import os
+from calendar import monthrange
 from pathlib import Path
 from typing import Final
 
@@ -136,6 +137,62 @@ def _parse_location(line: str) -> dict[str, object]:
         ) from exc
 
 
+def _validate_read_calendar(frame: pd.DataFrame) -> None:
+    """Require possible dates and complete ordered hourly annual coverage.
+
+    Each representative date must exist in its recorded year. Comparing the
+    remaining calendar fields against a normalized year permits composite TMY
+    years without permitting duplicated, skipped, or reordered hours. The two
+    commonly used hourly minute conventions, zero and sixty, are accepted when
+    one convention is used consistently throughout the file.
+    """
+    calendar_ranges = {
+        "year": (1, 9999),
+        "month": (1, 12),
+        "day": (1, 31),
+        "hour": (1, 24),
+        "minute": (0, 60),
+    }
+    for column, (minimum, maximum) in calendar_ranges.items():
+        values = frame[column].to_numpy(dtype=float)
+        if not np.isfinite(values).all() or np.any(values != np.floor(values)):
+            raise ValidationError(
+                f"EPW calendar column '{column}' must contain finite integers"
+            )
+        if np.any(values < minimum) or np.any(values > maximum):
+            raise ValidationError(
+                f"EPW calendar column '{column}' contains values outside "
+                f"[{minimum}, {maximum}]"
+            )
+
+    minutes = frame["minute"].to_numpy(dtype=int)
+    if minutes[0] not in {0, 60} or not np.all(minutes == minutes[0]):
+        raise ValidationError("EPW hourly minutes must consistently be 0 or 60")
+
+    years = frame["year"].to_numpy(dtype=int)
+    months = frame["month"].to_numpy(dtype=int)
+    days = frame["day"].to_numpy(dtype=int)
+    for number, (year, month, day) in enumerate(zip(years, months, days), start=1):
+        if day > monthrange(year, month)[1]:
+            raise ValidationError(
+                f"EPW data row {number} contains an impossible calendar date: "
+                f"{year:04d}-{month:02d}-{day:02d}"
+            )
+
+    reference_year = 2000 if len(frame) == 8784 else 2001
+    expected = pd.date_range(f"{reference_year}-01-01", periods=len(frame), freq="h")
+    hours = frame["hour"].to_numpy(dtype=int)
+    if (
+        not np.array_equal(months, expected.month.to_numpy())
+        or not np.array_equal(days, expected.day.to_numpy())
+        or not np.array_equal(hours, expected.hour.to_numpy() + 1)
+    ):
+        raise ValidationError(
+            "EPW data must contain a complete ordered hourly calendar "
+            "from January 1 through December 31"
+        )
+
+
 def _validate_read_frame(frame: pd.DataFrame) -> None:
     """Validate EPW row cardinality, calendar fields, and physical ranges.
 
@@ -146,12 +203,9 @@ def _validate_read_frame(frame: pd.DataFrame) -> None:
     """
     if len(frame) not in {8760, 8784}:
         raise ValidationError(f"EPW data has {len(frame)} rows; expected 8760 or 8784")
+    _validate_read_calendar(frame)
 
     ranges = {
-        "month": (1.0, 12.0),
-        "day": (1.0, 31.0),
-        "hour": (1.0, 24.0),
-        "minute": (0.0, 60.0),
         "dry_bulb": (-70.0, 70.0),
         "dew_point": (-70.0, 70.0),
         "relative_humidity": (0.0, 110.0),
@@ -193,7 +247,8 @@ def read_epw(
         Path to an EnergyPlus Weather file.
     validate
         If ``True``, require eight standard headers, 35 fields per row,
-        8760 or 8784 data rows, and valid calendar and physical ranges.
+        8760 or 8784 ordered hourly data rows, possible integer calendar fields,
+        consistent minutes of 0 or 60, and valid physical ranges.
     missing_as_nan
         If ``True``, replace each field's EnergyPlus missing sentinel with
         ``numpy.nan``.  Set this to ``False`` when inspecting the raw encoding.

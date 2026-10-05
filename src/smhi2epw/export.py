@@ -172,7 +172,7 @@ def build_header(
     time_zone: float,
     elevation: float,
     year: int,
-    station_id: int,
+    station_id: int | str,
 ) -> List[str]:
     """Build the eight mandatory EPW header lines.
 
@@ -374,11 +374,11 @@ def write_epw(
         raise ValidationError(
             f"EPW leap-day header must be {leap_flag} for actual year {year}"
         )
-    expected_period = (
-        f"DATA PERIODS,1,1,Data,{calendar.day_name[date(year, 1, 1).weekday()]},1/1,12/31"
-    )
+    expected_period = f"DATA PERIODS,1,1,Data,{calendar.day_name[date(year, 1, 1).weekday()]},1/1,12/31"
     if header_lines[7] != expected_period:
-        raise ValidationError(f"EPW data-period header does not match actual year {year}")
+        raise ValidationError(
+            f"EPW data-period header does not match actual year {year}"
+        )
     _validate_frame(frame, year)
     expected = expected_rows(year)
     rows = list(_row_iter(frame))

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "smhi2epw"
 version = "1.1.0"
-description = "Fetch SMHI MetObs + STRÅNG open data and compile EnergyPlus Weather (.epw) AMY files."
+description = "Compile SMHI actual-year EPW weather with assessed donors and same-year ERA5 recovery."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -69,7 +69,7 @@ smhi2epw = ["py.typed"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
-    "network: tests that require live access to the SMHI open-data endpoints",
+    "network: tests that require live SMHI or Open-Meteo endpoints",
 ]
 
 [tool.ruff]

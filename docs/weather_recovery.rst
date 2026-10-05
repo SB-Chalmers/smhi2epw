@@ -1,57 +1,155 @@
 Missing-weather recovery and audit trail
-=======================================
+========================================
 
 Policy and defaults
 -------------------
 
-The compiler preserves a continuous hourly UTC grid, including the boundary
-hours needed to export a complete Local Standard Time calendar. It does not
-silently replace missing meteorology with EnergyPlus defaults.
+``EPWConfig.weather_policy="automatic"`` is the default. The compiler aims to
+return a complete requested-year EPW while retaining usable observations and
+making reconstruction visible. Supported requests are completed calendar years
+from 1999 onward. Required meteorological variables follow this order:
 
-* Scalar gaps of at most three hours use endpoint interpolation. At a calendar
-  boundary, one available endpoint permits a constant one-sided estimate.
-* Gaps of four through 48 hours use endpoint-adjusted daily profiles. The
-  nearest complete 24-hour reference is searched independently on either side
-  within seven days. Available sides are blended equally; one usable side is
-  sufficient. Profiles are taken from the working series, which can contain
-  earlier reconstructions.
-* Longer gaps are never filled by temporal interpolation. Entirely missing
-  required variables also fail unless the opt-in observation fallback supplies
-  sufficient recorded observations.
-* Reconstructed relative humidity, wind speed and cloud cover are bounded to
-  0--100 percent, 0--40 m/s and 0--8 octas respectively. Valid source observations
-  are not clipped. Direction interpolation uses sine/cosine components.
+1. Accepted-quality primary observations.
+2. Interpolation for gaps up to three hours, circularly for wind direction.
+3. Assessed same-year nearby observations for longer gaps or unfillable short
+   wind gaps.
+4. Bounded daily-profile reconstruction for remaining gaps up to 48 hours.
+5. Same-year ERA5 at the requested coordinates, supplied through Open-Meteo.
 
-``EPWConfig.metobs_gap_fallback`` defaults to ``False``. Enabling it validates
-primary required meteorological observations and treats nonfinite or
-out-of-range cells as missing. The representable bounds are temperature
--70--70 degrees Celsius, humidity 0--100 percent, sea-level pressure
-310--1200 hPa, wind speed 0--40 m/s and direction 0--360 degrees. These bounds
-are representability checks, not a complete meteorological quality model.
+Solar recovery remains donor-free: usable primary radiation, bounded solar
+filling or GHI decomposition, then same-year ERA5 for unresolved GHI.
 
-Nearby-observation fallback
----------------------------
+``weather_policy="strict"`` retains source and gap failures instead of enabling
+reanalysis. In strict mode, ``metobs_gap_fallback=True`` permits assessed donors;
+its default remains ``False``. Automatic policy already enables donors and does
+not require this legacy flag. Donor-enabled strict mode uses the same
+meteorological precedence through daily profiles, with no ERA5 stage. Without
+that flag, strict mode uses primary observations and bounded temporal filling.
+Both modes preserve valid primary observations. Invalid or nonfinite inputs
+become missing cells in automatic recovery.
 
-After identifying gaps that the temporal policy cannot reconstruct, the
-compiler searches stations with metadata coverage for the requested year and
-needed parameter. A donor need not supply all five required variables.
-Candidates are ranked by distance to the requested point, then station ID.
+Temporal filling remains bounded. Scalar gaps of at most three hours use
+endpoint interpolation; a single endpoint permits a constant boundary estimate.
+After assessed donors are tried, remaining gaps of up to 48 hours use
+endpoint-adjusted daily profiles, searching independently on each side within
+seven days. Usable sides receive equal weight; one side is sufficient. Profiles
+can include earlier reconstructions. Wind direction uses sine/cosine components.
+Solar gaps use day-aware profiles without donor transfer. Longer gaps are filled
+from another source, never by extending interpolation.
+
+A single-year building/weather sensitivity experiment motivated placing
+assessed donors before daily profiles. It does not establish universal donor
+superiority across locations, seasons or extreme events.
+
+Automatic station selection prefers full coverage but can use a partial station.
+Source failures are reported while other requests continue. If station discovery
+fails, supplied coordinates allow reanalysis recovery. Supplying only a station
+ID still requires enough metadata to resolve a target location. Invalid
+configuration, unknown coordinates, incomplete future years, unavailable weather
+from every source, unrecoverable physical inconsistencies and filesystem errors
+remain explicit failures. "Complete" does not mean inventing weather when no
+usable source exists.
+
+Nearby-observation assessment
+-----------------------------
+
+Donors are searched within ``gap_fallback_max_distance_km`` (default 75 km).
 At most ``gap_fallback_max_stations`` candidates (default three in total) are
-attempted within ``gap_fallback_max_distance_km`` (default 75 km). Year-specific
-positions are checked against the radius again after metadata resolution.
+attempted, ordered by distance and station ID. Metadata is resolved for the
+parameter being borrowed; a donor need not have temperature or all five required
+variables. Year-specific positions are checked against the radius again.
+Only same-hour SMHI observations with accepted quality grades G or Y are used.
+Invalid donor values and transport failures are recorded and skipped.
 
-Only same-hour, accepted-quality SMHI observations (G or Y) replace missing
-primary cells. Donor observations outside the representable bounds are ignored.
-Subhourly donor observations are averaged hourly; wind directions use circular
-averages and a cancelling vector is left missing. Existing valid primary values
-are retained. After each donor, remaining gaps are reassessed using the same
-48-hour temporal limit. Transport errors for a donor parameter are recorded and
-other eligible candidates may still be attempted. Uncovered gaps still fail.
+For each gap and variable, assess original paired primary/donor observations
+within 30 days on either side. Reconstructed primary values are excluded.
+Validate on three complete, distinct UTC overlap days: the earliest, middle and
+latest. Each fit excludes its test day and the adjacent days, and requires at
+least 168 paired training hours spanning seven dates. Insufficient overlap
+rejects a donor rather than treating its proximity as evidence of accuracy.
 
-No donor solar radiation is copied. STRANG queries and solar geometry remain at
-the requested location. Parameter 9 remains sea-level QFF until processing
-converts it into pressure at the resolved target elevation using the inverse
-SMHI reduction. See :doc:`provenance` for pressure assumptions.
+Scalar candidates are raw transfer and a median primary-minus-donor offset.
+Select an offset only if held-out mean absolute error (MAE) improves by at least
+10 percent, then refit on all eligible overlap. Wind direction uses shortest-arc
+errors and raw transfer only. The selected candidate must satisfy these default
+MAE ceilings in source units:
+
+===================== ====================
+Variable              Maximum held-out MAE
+===================== ====================
+Temperature           3 degrees Celsius
+Relative humidity     15 percentage points
+Wind speed            3 m/s
+Wind direction        45 degrees
+Sea-level QFF         5 hPa
+===================== ====================
+
+These are engineering defaults, not scientifically established accuracy
+thresholds. Corrected values outside physical bounds are ignored. Remaining
+gaps proceed to another eligible donor, then bounded daily profiles where
+possible, and ERA5 in automatic mode. Entirely
+missing variables cannot be calibrated against that year's primary record and
+therefore normally require reanalysis. No ML, wind rotation, multi-variable
+prediction or future-climate morphing is applied.
+
+Primary and donor subhourly winds share circular hourly averaging. A cancelling
+direction vector remains missing. Donor solar data is never copied; solar
+recovery remains tied to the requested coordinates.
+
+ERA5 recovery and physical consistency
+--------------------------------------
+
+Automatic policy uses the `Open-Meteo Historical Weather API
+<https://open-meteo.com/en/docs/historical-weather-api>`_ with ERA5 selected
+explicitly, UTC timestamps and the buffered requested-year window. The adapter
+checks units, array lengths, calendar coverage and usable values. Returned grid
+coordinates, elevation, model and response fingerprints accompany the report.
+
+Temperature, humidity, wind and surface pressure recover unresolved required
+hours. Missing cloud cover is filled from ERA5 only where ERA5 actually replaces
+required meteorology or GHI. Usable existing cloud values and all other hours
+remain unchanged; fetching ERA5 only to resolve metadata does not add clouds.
+``reanalysis_filled_hours`` includes ``cloud_cover`` when these optional
+replacements are used. SMHI parameter 9 is sea-level QFF and requires the inverse
+SMHI reduction; ERA5 surface pressure is used directly after unit conversion,
+without a second
+reduction. See :doc:`provenance` for elevation assumptions.
+
+Reanalysis radiation already represents the preceding-hour mean and is not
+averaged again like instantaneous STRÅNG samples. Solar replacements use complete
+component groups; when only usable GHI is available, the existing Erbs method
+derives DNI/DHI. Missing direct/diffuse solar components alone do not request
+ERA5 when existing GHI can be decomposed. Dew point and longwave radiation are
+derived from the final meteorological inputs.
+
+Hourly solar inputs outside 0--2,000 W/m² are treated as missing before recovery.
+This is a broad engineering plausibility guard, not a validated local solar
+threshold or a limit on plausible heatwave temperatures.
+
+Final checks require complete ordered hours, finite required values, physical
+ranges, dew point consistent with dry bulb, nonnegative solar fields, solar
+closure and the existing extraterrestrial DNI cap. Positive solar data during
+fully dark intervals is treated as inconsistent. Darkness checks use interval
+geometry so sunrise and sunset hours are not mistaken for complete darkness.
+Reconstructed humidity, wind and cloud estimates obey representable limits;
+valid observations are not clipped merely because they are unusual.
+
+When ERA5 is fetched, ``reanalysis_metadata["overlap"]`` compares it against
+available original primary observations. It records paired-hour counts, mean
+difference and mean absolute difference; wind direction uses shortest angular
+arcs. Pressure comparisons use Pa after original QFF is converted to target
+surface pressure with original valid temperature. Substantial disagreement
+produces a warning rather than rejecting the fallback or suppressing an event.
+These comparisons are descriptive and do not provide independent validation.
+
+Abrupt changes at source boundaries also generate warnings.
+Boundary warning thresholds are 10 degrees Celsius for temperature, 40
+percentage points for humidity, 15 m/s for wind speed and 1,000 Pa for surface
+pressure. They trigger review, not automatic rejection of extreme weather.
+Usable primary extremes are preserved, and another year is never substituted.
+Reconstruction may change a missing event's peak intensity, timing or duration;
+these checks cannot guarantee heatwave preservation or building-site accuracy.
+Review source extent and uncertainty when extremes matter.
 
 Usage
 -----
@@ -65,66 +163,100 @@ Python::
         output_path="weather-2018.epw",  # parent directory must exist
         latitude=59.3,
         longitude=18.0,
-        metobs_gap_fallback=True,
+        weather_policy="automatic",  # default; also enables assessed donors
         gap_fallback_max_distance_km=75.0,
         gap_fallback_max_stations=3,
-        provenance_path="weather-2018.json",
     ))
+    print(result.report.warnings)
     print(result.report.required_reconstructed_fraction)
     print(result.report.gap_fallback_sources)
+    # Default audit sidecar: weather-2018.epw.json
 
 CLI::
 
     smhi2epw 2018 weather-2018.epw --lat 59.3 --lon 18.0 \
-      --metobs-gap-fallback --gap-fallback-max-distance-km 75 \
-      --gap-fallback-max-stations 3 --provenance weather-2018.json
+      --gap-fallback-max-distance-km 75 --gap-fallback-max-stations 3
 
-Fallback settings are validated before network access. Disabling fallback
-retains strict station-only behavior; the improved temporal reconstruction and
-bounds on reconstructed values still apply.
+For strict compilation with optional assessed donors::
+
+    smhi2epw 2018 weather-2018.epw --lat 59.3 --lon 18.0 \
+      --weather-policy strict --metobs-gap-fallback --provenance weather-2018.json
+
+Settings are validated before requests. Explicit ``provenance_path`` (CLI
+``--provenance``) overrides the automatic ``OUTPUT.epw.json`` destination.
+Strict mode creates no sidecar unless one is requested. The output and sidecar
+paths must differ and their parent directories must exist.
 
 Diagnostics and reproducibility
 -------------------------------
 
-``ProcessingReport`` records:
+Review ``ProcessingReport.warnings`` and the sidecar alongside the EPW. They
+record source failures, rejected donors, insufficient overlap, corrected or
+reanalysis-filled hours, and source-boundary concerns. ``weather_classification``
+is ``observation_based``, ``mixed_reconstructed`` or ``reanalysis_only``.
+Reconstruction of any required meteorological variable or solar GHI makes a
+result mixed; routine physical darkness zeros do not. Reanalysis-only requires
+all required meteorological hours from ERA5 and solar GHI from ERA5 or physical
+darkness. ``solar_source`` separately identifies the radiation path.
+``source_fractions`` maps required meteorological variables and GHI to shares
+of exported hours using primary, temporal, donor, reanalysis and physical source
+tags. It does not currently describe optional cloud cover; its recovered-hour
+count is included in ``reanalysis_filled_hours``.
+``reanalysis_filled_hours`` and ``reanalysis_metadata`` describe the extent,
+provider details and original-observation comparisons of ERA5 use.
+EPW comments retain fallback attribution and a quality summary when the EPW is
+copied without its sidecar.
+
+Recovery diagnostics include:
 
 * ``primary_missing_hours`` and ``invalid_observation_hours`` by required
-  variable, before any recovery, when fallback is enabled;
-* ``cross_station_filled_hours`` by variable, and ``gap_fallback_sources`` with
-  donor IDs, coordinates, distances, filled counts and inclusive UTC intervals;
-* ``gap_fallback_attempts`` including donor metadata/parameter errors;
-* donor/primary overlap counts, mean differences and mean absolute differences
-  in each variable's source units (angular differences use the shortest arc);
+  variable before recovery;
+* ``cross_station_filled_hours`` and ``gap_fallback_sources`` with donor IDs,
+  locations, distances, selected methods, offsets and filled UTC intervals;
+* ``gap_fallback_attempts`` including rejected candidates, assessment status,
+  overlap period, held-out errors and metadata/parameter errors;
 * ``linear_filled_hours``, ``diurnal_filled_hours``, ``max_gap_hours`` and
-  ``bounded_filled_hours`` for subsequent temporal filling;
-* ``required_reconstructed_fraction``: the pre-recovery missing/invalid cell
-  count divided by all cells in the five required meteorological variables on
-  the ingestion grid, including calendar boundary hours. This field is populated
-  by the opt-in recovery path and remains zero when that path is disabled.
+  ``bounded_filled_hours`` for temporal reconstruction;
+* ``required_reconstructed_fraction``: missing/invalid primary cells divided
+  by all cells in the five required meteorological variables on the ingestion
+  grid, including calendar boundary hours.
 
-The existing ``interpolated_fraction`` measures subsequent temporal filling
-across processed columns; it excludes cells already supplied by donors and
-must not be interpreted as the total amount of weather reconstruction.
-Overlap differences are descriptive comparisons against primary observations,
-not independent held-out validation or a bias correction. No-overlap statistics
-are explicitly null, including when a primary variable is entirely absent.
+The existing ``interpolated_fraction`` reports temporal filling across processed
+columns. It is not the fraction of all reconstruction; donor and reanalysis
+estimates must also be reviewed. Donor held-out errors measure agreement with
+primary observations during overlap, not independent site validation or an
+accuracy guarantee for the outage.
 
-``provenance_path`` writes a separate atomic JSON receipt with configuration,
-result/report, EPW SHA-256, package version, source-code fingerprints and hashes
-of UTF-8 API responses consumed by the parser. Cached and fetched payloads are
-both recorded. Custom clients without receipts are marked incomplete. Receipt
-writing happens after successful EPW export; a failed compilation has no normal
-success receipt, and a receipt-write failure can leave a valid EPW on disk.
+The atomic JSON sidecar records configuration, result/report, EPW SHA-256,
+package version, source-code fingerprints and UTF-8 response hashes. Live and
+cached payloads follow the same receipt contract. Receipts are scoped per
+compilation even when a client is reused; unrelated earlier requests are
+excluded. Custom clients without scoped response receipts are marked incomplete.
 
-Actual-year export also validates leap-day and weekday headers before replacing
-an output file. Leap years use 8,784 rows and permit February 29; ordinary years
-use 8,760 rows. Preserve old artifacts and generate a fresh EPW when changing
-pressure conversion, reconstruction policy or source data.
+Receipt writing occurs after successful EPW export. Automatic policy returns
+the valid EPW with a ``provenance_write_failed`` warning when a sidecar filesystem
+failure prevents saving the receipt; strict policy retains a reported error.
+Neither case establishes a saved audit trail. EPW replacement remains atomic and follows successful
+validation of headers, 35-field rows, physical values and annual cardinality.
+Preserve old artifacts and regenerate when changing reconstruction policy,
+pressure conversion or source payloads.
 
-Evidence and limitations
-------------------------
+Service access and limitations
+------------------------------
 
-On 5 October 2026, the EPSM national-cohort workflow replayed its 53 failed
+The packaged adapter uses Open-Meteo's public noncommercial endpoint. Check the
+current `service access and limits <https://open-meteo.com/en/pricing>`_ before
+batch or commercial use; the package does not configure a paid API key or a
+customer endpoint. Responses are cached to avoid unnecessary repeat requests.
+Attribute Open-Meteo and Copernicus Climate Change Service ERA5 in studies using
+this fallback. Model weather is not an independent local observation and can
+underrepresent microclimates or extreme intensity.
+
+Historical replay evidence
+--------------------------
+
+The earlier opt-in, raw-donor policy (commit ``4861f9e``) was exercised on
+5 October 2026 when the EPSM national-cohort workflow replayed its 53 failed
 municipality/year weather jobs in a separate artifact directory, retaining
 cached primary observations and fetching needed donor archives. Of these:
 
@@ -146,11 +278,13 @@ No annual building simulations or calibration were rerun in this replay.
 The workflow artifact directory ``output/weather-robustness-2026-10-05-v1``
 contains status, source manifest/snapshot, per-job receipts, failure diagnostics,
 replay script and an HTML report. Large generated EPWs and raw caches are local
-artifacts, not package source. The replay source hashes precede documentation
-and formatting added for this commit; regenerated receipts will have new hashes.
+artifacts, not package source. These artifacts describe the earlier recovery
+policy and do not validate the automatic ERA5 fallback or donor assessment
+introduced here. Regenerated
+receipts will have new code and configuration identities.
 
-Regression verification: 97 offline smhi2epw tests passed, four skipped and four
-live-network tests were deselected. Coverage includes a complete recovered
+Historical regression verification: 97 offline smhi2epw tests passed, four
+skipped and four live-network tests were deselected. Coverage includes a complete recovered
 8,760-hour EPW, a 49-hour donor-filled gap, radius enforcement, circular winds,
 invalid configuration before requests, preserving valid observations and the
 48-hour temporal ceiling. The EPSM workflow suite passed 236 tests with one

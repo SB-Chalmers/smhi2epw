@@ -79,6 +79,91 @@ def test_read_epw_accepts_leap_and_composite_tmy_years(tmp_path):
     assert composite["year"].nunique() == 12
 
 
+@pytest.mark.parametrize("minute", [0, 60])
+def test_read_epw_accepts_consistent_hourly_minute_conventions(tmp_path, minute):
+    path = _write_valid_epw(tmp_path / "minutes.epw")
+    rows = list(csv.reader(path.read_text(encoding="utf-8").splitlines()))
+    for row in rows[8:]:
+        row[4] = str(minute)
+    path.write_text("\n".join(",".join(row) for row in rows) + "\n", encoding="utf-8")
+
+    assert read_epw(path)["minute"].eq(minute).all()
+
+
+def test_read_epw_accepts_leap_composite_tmy_calendar(tmp_path):
+    path = _write_valid_epw(tmp_path / "leap-composite.epw", 2020)
+    rows = list(csv.reader(path.read_text(encoding="utf-8").splitlines()))
+    for row in rows[8:]:
+        month = int(row[1])
+        row[0] = str(2004 if month == 2 else 2000 + month)
+    path.write_text("\n".join(",".join(row) for row in rows) + "\n", encoding="utf-8")
+
+    assert len(read_epw(path)) == 8784
+
+
+@pytest.mark.parametrize(
+    "column,value",
+    [
+        ("year", "2021.5"),
+        ("month", "1.5"),
+        ("day", "1.5"),
+        ("hour", "1.5"),
+        ("minute", "0.5"),
+        ("year", "inf"),
+    ],
+)
+def test_read_epw_rejects_noninteger_calendar_fields(tmp_path, column, value):
+    path = _write_valid_epw(tmp_path / "fractional.epw")
+    rows = list(csv.reader(path.read_text(encoding="utf-8").splitlines()))
+    rows[8][EPW_COLUMNS.index(column)] = value
+    path.write_text("\n".join(",".join(row) for row in rows) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValidationError, match=f"'{column}'.*finite integers"):
+        read_epw(path)
+
+
+@pytest.mark.parametrize("day", [29, 31])
+def test_read_epw_rejects_impossible_representative_date(tmp_path, day):
+    path = _write_valid_epw(tmp_path / "impossible.epw")
+    rows = list(csv.reader(path.read_text(encoding="utf-8").splitlines()))
+    february = next(row for row in rows[8:] if row[1] == "2")
+    february[2] = str(day)
+    path.write_text("\n".join(",".join(row) for row in rows) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValidationError, match="impossible calendar date"):
+        read_epw(path)
+
+
+@pytest.mark.parametrize("corruption", ["duplicate", "reordered", "missing"])
+def test_read_epw_rejects_incomplete_ordered_calendar(tmp_path, corruption):
+    path = _write_valid_epw(tmp_path / "sequence.epw")
+    rows = list(csv.reader(path.read_text(encoding="utf-8").splitlines()))
+    if corruption == "duplicate":
+        rows[9] = rows[8].copy()
+    elif corruption == "reordered":
+        rows[8], rows[9] = rows[9], rows[8]
+    else:
+        # Keep cardinality valid while skipping one hour and appending a duplicate.
+        rows.pop(9)
+        rows.append(rows[-1].copy())
+    path.write_text("\n".join(",".join(row) for row in rows) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValidationError, match="complete ordered hourly calendar"):
+        read_epw(path)
+
+
+@pytest.mark.parametrize("minute", [30, 60])
+def test_read_epw_rejects_intermediate_or_mixed_minutes(tmp_path, minute):
+    path = _write_valid_epw(tmp_path / "mixed-minutes.epw")
+    rows = list(csv.reader(path.read_text(encoding="utf-8").splitlines()))
+    rows[8][4] = "0"
+    rows[9][4] = str(minute)
+    path.write_text("\n".join(",".join(row) for row in rows) + "\n", encoding="utf-8")
+
+    with pytest.raises(ValidationError, match="consistently be 0 or 60"):
+        read_epw(path)
+
+
 def test_read_epw_rejects_wrong_field_count(tmp_path):
     path = _write_valid_epw(tmp_path / "malformed.epw")
     lines = path.read_text(encoding="utf-8").splitlines()

@@ -41,10 +41,11 @@ class ProcessingReport:
     missing_columns
         Optional source columns that were absent or entirely missing.
     cloud_available
-        Whether observed SMHI total cloud cover was available.
+        Whether usable observed or reconstructed total cloud cover was available.
     solar_source
         One of ``"strang"``, ``"measured+strang_partition"``,
-        ``"strang_ghi+erbs"``, or ``"measured+erbs"``.
+        ``"strang_ghi+erbs"``, ``"measured+erbs"``, ``"era5"``, or
+        ``"mixed"`` for solar assembled from different hourly sources.
     linear_filled_hours, diurnal_filled_hours
         Filled-hour counts by column and method.
     max_gap_hours
@@ -52,14 +53,29 @@ class ProcessingReport:
     bounded_filled_hours
         Reconstructed hours clipped to each variable's representable range.
     primary_missing_hours, invalid_observation_hours
-        Required-variable missing and invalid counts before opt-in recovery.
+        Required-variable missing and invalid counts before source recovery.
     cross_station_filled_hours
         Required-variable counts filled from same-hour donor observations.
     gap_fallback_sources, gap_fallback_attempts
         Donor receipts and attempted requests, including parameter errors.
     required_reconstructed_fraction
         Pre-recovery missing/invalid fraction across required ingestion cells.
-        Populated only when the opt-in recovery path runs.
+        Populated by automatic or strict donor recovery.
+    warnings
+        Structured records containing ``code``, ``message`` and optional
+        ``variable``/``details``; plausibility warnings retain valid extremes.
+    reanalysis_filled_hours
+        Weather-variable sample counts supplied by ERA5 on the buffered grid,
+        including optional cloud cover during actual weather replacement hours.
+    reanalysis_metadata
+        Provider, model, grid/elevation, attribution and original overlap
+        comparisons; pressure differences are expressed in Pa.
+    source_fractions
+        Source proportions by variable over exported LST hours.
+    weather_classification
+        ``"observation_based"``, ``"mixed_reconstructed"`` or
+        ``"reanalysis_only"``. Includes reconstructed GHI; routine physical
+        nighttime zeros do not downgrade otherwise observation-based inputs.
     """
 
     interpolated_fraction: Dict[str, float] = field(default_factory=dict)
@@ -79,6 +95,11 @@ class ProcessingReport:
     gap_fallback_sources: List[dict] = field(default_factory=list)
     gap_fallback_attempts: List[dict] = field(default_factory=list)
     required_reconstructed_fraction: float = 0.0
+    warnings: List[dict] = field(default_factory=list)
+    reanalysis_filled_hours: Dict[str, int] = field(default_factory=dict)
+    reanalysis_metadata: dict = field(default_factory=dict)
+    source_fractions: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    weather_classification: str = "observation_based"
 
 
 # --------------------------------------------------------------------------- #
@@ -353,8 +374,16 @@ def _fill_wind_direction(
         max_gap_hours=max_gap_hours,
     )
     direction = np.degrees(np.arctan2(sin_filled, cos_filled)) % 360.0
-    invalid = sin_filled.isna() | cos_filled.isna()
+    invalid = (
+        sin_filled.isna()
+        | cos_filled.isna()
+        | (np.hypot(sin_filled, cos_filled) <= 1e-8)
+    )
     direction[invalid] = np.nan
+    if required and invalid.any():
+        raise DataGapError(
+            "Wind direction cannot be reconstructed from cancelling vectors"
+        )
     return (
         pd.Series(direction, index=series.index, name=series.name),
         linear,
@@ -868,8 +897,15 @@ def process(
     optional = list(C.METOBS_OPTIONAL_PARAMETERS.values())
     solar_columns = list(C.STRANG_PARAMETERS.values())
 
-    report = impute(frame, required, optional, report=report)
-    impute_solar(frame, solar_columns, report)
+    has_surface_fallback = "reanalysis_surface_pressure" in frame
+    if has_surface_fallback:
+        required.remove("pressure")
+        optional.append("pressure")
+    if frame.attrs.get("automatic_prepared"):
+        report = report or ProcessingReport()
+    else:
+        report = impute(frame, required, optional, report=report)
+        impute_solar(frame, solar_columns, report)
 
     measured_column = C.METOBS_RADIATION_COLUMN
     if measured_column in frame.columns and not frame[measured_column].isna().all():
@@ -901,9 +937,26 @@ def process(
         )
 
     convert_units(frame)
-    frame["pressure"] = pressure_at_elevation(
-        frame["pressure"], frame["dry_bulb"], lat, target_elevation_m
-    )
+    if has_surface_fallback:
+        valid_pressure = (
+            frame["pressure"].notna() & frame["reanalysis_surface_pressure"].isna()
+        )
+        frame.loc[~valid_pressure, "pressure"] = np.nan
+        frame.loc[valid_pressure, "pressure"] = pressure_at_elevation(
+            frame.loc[valid_pressure, "pressure"],
+            frame.loc[valid_pressure, "dry_bulb"],
+            lat,
+            target_elevation_m,
+        )
+        frame["pressure"] = frame["pressure"].combine_first(
+            frame["reanalysis_surface_pressure"]
+        )
+        if not np.isfinite(frame["pressure"]).all():
+            raise DataGapError("No complete surface-pressure source is available")
+    else:
+        frame["pressure"] = pressure_at_elevation(
+            frame["pressure"], frame["dry_bulb"], lat, target_elevation_m
+        )
 
     frame["dew_point"] = dew_point(frame["dry_bulb"], frame["relative_humidity"])
 

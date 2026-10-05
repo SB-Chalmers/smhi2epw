@@ -63,3 +63,38 @@ def test_find_nearest_station_live():
     meta = find_nearest_station(57.7156, 11.9924, 2023, client)
     assert meta.station_id > 0
     assert meta.distance_km(57.7156, 11.9924) < 50.0
+
+
+@pytest.mark.network
+def test_open_meteo_era5_units_and_interval(tmp_path):
+    """Exercise the explicitly selected archive model on a small historical window."""
+    import numpy as np
+    import pandas as pd
+
+    from smhi2epw import reanalysis
+    from smhi2epw.ingestion import CachedClient
+
+    index = pd.date_range("2018-07-20", periods=48, freq="h", tz="UTC")
+    client = CachedClient(cache_dir=str(tmp_path / "era5-cache"))
+    frame, metadata = reanalysis.fetch(57.7, 12.0, 50.0, index, client)
+    assert frame.index.equals(index)
+    assert (
+        np.isfinite(
+            frame[
+                [
+                    "dry_bulb",
+                    "relative_humidity",
+                    "reanalysis_surface_pressure",
+                    "wind_speed",
+                    "wind_direction",
+                    "ghi",
+                ]
+            ]
+        )
+        .all()
+        .all()
+    )
+    assert metadata["model"] == "ERA5"
+    assert metadata["elevation_m"] == 50.0
+    assert metadata["radiation_interval"] == "preceding_hour_mean"
+    assert frame.reanalysis_surface_pressure.between(31000, 120000).all()

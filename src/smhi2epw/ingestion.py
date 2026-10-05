@@ -10,6 +10,7 @@ atomically to make repeated educational and production runs kind to the APIs.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import io
 import json
@@ -145,7 +146,8 @@ class CachedClient:
         See the class-level documentation for parameter semantics. The cache
         directory is created eagerly so later worker threads only write files.
         """
-        self.response_receipts = {}
+        self.response_receipts: dict[tuple[str, str], dict[str, object]] = {}
+        self.response_receipts_scoped = False
         self._receipt_lock = Lock()
         self.cache_dir = cache_dir
         self.timeout = timeout
@@ -154,6 +156,19 @@ class CachedClient:
         self.refresh = refresh  # force re-fetch, ignore cached entries
         if cache_dir:
             os.makedirs(cache_dir, exist_ok=True)
+
+    def scoped(self) -> CachedClient:
+        """Share transport/cache while isolating receipts for one compilation.
+
+        Each clone owns its receipt dictionary and lock. Worker threads within
+        a compilation share that clone; concurrent compilations cannot clear or
+        contaminate one another's provenance.
+        """
+        client = copy.copy(self)
+        client.response_receipts = {}
+        client._receipt_lock = Lock()
+        client.response_receipts_scoped = True
+        return client
 
     @staticmethod
     def _build_session(max_retries: int) -> requests.Session:
@@ -353,7 +368,11 @@ def _clean_station_name(title: object, station_id: int) -> str:
 
 
 def get_station_metadata(
-    station_id: int, client: CachedClient, year: Optional[int] = None
+    station_id: int,
+    client: CachedClient,
+    year: Optional[int] = None,
+    *,
+    parameter: int = 1,
 ) -> StationMeta:
     """Resolve a station's name, coordinates and elevation from metobs.
 
@@ -365,6 +384,9 @@ def get_station_metadata(
         Cache-aware transport used for the metadata request.
     year
         Optional historical year used to select the correct position record.
+    parameter
+        MetObs parameter whose station metadata is requested; defaults to
+        temperature (1). Donors use their actual borrowed parameter.
 
     Returns
     -------
@@ -381,31 +403,46 @@ def get_station_metadata(
     The SMHI ``key`` field is not assumed to be a WMO number. Missing genuine
     WMO metadata is represented by the EPW fallback ``"999999"``.
     """
-    url = f"{C.METOBS_BASE}/parameter/1/station/{station_id}.json"
+    url = f"{C.METOBS_BASE}/parameter/{parameter}/station/{station_id}.json"
     payload = client.get_json(url)
     if not isinstance(payload, dict):
         raise IngestionError(f"unexpected station payload for {station_id}")
 
-    positions = payload.get("position") or []
-    if year is not None:
-        pos = _select_position(positions, year)
-    elif positions:
-        pos = max(positions, key=lambda p: p.get("to", 0))
-    else:
-        raise IngestionError(f"no position metadata for station {station_id}")
-
-    # The metobs station payload exposes the human-readable name as 'title'.
-    raw_name = payload.get("name") or payload.get("title")
-    name = _clean_station_name(raw_name, int(station_id))
-    return StationMeta(
-        station_id=int(station_id),
-        name=name,
-        latitude=float(pos["latitude"]),
-        longitude=float(pos["longitude"]),
-        elevation=float(pos.get("height", 0.0) or 0.0),
-        # The MetObs ``key`` is an SMHI station ID, not a WMO identifier.
-        wmo_id=str(payload.get("wmo") or "999999"),
-    )
+    try:
+        positions = payload.get("position") or []
+        if not isinstance(positions, list) or not all(
+            isinstance(position, dict) for position in positions
+        ):
+            raise ValueError("position records must be a list of mappings")
+        if year is not None:
+            pos = _select_position(positions, year)
+        elif positions:
+            pos = max(positions, key=lambda p: p.get("to", 0))
+        else:
+            raise IngestionError(f"no position metadata for station {station_id}")
+        latitude = float(pos["latitude"])
+        longitude = float(pos["longitude"])
+        elevation = float(pos.get("height", 0.0) or 0.0)
+        if not (math.isfinite(latitude) and -90 <= latitude <= 90):
+            raise ValueError("invalid station latitude")
+        if not (math.isfinite(longitude) and -180 <= longitude <= 180):
+            raise ValueError("invalid station longitude")
+        if not (math.isfinite(elevation) and -1000 <= elevation <= 9999):
+            raise ValueError("invalid station elevation")
+        raw_name = payload.get("name") or payload.get("title")
+        return StationMeta(
+            station_id=int(station_id),
+            name=_clean_station_name(raw_name, int(station_id)),
+            latitude=latitude,
+            longitude=longitude,
+            elevation=elevation,
+            # SMHI station keys are distinct from actual WMO identifiers.
+            wmo_id=str(payload.get("wmo") or "999999"),
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise IngestionError(
+            f"Invalid metadata for station {station_id}: {exc}"
+        ) from exc
 
 
 # --------------------------------------------------------------------------- #
@@ -476,7 +513,12 @@ def _covers_year(record: Tuple[float, float, int, int], year: int) -> bool:
 
 
 def find_nearest_station(
-    lat: float, lon: float, year: int, client: CachedClient
+    lat: float,
+    lon: float,
+    year: int,
+    client: CachedClient,
+    *,
+    allow_partial: bool = False,
 ) -> StationMeta:
     """Find the nearest metobs station carrying all required parameters in ``year``.
 
@@ -488,6 +530,9 @@ def find_nearest_station(
         Calendar year that every required parameter must fully cover.
     client
         Cache-aware metadata transport.
+    allow_partial
+        Prefer full coverage but accept a station overlapping the year when
+        automatic recovery can supply its remaining variables/hours.
 
     Returns
     -------
@@ -510,7 +555,14 @@ def find_nearest_station(
     if not base:
         raise IngestionError("could not list metobs stations")
 
-    other = {p: _stations_for_parameter(p, client) for p in required[1:]}
+    other = {}
+    for parameter in required[1:]:
+        try:
+            other[parameter] = _stations_for_parameter(parameter, client)
+        except IngestionError:
+            if not allow_partial:
+                raise
+            other[parameter] = {}
 
     ranked = sorted(
         base.items(), key=lambda kv: _haversine_km(lat, lon, kv[1][0], kv[1][1])
@@ -534,6 +586,15 @@ def find_nearest_station(
                 _haversine_km(lat, lon, slat, slon),
             )
             return get_station_metadata(sid, client, year=year)
+
+    if allow_partial:
+        for sid, record in ranked:
+            start_ms, end_ms = _year_bounds_ms(year)
+            if record[2] <= end_ms and record[3] >= start_ms:
+                try:
+                    return get_station_metadata(sid, client, year=year)
+                except IngestionError:
+                    continue
 
     raise IngestionError(
         f"no metobs station near {lat:.4f},{lon:.4f} covers all required "
@@ -800,6 +861,7 @@ def ingest(
     solar_latitude: Optional[float] = None,
     solar_longitude: Optional[float] = None,
     radiation_required: bool = False,
+    tolerate_failures: bool = False,
 ) -> pd.DataFrame:
     """Query both endpoints in parallel and return a UTC-indexed DataFrame.
 
@@ -823,6 +885,9 @@ def ingest(
         Requested STRÅNG point; station coordinates are fallbacks when absent.
     radiation_required
         Make measured-GHI failure fatal for an explicit radiation station.
+    tolerate_failures
+        Retain unavailable sources as gaps and record failures in frame attrs
+        for automatic recovery. The default retains strict ingestion errors.
 
     Returns
     -------
@@ -911,13 +976,21 @@ def ingest(
             ] = (column, True)
 
         collected: Dict[str, pd.Series] = {}
+        failures: list[dict] = []
         for future in as_completed(tasks):
             column, required = tasks[future]
             try:
                 collected[column] = future.result()
             except Exception as exc:
-                if required:
+                if required and not tolerate_failures:
                     raise
+                failures.append(
+                    {
+                        "code": "source_unavailable",
+                        "message": str(exc),
+                        "variable": column,
+                    }
+                )
                 log.warning("optional source '%s' unavailable: %s", column, exc)
                 collected[column] = pd.Series(dtype=float, name=column)
 
@@ -933,7 +1006,12 @@ def ingest(
     for column in ordered:
         series = collected.get(column, pd.Series(dtype=float, name=column))
         if not series.empty:
-            series = series.resample("h").mean()
+            if column == "wind_direction":
+                from .gap_recovery import hourly_observations
+
+                series = hourly_observations(series, column)
+            else:
+                series = series.resample("h").mean()
         frame[column] = series.reindex(grid)
 
     # STRÅNG values are instantaneous at the full hour; EPW expects the mean
@@ -942,4 +1020,5 @@ def ingest(
         if col in frame.columns:
             frame[col] = (frame[col] + frame[col].shift(1)) / 2
 
+    frame.attrs["source_failures"] = failures
     return frame

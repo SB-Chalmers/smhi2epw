@@ -12,12 +12,14 @@ from __future__ import annotations
 
 import logging
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Optional
 
+from . import automatic, export, processing
 from . import constants as C
-from . import export, processing
-from .errors import IngestionError
+from .errors import IngestionError, ValidationError
 from .ingestion import (
     CachedClient,
     StationMeta,
@@ -38,13 +40,13 @@ class EPWConfig:
     Attributes
     ----------
     year
-        Calendar year to compile. STRÅNG coverage begins in 1999.
+        Completed calendar year to compile, from 1999 onward.
     output_path
         Destination EPW path. Its parent directory must already exist.
     station_id
         Explicit SMHI MetObs station identifier. If omitted, ``latitude`` and
-        ``longitude`` are used to locate the nearest station that covers the
-        full year for every required parameter.
+        ``longitude`` locate a station. Automatic policy permits partial
+        coverage or reanalysis-only recovery when metadata is unavailable.
     city, region, country
         Human-readable EPW location fields. They must not contain commas or
         newlines; ``country`` is normally an ISO-style code such as ``"SWE"``.
@@ -57,15 +59,15 @@ class EPWConfig:
         Positive number of concurrent parameter requests.
     latitude, longitude
         Optional requested coordinates in decimal degrees. When supplied,
-        they control the STRÅNG query, solar geometry, and EPW location even
+        they control STRÅNG and ERA5 queries, solar geometry, and EPW location even
         if an explicit meteorological station is used.
     refresh
         Ignore otherwise valid cached responses when ``True``.
     cache_ttl
         Maximum cache age in seconds, or ``None`` for no age limit.
     radiation_station_id
-        Explicit SMHI Sol station for measured GHI. Unlike automatic
-        selection, an unusable explicit station causes compilation to fail.
+        Explicit SMHI Sol station for measured GHI. An unusable station
+        fails in strict policy; automatic policy warns and uses other sources.
     radiation_station_auto
         Discover a nearby full-year Sol station when no explicit ID is given.
     target_elevation_m
@@ -76,13 +78,18 @@ class EPWConfig:
         disables the radius; the default is 50 km.
 
     provenance_path
-        Optional separate JSON receipt with source, response and output hashes.
+        Separate JSON receipt with source, response and output hashes.
+        Automatic policy defaults to ``output_path + ".json"``.
     metobs_gap_fallback
-        Opt in to bounded same-hour nearby-observation recovery; default False.
+        Enable assessed nearby donors in strict policy; default False.
+        Automatic policy always evaluates donors before reanalysis.
     gap_fallback_max_distance_km
         Positive donor radius about the requested point; default 75 km.
     gap_fallback_max_stations
         Positive total candidate-attempt limit; default three stations.
+    weather_policy
+        ``"automatic"`` (default) recovers same-year weather with ERA5 and
+        warnings; ``"strict"`` retains explicit source and gap failures.
 
     Examples
     --------
@@ -129,6 +136,7 @@ class EPWConfig:
     metobs_gap_fallback: bool = False
     gap_fallback_max_distance_km: float = 75.0
     gap_fallback_max_stations: int = 3
+    weather_policy: str = "automatic"
 
 
 @dataclass
@@ -142,12 +150,13 @@ class CompileResult:
     rows
         Number of hourly rows written: 8760 or 8784.
     station
-        Meteorological station supplying observations; its elevation is kept
-        independently of the resolved target site.
+        Meteorological station supplying observations; ``None`` when station
+        metadata is unavailable and requested coordinates enable reanalysis.
     interpolated_fraction
         Mean fraction of samples filled across processed input columns.
     coordinate_distance_km
-        Distance from the meteorological station to the requested solar point.
+        Distance from the station to the requested point, or ``None`` when
+        no station metadata is available.
     report
         Detailed filling, solar-source, cloud, and energy-closure diagnostics.
     radiation_station_id
@@ -165,9 +174,9 @@ class CompileResult:
 
     output_path: str
     rows: int
-    station: StationMeta
+    station: Optional[StationMeta]
     interpolated_fraction: float
-    coordinate_distance_km: float
+    coordinate_distance_km: Optional[float]
     report: processing.ProcessingReport
     radiation_station_id: Optional[int] = None
     radiation_station_distance_km: Optional[float] = None
@@ -196,6 +205,11 @@ def _validate_config(config: EPWConfig) -> None:
     This function runs before constructing :class:`CachedClient`; configuration
     mistakes therefore never trigger an SMHI request.
     """
+    if not isinstance(config.weather_policy, str) or config.weather_policy not in {
+        "automatic",
+        "strict",
+    }:
+        raise IngestionError("weather_policy must be automatic or strict")
     if not isinstance(config.metobs_gap_fallback, bool):
         raise IngestionError("metobs_gap_fallback must be boolean")
     if (
@@ -212,24 +226,45 @@ def _validate_config(config: EPWConfig) -> None:
         raise IngestionError("gap fallback station count must be a positive integer")
     if not isinstance(config.year, int) or isinstance(config.year, bool):
         raise IngestionError("year must be an integer")
+    if config.year >= datetime.now(timezone.utc).year:
+        raise IngestionError(
+            "A complete requested-year EPW requires a completed calendar year"
+        )
     if config.year < C.STRANG_MIN_YEAR:
         raise IngestionError(
             f"STRÅNG solar data is only available from {C.STRANG_MIN_YEAR}; "
             f"requested year {config.year} is out of range"
         )
-    if config.station_id is not None and config.station_id <= 0:
-        raise IngestionError("station id must be positive")
-    if config.radiation_station_id is not None and config.radiation_station_id <= 0:
-        raise IngestionError("radiation station id must be positive")
-    if config.max_workers <= 0:
-        raise IngestionError("max_workers must be positive")
-    if config.cache_ttl is not None and config.cache_ttl < 0:
-        raise IngestionError("cache_ttl must be nonnegative")
-    if (
-        config.radiation_station_max_distance_km is not None
-        and config.radiation_station_max_distance_km < 0
+    for label, identifier in (
+        ("station id", config.station_id),
+        ("radiation station id", config.radiation_station_id),
     ):
-        raise IngestionError("radiation station maximum distance must be nonnegative")
+        if identifier is not None and (
+            isinstance(identifier, bool)
+            or not isinstance(identifier, int)
+            or identifier <= 0
+        ):
+            raise IngestionError(f"{label} must be a positive integer")
+    if (
+        isinstance(config.max_workers, bool)
+        or not isinstance(config.max_workers, int)
+        or config.max_workers <= 0
+    ):
+        raise IngestionError("max_workers must be a positive integer")
+    for label, value in (
+        ("cache_ttl", config.cache_ttl),
+        (
+            "radiation station maximum distance",
+            config.radiation_station_max_distance_km,
+        ),
+    ):
+        if value is not None and (
+            isinstance(value, bool)
+            or not isinstance(value, (int, float))
+            or not math.isfinite(value)
+            or value < 0
+        ):
+            raise IngestionError(f"{label} must be finite and nonnegative")
 
     if config.target_elevation_m is not None and (
         not math.isfinite(config.target_elevation_m)
@@ -303,7 +338,8 @@ def compile_epw(
         If configuration, station coverage, HTTP access, or source payloads
         are invalid.
     DataGapError
-        If a required observation gap cannot be filled under the 48-hour rule.
+        If strict source requirements fail or automatic recovery cannot
+        produce physically representable complete same-year inputs.
     ValidationError
         If the processed year cannot be represented as a strict EPW file.
 
@@ -315,8 +351,14 @@ def compile_epw(
     defaults to the station height. Parameter 9 is sea-level pressure; surface
     pressure is estimated at the target using the inverse SMHI QFF formula.
 
+    Automatic policy evaluates bounded temporal filling and nearby donors,
+    then uses same-year ERA5 for remaining gaps. Surface pressure from ERA5
+    bypasses SMHI's QFF conversion. The automatic result includes structured
+    warnings and defaults to a separate ``output_path + ".json"`` receipt.
+
     The output is replaced atomically only after all 35 fields and all
-    8760/8784 rows pass validation.
+    8760/8784 rows pass validation. A receipt filesystem/serialization failure
+    warns and returns the valid EPW under automatic policy.
 
     Examples
     --------
@@ -334,9 +376,12 @@ def compile_epw(
     _configure_logging()
     _validate_config(config)
 
+    is_automatic = config.weather_policy == "automatic"
+    if is_automatic and config.provenance_path is None:
+        config = replace(config, provenance_path=str(config.output_path) + ".json")
+    if not Path(config.output_path).parent.is_dir():
+        raise ValidationError("EPW output parent directory must exist")
     if config.provenance_path is not None:
-        from pathlib import Path
-
         if Path(config.provenance_path).resolve() == Path(config.output_path).resolve():
             raise IngestionError("Provenance path must differ from EPW output")
         if not Path(config.provenance_path).parent.is_dir():
@@ -347,26 +392,41 @@ def compile_epw(
         cache_ttl=config.cache_ttl,
     )
 
-    # 1. Resolve station metadata / coordinates.
-    if config.station_id is not None:
-        meta = get_station_metadata(config.station_id, client, year=config.year)
-    elif config.latitude is not None and config.longitude is not None:
-        meta = find_nearest_station(
-            config.latitude, config.longitude, config.year, client
-        )
-    else:  # guarded by _validate_config
-        raise AssertionError("unreachable station configuration")
+    if isinstance(client, CachedClient):
+        client = client.scoped()
+    recovery_report = processing.ProcessingReport()
 
+    # 1. Prefer full station coverage; automatic mode also accepts partial data.
+    meta = None
+    try:
+        if config.station_id is not None:
+            meta = get_station_metadata(config.station_id, client, year=config.year)
+        else:
+            assert config.latitude is not None and config.longitude is not None
+            meta = find_nearest_station(
+                config.latitude,
+                config.longitude,
+                config.year,
+                client,
+                allow_partial=is_automatic,
+            )
+    except IngestionError as exc:
+        if not is_automatic or config.latitude is None:
+            raise
+        automatic.warn(
+            recovery_report,
+            "station_unavailable",
+            f"SMHI station metadata unavailable; using requested coordinates: {exc}",
+        )
     if config.latitude is not None and config.longitude is not None:
         request_lat, request_lon = config.latitude, config.longitude
     else:
+        assert meta is not None
         request_lat, request_lon = meta.latitude, meta.longitude
-    distance = meta.distance_km(request_lat, request_lon)
-    target_elevation = (
-        meta.elevation
-        if config.target_elevation_m is None
-        else config.target_elevation_m
-    )
+    distance = meta.distance_km(request_lat, request_lon) if meta is not None else None
+    target_elevation = config.target_elevation_m
+    if target_elevation is None and meta is not None:
+        target_elevation = meta.elevation
 
     # STRÅNG is optimised for Sweden; accuracy degrades outside it (Lundström 2012 §3.1.1).
     _SE_LAT = (55.0, 69.5)
@@ -383,81 +443,96 @@ def compile_epw(
             request_lon,
         )
 
-    log.info(
-        "station %s (%s) @ %.4f,%.4f; solar query point %.4f,%.4f (%.2f km)",
-        meta.station_id,
-        meta.name,
-        meta.latitude,
-        meta.longitude,
-        request_lat,
-        request_lon,
-        distance,
-    )
-
-    # 2. Resolve a radiation (Sol) station for measured GHI.
-    rad_station_id: Optional[int] = config.radiation_station_id
-    rad_dist: Optional[float] = None
-    radiation_required = rad_station_id is not None
-    if rad_station_id is None and config.radiation_station_auto:
-        result = find_nearest_radiation_station(
-            request_lat, request_lon, config.year, client
-        )
-        if result is not None:
-            rad_station_id, rad_dist = result
-            max_distance = config.radiation_station_max_distance_km
-            if max_distance is not None and rad_dist > max_distance:
-                log.info(
-                    "nearest radiation station %s is %.1f km away (limit %.1f km); "
-                    "using STRÅNG solar",
-                    rad_station_id,
-                    rad_dist,
-                    max_distance,
-                )
-                rad_station_id = None
-                rad_dist = None
-            else:
-                log.info(
-                    "radiation station %s selected (%.1f km); "
-                    "will use measured GHI + STRÅNG partitioning",
-                    rad_station_id,
-                    rad_dist,
-                )
-        else:
-            log.info("no Sol radiation station found; falling back to STRÅNG solar")
-    elif rad_station_id is not None:
-        rad_dist = radiation_station_distance(
-            rad_station_id, request_lat, request_lon, config.year, client
-        )
-        if rad_dist is None:
-            raise IngestionError(
-                f"configured radiation station {rad_station_id} does not cover {config.year}"
-            )
+    if meta is not None:
         log.info(
-            "using configured radiation station %s (%.1f km)",
-            rad_station_id,
-            rad_dist,
+            "station %s (%s); requested point %.4f,%.4f",
+            meta.station_id,
+            meta.name,
+            request_lat,
+            request_lon,
         )
+
+    # 2. Explicit radiation requirements remain fatal only in strict mode.
+    rad_station_id = config.radiation_station_id
+    rad_dist = None
+    radiation_required = rad_station_id is not None and not is_automatic
+    try:
+        if rad_station_id is None and config.radiation_station_auto:
+            radiation_choice = find_nearest_radiation_station(
+                request_lat, request_lon, config.year, client
+            )
+            if radiation_choice is not None:
+                rad_station_id, rad_dist = radiation_choice
+                limit = config.radiation_station_max_distance_km
+                if limit is not None and rad_dist > limit:
+                    rad_station_id, rad_dist = None, None
+        elif rad_station_id is not None:
+            rad_dist = radiation_station_distance(
+                rad_station_id, request_lat, request_lon, config.year, client
+            )
+            if rad_dist is None:
+                raise IngestionError(
+                    f"configured radiation station {rad_station_id} does not cover {config.year}"
+                )
+    except IngestionError as exc:
+        if not is_automatic:
+            raise
+        automatic.warn(
+            recovery_report,
+            "radiation_station_unavailable",
+            f"Using other solar sources: {exc}",
+        )
+        rad_station_id, rad_dist = None, None
 
     # 3. Ingest both endpoints (multi-threaded) onto a continuous UTC grid.
-    frame = ingest(
-        meta,
-        config.year,
-        client,
-        max_workers=config.max_workers,
-        utc_offset=config.utc_offset,
-        radiation_station_id=rad_station_id,
-        solar_latitude=request_lat,
-        solar_longitude=request_lon,
-        radiation_required=radiation_required,
-    )
-    log.info("ingested %d UTC hours for %d", len(frame), config.year)
+    if meta is not None:
+        frame = ingest(
+            meta,
+            config.year,
+            client,
+            max_workers=config.max_workers,
+            utc_offset=config.utc_offset,
+            radiation_station_id=rad_station_id,
+            solar_latitude=request_lat,
+            solar_longitude=request_lon,
+            radiation_required=radiation_required,
+            tolerate_failures=is_automatic,
+        )
+        recovery_report.warnings.extend(frame.attrs.get("source_failures", []))
+    else:
+        import pandas as pd
 
-    # 4. Process: impute, convert, derive dew point / IR / DNI.
-    recovery_report = None
-    if config.metobs_gap_fallback:
+        buffer_hours = int(abs(config.utc_offset)) + 1
+        start = pd.Timestamp(config.year, 1, 1, tz="UTC") - pd.Timedelta(
+            hours=buffer_hours
+        )
+        end = (
+            pd.Timestamp(config.year + 1, 1, 1, tz="UTC")
+            - pd.Timedelta(hours=1)
+            + pd.Timedelta(hours=buffer_hours)
+        )
+        frame = pd.DataFrame(index=pd.date_range(start, end, freq="h"))
+
+    # 4. Source recovery precedes physical derivation and strict export checks.
+    source_tags = None
+    if is_automatic:
+        target_elevation, source_tags = automatic.prepare(
+            frame,
+            meta,
+            config.year,
+            request_lat,
+            request_lon,
+            target_elevation,
+            client,
+            recovery_report,
+            max_distance_km=config.gap_fallback_max_distance_km,
+            max_stations=config.gap_fallback_max_stations,
+        )
+    elif config.metobs_gap_fallback:
         from .gap_recovery import recover
 
-        recovery_report = recover(
+        assert meta is not None
+        recover(
             frame,
             meta,
             config.year,
@@ -466,7 +541,9 @@ def compile_epw(
             client,
             max_distance_km=config.gap_fallback_max_distance_km,
             max_stations=config.gap_fallback_max_stations,
+            report=recovery_report,
         )
+    assert target_elevation is not None
     report = processing.process(
         frame,
         request_lat,
@@ -475,6 +552,9 @@ def compile_epw(
         report=recovery_report,
         target_elevation_m=target_elevation,
     )
+    if is_automatic:
+        report.solar_source = frame.attrs["automatic_solar_source"]
+        report.clamped_dni_hours += frame.attrs.get("automatic_clamped_dni_hours", 0)
     log.info(
         "interpolated %.3f%% of observation samples",
         report.total_interpolated_fraction * 100.0,
@@ -484,7 +564,7 @@ def compile_epw(
             "optional columns missing/sparse: %s", ", ".join(report.missing_columns)
         )
     log.info(
-        "solar source: %s; observed cloud data %s; clamped %d DNI hours; "
+        "solar source: %s; cloud data %s; clamped %d DNI hours; "
         "max solar energy-balance residual %.1f W/m^2",
         report.solar_source,
         "available" if report.cloud_available else "unavailable",
@@ -494,18 +574,35 @@ def compile_epw(
 
     # 5. Shift UTC -> LST and write the EPW.
     lst_frame = export.shift_to_lst(frame, config.year, config.utc_offset)
+    if source_tags is not None:
+        lst_tags = export.shift_to_lst(source_tags, config.year, config.utc_offset)
+        automatic.summarize(lst_tags, lst_frame, report)
+    elif config.metobs_gap_fallback and report.cross_station_filled_hours:
+        report.weather_classification = "mixed_reconstructed"
     header = export.build_header(
         city=config.city,
         region=config.region,
         country=config.country,
-        wmo_id=meta.wmo_id,
+        wmo_id=meta.wmo_id if meta is not None else "999999",
         latitude=request_lat,
         longitude=request_lon,
         time_zone=config.utc_offset,
         elevation=target_elevation,
         year=config.year,
-        station_id=meta.station_id,
+        station_id=meta.station_id if meta is not None else "unavailable",
     )
+    header[5] += (
+        f" Weather quality: {report.weather_classification}; {len(report.warnings)} weather warning(s); see provenance receipt."
+    )
+    if report.reanalysis_metadata:
+        header[6] += (
+            " ERA5 / Copernicus Climate Change Service data via Open-Meteo (CC BY 4.0); modeled estimates fill missing same-year inputs."
+        )
+        if report.weather_classification == "reanalysis_only":
+            header[0] = header[0].replace(",SMHI-AMY,", ",ERA5-AMY,")
+            header[6] = (
+                "COMMENTS 2,ERA5 / Copernicus Climate Change Service via Open-Meteo (CC BY 4.0). Reanalysis estimates; not station observations."
+            )
     rows = export.write_epw(config.output_path, header, lst_frame, config.year)
     log.info("wrote %d rows -> %s (validated)", rows, config.output_path)
 
@@ -526,9 +623,29 @@ def compile_epw(
         target_latitude=request_lat,
         target_longitude=request_lon,
         target_elevation_m=target_elevation,
+        pressure_method=(
+            "era5_surface_pressure"
+            if report.reanalysis_filled_hours.get("pressure") == len(frame)
+            else "mixed_qff_and_era5_surface"
+            if report.reanalysis_filled_hours.get("pressure", 0)
+            else C.PRESSURE_METHOD
+        ),
     )
     if config.provenance_path is not None:
         from .provenance import write_provenance
 
-        write_provenance(config, result, client)
+        try:
+            write_provenance(config, result, client)
+        except (OSError, ValueError) as exc:
+            if not is_automatic:
+                raise ValidationError(
+                    f"EPW written but provenance failed: {exc}"
+                ) from exc
+            automatic.warn(
+                report,
+                "provenance_write_failed",
+                f"Valid EPW returned but provenance receipt could not be written: {exc}",
+            )
+    for warning in report.warnings:
+        log.warning("%s: %s", warning["code"], warning["message"])
     return result

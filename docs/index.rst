@@ -4,7 +4,9 @@ smhi2epw documentation
 ``smhi2epw`` creates Actual Meteorological Year (AMY) EnergyPlus Weather files
 from open data published by the Swedish Meteorological and Hydrological
 Institute (SMHI). It combines quality-controlled station observations with
-STRÅNG solar radiation at the coordinates you request.
+STRÅNG solar radiation at the coordinates you request. Automatic recovery fills
+missing required hours with assessed nearby observations and same-year ERA5,
+while retaining warnings and a provenance sidecar.
 
 The documentation begins with installation and a small working example. The
 pipeline and scientific-method pages explain why the converter makes each
@@ -43,4 +45,3 @@ analyses suitable for students and practitioners.
 
    api
    internals
-

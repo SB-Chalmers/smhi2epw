@@ -33,9 +33,9 @@ def build_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(
         prog="smhi2epw",
-        description="Compile SMHI MetObs + STRÅNG data into an EnergyPlus .epw file.",
+        description="Compile requested-year SMHI weather with ERA5 recovery into an EnergyPlus .epw file.",
     )
-    parser.add_argument("year", type=int, help="target year (AMY)")
+    parser.add_argument("year", type=int, help="completed target year from 1999 (AMY)")
     parser.add_argument("output", help="output .epw file path")
     parser.add_argument(
         "--station",
@@ -58,7 +58,7 @@ def build_parser() -> argparse.ArgumentParser:
         dest="latitude",
         type=float,
         default=None,
-        help="latitude for nearest-station search and STRÅNG solar query",
+        help="target latitude for station search, solar geometry and ERA5",
     )
     parser.add_argument(
         "--lon",
@@ -66,7 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
         dest="longitude",
         type=float,
         default=None,
-        help="longitude for nearest-station search and STRÅNG solar query",
+        help="target longitude for station search, solar geometry and ERA5",
     )
     parser.add_argument(
         "--cache-dir",
@@ -76,14 +76,20 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--refresh",
         action="store_true",
-        help="ignore cached payloads and re-fetch from the SMHI endpoints",
+        help="ignore cached payloads and re-fetch requested source responses",
     )
     parser.add_argument("--max-workers", type=int, default=8)
+    parser.add_argument(
+        "--weather-policy",
+        choices=("automatic", "strict"),
+        default="automatic",
+        help="automatic recovery with same-year ERA5 fallback (default) or strict source requirements",
+    )
     parser.add_argument(
         "--target-elevation-m",
         type=float,
         default=None,
-        help="target elevation for EPW and derived pressure (default: station height)",
+        help="target elevation for EPW and pressure (default: station or ERA5 height)",
     )
     parser.add_argument(
         "--radiation-station",
@@ -98,7 +104,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--no-radiation",
         action="store_true",
-        help="disable auto-discovery of radiation station; use STRÅNG solar only",
+        help="disable automatic pyranometer discovery; retain other solar sources",
     )
     parser.add_argument(
         "--radiation-station-max-distance",
@@ -109,12 +115,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--provenance",
-        help="Optional JSON receipt of source responses, quality and EPW hash",
+        help="JSON receipt path (automatic default: OUTPUT.epw.json)",
     )
     parser.add_argument(
         "--metobs-gap-fallback",
         action="store_true",
-        help="Recover unfillable meteorological gaps from same-hour nearby observations",
+        help="enable assessed donors in strict mode; already enabled in automatic mode",
     )
     parser.add_argument("--gap-fallback-max-distance-km", type=float, default=75.0)
     parser.add_argument("--gap-fallback-max-stations", type=int, default=3)
@@ -154,6 +160,7 @@ def main(argv=None) -> int:
         )
     config = EPWConfig(
         station_id=args.station,
+        weather_policy=args.weather_policy,
         metobs_gap_fallback=args.metobs_gap_fallback,
         gap_fallback_max_distance_km=args.gap_fallback_max_distance_km,
         gap_fallback_max_stations=args.gap_fallback_max_stations,
@@ -184,6 +191,11 @@ def main(argv=None) -> int:
         f"({result.interpolated_fraction * 100:.2f}% interpolated, "
         f"solar={result.report.solar_source})"
     )
+    warnings = getattr(result.report, "warnings", [])
+    classification = getattr(
+        result.report, "weather_classification", "observation_based"
+    )
+    print(f"Weather: {classification}; {len(warnings)} warning(s)")
     return 0
 
 

@@ -250,6 +250,7 @@ def test_header_has_eight_lines():
 def test_compile_epw_end_to_end(tmp_path):
     out = tmp_path / "synthetic.epw"
     config = EPWConfig(
+        weather_policy="strict",
         station_id=STATION_ID,
         year=YEAR,
         output_path=str(out),
@@ -284,7 +285,11 @@ def test_compile_epw_end_to_end(tmp_path):
 def test_compile_epw_aborts_on_long_gap(tmp_path):
     out = tmp_path / "broken.epw"
     config = EPWConfig(
-        station_id=STATION_ID, year=YEAR, output_path=str(out), cache_dir=None
+        weather_policy="strict",
+        station_id=STATION_ID,
+        year=YEAR,
+        output_path=str(out),
+        cache_dir=None,
     )
     with pytest.raises(DataGapError):
         compile_epw(config, client=FakeClient(gap_hours=49))
@@ -433,6 +438,7 @@ def test_erbs_decomposition_clear_sky_high_dni():
 def test_compile_epw_uses_measured_ghi_when_available(tmp_path):
     out = tmp_path / "synthetic_erbs.epw"
     config = EPWConfig(
+        weather_policy="strict",
         station_id=STATION_ID,
         year=YEAR,
         output_path=str(out),
@@ -547,7 +553,7 @@ def test_invalid_config_rejected_before_network(tmp_path, updates, message):
     )
     kwargs.update(updates)
     with pytest.raises(IngestionError, match=message):
-        compile_epw(EPWConfig(**kwargs), client=FakeClient())
+        compile_epw(EPWConfig(weather_policy="strict", **kwargs), client=FakeClient())
 
 
 def test_requested_coordinates_drive_solar_and_header(tmp_path):
@@ -555,6 +561,7 @@ def test_requested_coordinates_drive_solar_and_header(tmp_path):
     out = tmp_path / "target.epw"
     result = compile_epw(
         EPWConfig(
+            weather_policy="strict",
             station_id=STATION_ID,
             year=YEAR,
             output_path=str(out),
@@ -581,6 +588,7 @@ def test_radiation_station_radius_falls_back_to_strang(tmp_path):
     client = FarRadiationClient()
     result = compile_epw(
         EPWConfig(
+            weather_policy="strict",
             station_id=STATION_ID,
             year=YEAR,
             output_path=str(tmp_path / "strang.epw"),
@@ -602,6 +610,7 @@ def test_optional_cloud_endpoint_failure_is_soft(tmp_path):
 
     result = compile_epw(
         EPWConfig(
+            weather_policy="strict",
             station_id=STATION_ID,
             year=YEAR,
             output_path=str(tmp_path / "no-cloud.epw"),
@@ -625,6 +634,7 @@ def test_auto_measured_ghi_gap_falls_back_but_explicit_fails(tmp_path):
 
     auto = compile_epw(
         EPWConfig(
+            weather_policy="strict",
             station_id=STATION_ID,
             year=YEAR,
             output_path=str(tmp_path / "fallback.epw"),
@@ -637,6 +647,7 @@ def test_auto_measured_ghi_gap_falls_back_but_explicit_fails(tmp_path):
     with pytest.raises(DataGapError):
         compile_epw(
             EPWConfig(
+                weather_policy="strict",
                 station_id=STATION_ID,
                 year=YEAR,
                 output_path=str(tmp_path / "explicit.epw"),
