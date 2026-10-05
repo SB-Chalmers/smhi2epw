@@ -26,14 +26,16 @@ def _utc_grid(year):
     return pd.date_range(f"{year}-01-01", f"{year}-12-31 23:00", freq="h", tz="UTC")
 
 
-def _metobs_csv(name, base):
+def _metobs_csv(name, base, unit=None):
     grid = _utc_grid(YEAR)
     lines = [
         "Stationsnamn;Stationsnummer",
         f"Synthetic;{STATION_ID}",
         "",
-        f"Datum;Tid (UTC);{name};Kvalitet",
     ]
+    if unit is not None:
+        lines.extend(["Parameternamn;Beskrivning;Enhet", f"{name};;{unit}", ""])
+    lines.append(f"Datum;Tid (UTC);{name};Kvalitet")
     for i, ts in enumerate(grid):
         val = base + np.sin(i / 24.0)
         lines.append(f"{ts.strftime('%Y-%m-%d')};{ts.strftime('%H:%M:%S')};{val:.2f};G")
@@ -73,7 +75,7 @@ class FakeClient:
         if "/parameter/3/" in url:
             return _metobs_csv("Vindriktning", 180.0)
         if "/parameter/16/" in url:
-            return _metobs_csv("Total molnmangd", 4.0)  # octas
+            return _metobs_csv("Total molnmangd", 4.0, unit="octas")
         raise AssertionError(f"unexpected text url: {url}")
 
     def get_json(self, url):

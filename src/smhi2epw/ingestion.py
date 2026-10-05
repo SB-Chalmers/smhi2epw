@@ -11,6 +11,7 @@ atomically to make repeated educational and production runs kind to the APIs.
 from __future__ import annotations
 
 import copy
+import csv
 import hashlib
 import io
 import json
@@ -775,13 +776,59 @@ def fetch_metobs_parameter(
     Parameters mirror :func:`_parse_metobs_csv`; ``param`` and ``station_id``
     form the endpoint URL. The returned series is hourly UTC where supplied by
     SMHI, but final resampling and grid alignment occur in :func:`ingest`.
+    Parameter 16 ``cloud_cover`` is normalized to octas using the CSV preamble's
+    explicit ``Enhet`` declaration. Unknown/missing cloud units raise
+    :class:`IngestionError`; ingestion treats that optional source as unavailable.
     """
     url = (
         f"{C.METOBS_BASE}/parameter/{param}/station/{station_id}"
         f"/period/{C.METOBS_PERIOD}/data.csv"
     )
     text = client.get_text(url, suffix="csv")
-    return _parse_metobs_csv(text, column, window, accepted_quality)
+    series = _parse_metobs_csv(text, column, window, accepted_quality)
+    if param == 16 and column == "cloud_cover":
+        series = _normalize_cloud_cover(text, series)
+    return series
+
+
+def _normalize_cloud_cover(text: str, series: pd.Series) -> pd.Series:
+    """Convert declared MetObs cloud units to octas without magnitude guessing.
+
+    ``Enhet`` must belong to the parameter metadata header before the hourly
+    data block. Percent/procent values use their source 0–100 bounds before
+    conversion; octa/okta values retain source 0–8 bounds. Invalid observations
+    become gaps. Original quality filtering and corrected-archive duplicates
+    remain those of :func:`_parse_metobs_csv`.
+    """
+    declared_unit = None
+    rows = csv.reader(io.StringIO(text), delimiter=";")
+    for row in rows:
+        fields = [field.strip().casefold() for field in row]
+        if fields and fields[0] in ("datum", "from", "från"):
+            break
+        if "parameternamn" not in fields or "enhet" not in fields:
+            continue
+        unit_index = fields.index("enhet")
+        values = next(rows, None)
+        while values is not None and not any(field.strip() for field in values):
+            values = next(rows, None)
+        if values is not None and len(values) > unit_index:
+            declared_unit = values[unit_index].strip()
+        break
+
+    unit = declared_unit.casefold() if declared_unit else ""
+    if unit in {"procent", "percent", "%"}:
+        series = series.where(series.between(0, 100)) * (8.0 / 100.0)
+    elif unit in {"octa", "octas", "okta", "oktas"}:
+        series = series.where(series.between(0, 8))
+    else:
+        raise IngestionError(
+            "cloud_cover parameter 16 requires a recognized CSV Enhet declaration "
+            f"(percent/procent/% or octas/oktas), got {declared_unit!r}"
+        )
+    series.attrs["source_unit"] = declared_unit
+    series.attrs["output_unit"] = "octas"
+    return series
 
 
 # --------------------------------------------------------------------------- #
@@ -1005,6 +1052,10 @@ def ingest(
     )
     for column in ordered:
         series = collected.get(column, pd.Series(dtype=float, name=column))
+        if column == "cloud_cover":
+            for attribute in ("source_unit", "output_unit"):
+                if attribute in series.attrs:
+                    frame.attrs[f"cloud_{attribute}"] = series.attrs[attribute]
         if not series.empty:
             if column == "wind_direction":
                 from .gap_recovery import hourly_observations

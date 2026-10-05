@@ -31,7 +31,8 @@ METOBS_REQUIRED_PARAMETERS = {
     3: "wind_direction",  # Wind direction (degrees)
 }
 METOBS_OPTIONAL_PARAMETERS = {
-    16: "cloud_cover",  # Total cloud cover (octas 0-8)
+    # Internal octas 0–8; normalize SMHI declared percent 0–100 at ingestion.
+    16: "cloud_cover",
 }
 METOBS_PARAMETERS = {**METOBS_REQUIRED_PARAMETERS, **METOBS_OPTIONAL_PARAMETERS}
 
