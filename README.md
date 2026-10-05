@@ -221,3 +221,55 @@ network-marked tests are skipped unless explicitly requested.
 ## License
 
 MIT
+
+### Target elevation and pressure correction
+
+`EPWConfig.target_elevation_m` / `--target-elevation-m` sets the EPW site height;
+omitting it uses station elevation. SMHI parameter 9 supplies sea-level QFF, so
+the compiler now derives surface pressure using the inverse SMHI reduction.
+`CompileResult` retains target coordinates, target elevation, the pressure method
+and the original observation-station metadata separately. Rebuild weather files
+when adopting this correction; see `docs/provenance.rst` for assumptions.
+
+
+### Actual-year EPW calendar headers
+
+Exports declare leap-day observation as `Yes` for Gregorian leap years (8784
+hours) and `No` for common years (8760 hours). The data-period start weekday
+matches January 1 of the measurement year. `write_epw` rejects contradictory
+calendar headers before replacing an output file. Downstream workflows do not
+need to patch headers after compilation. Previously exported or pinned study
+files are not modified; regenerate in a fresh directory when migrating.
+
+
+### Reproducible reconstruction provenance
+
+Pass `--provenance PATH.json` to the CLI, or set `EPWConfig.provenance_path`, to write an atomic provenance sidecar after a successful EPW compilation. It records reconstruction configuration, package/source identity, output checksum and hashes of the actual consumed response text. Cached responses and live responses follow the same receipt contract; unrelated cache files are excluded. The output and provenance paths must differ. A custom client without response receipts is explicitly marked incomplete. This records weather reconstruction evidence without collecting additional building observations.
+
+### Recovering missing meteorological observations
+
+Short scalar gaps (up to 3 hours) use linear interpolation; gaps up to 48 hours
+use the nearest complete daily reference within seven days. Reconstructed
+humidity, wind speed and cloud cover are bounded without clipping observed values.
+
+Opt in with `EPWConfig(metobs_gap_fallback=True)` or `--metobs-gap-fallback`.
+Unfillable gaps can then use quality-filtered observations for the **same hours**
+from at most three nearby stations within 75 km of the requested location.
+Use `gap_fallback_max_distance_km` and `gap_fallback_max_stations` to adjust these
+explicit limits. Invalid primary meteorological observations are treated as gaps
+and counted. Solar data remains at the requested location. Unrecoverable gaps
+still fail; the 48-hour temporal interpolation ceiling is unchanged.
+
+The processing report records original missing/invalid hours, donor station
+positions and distances, replaced UTC intervals, and overlap differences against
+valid primary observations. `required_reconstructed_fraction` counts reconstructed
+cells across the five required meteorological variables; the existing
+`interpolated_fraction` describes subsequent temporal filling. These diagnostics
+must be reviewed before using heavily reconstructed weather for qualification.
+Pass `provenance_path` (CLI `--provenance`) to retain raw-response and code hashes.
+Nearby observations do not guarantee identical site weather, especially for wind
+and elevation-sensitive temperature; overlap diagnostics are evidence, not a
+correction or accuracy guarantee. EPSM workflows opt into this policy explicitly.
+
+See [the detailed weather-recovery guide](docs/weather_recovery.rst) for policy,
+API/CLI examples, diagnostic definitions, replay evidence and limitations.

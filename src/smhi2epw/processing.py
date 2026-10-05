@@ -48,7 +48,18 @@ class ProcessingReport:
     linear_filled_hours, diurnal_filled_hours
         Filled-hour counts by column and method.
     max_gap_hours
-        Longest originally detected gap by column.
+        Longest gap before temporal filling, after any donor recovery.
+    bounded_filled_hours
+        Reconstructed hours clipped to each variable's representable range.
+    primary_missing_hours, invalid_observation_hours
+        Required-variable missing and invalid counts before opt-in recovery.
+    cross_station_filled_hours
+        Required-variable counts filled from same-hour donor observations.
+    gap_fallback_sources, gap_fallback_attempts
+        Donor receipts and attempted requests, including parameter errors.
+    required_reconstructed_fraction
+        Pre-recovery missing/invalid fraction across required ingestion cells.
+        Populated only when the opt-in recovery path runs.
     """
 
     interpolated_fraction: Dict[str, float] = field(default_factory=dict)
@@ -61,6 +72,13 @@ class ProcessingReport:
     linear_filled_hours: Dict[str, int] = field(default_factory=dict)
     diurnal_filled_hours: Dict[str, int] = field(default_factory=dict)
     max_gap_hours: Dict[str, int] = field(default_factory=dict)
+    bounded_filled_hours: Dict[str, int] = field(default_factory=dict)
+    invalid_observation_hours: Dict[str, int] = field(default_factory=dict)
+    primary_missing_hours: Dict[str, int] = field(default_factory=dict)
+    cross_station_filled_hours: Dict[str, int] = field(default_factory=dict)
+    gap_fallback_sources: List[dict] = field(default_factory=list)
+    gap_fallback_attempts: List[dict] = field(default_factory=list)
+    required_reconstructed_fraction: float = 0.0
 
 
 # --------------------------------------------------------------------------- #
@@ -154,26 +172,30 @@ def _profile_estimate(
     the following profile.
     """
     size = end - start
+    # Find the nearest complete same-hour reference within one week. Repeated
+    # short outages can invalidate both immediately adjacent daily profiles.
+    template = None
+    for day in range(1, 8):
+        template_start = start - 24 * day if direction < 0 else end + 24 * (day - 1)
+        template_end = template_start + 24
+        if template_start < 0 or template_end > len(values):
+            continue
+        candidate = values[template_start:template_end]
+        if len(candidate) == 24 and np.isfinite(candidate).all():
+            template = candidate
+            break
+    if template is None:
+        return None
     if direction < 0:
-        template_start = start - 24
-        if template_start < 0:
-            return None
-        template = values[template_start:start]
         base = np.resize(template, size)
         left_base = template[-1]
         right_base = template[size % 24]
     else:
-        template_end = end + 24
-        if template_end > len(values):
-            return None
-        template = values[end:template_end]
         indices = (np.arange(start, end) - end) % 24
         base = template[indices]
         left_base = template[(start - 1 - end) % 24]
         right_base = template[0]
 
-    if len(template) != 24 or not np.isfinite(template).all():
-        return None
     left = values[start - 1] if start > 0 else np.nan
     right = values[end] if end < len(values) else np.nan
     if not np.isfinite(left) and not np.isfinite(right):
@@ -420,6 +442,17 @@ def impute(
                 short_gap_hours=short_gap_hours,
                 max_gap_hours=max_gap_hours,
             )
+        # Bound only reconstructed values. Do not silently clip observations.
+        limits = {
+            "relative_humidity": (0.0, 100.0),
+            "wind_speed": (0.0, 40.0),
+            "cloud_cover": (0.0, 8.0),
+        }
+        if column in limits:
+            lo, hi = limits[column]
+            out_of_bounds = missing & ((filled < lo) | (filled > hi))
+            report.bounded_filled_hours[column] = int(out_of_bounds.sum())
+            filled.loc[missing] = filled.loc[missing].clip(lo, hi)
         frame[column] = filled
         report.linear_filled_hours[column] = linear
         report.diurnal_filled_hours[column] = diurnal
@@ -474,7 +507,8 @@ def impute_solar(
 def convert_units(frame: pd.DataFrame) -> None:
     """Convert source units to EPW units in-place.
 
-    Currently MetObs station pressure is converted from hPa to Pa. Missing
+    MetObs sea-level pressure is converted from hPa to Pa here. The full
+    pipeline subsequently derives pressure at the target elevation. Missing
     columns are ignored so the helper remains safe for focused examples.
 
     Examples
@@ -491,6 +525,46 @@ def convert_units(frame: pd.DataFrame) -> None:
 # --------------------------------------------------------------------------- #
 # Dew point (Magnus formula)
 # --------------------------------------------------------------------------- #
+def pressure_at_elevation(sea_level_pa, dry_bulb_c, latitude_deg, elevation_m):
+    """Estimate target surface pressure from SMHI parameter 9 (sea-level QFF).
+
+    Invert SMHI's published reduction: QFF = P * exp(H * B / T1).
+    https://www.smhi.se/kunskapsbanken/meteorologi/lufttryck/hur-mats-lufttryck
+    T1 is SMHI's piecewise effective layer temperature, not virtual temperature.
+    The target height approximates barometer height; station-observed temperature
+    represents the target. This is a derived estimate, not a pressure observation.
+    Inputs have already passed filling and unit conversion. No clipping is used.
+    """
+    temperature = np.asarray(dry_bulb_c, dtype=float)
+    pressure = np.asarray(sea_level_pa, dtype=float)
+    if not (
+        np.isfinite(temperature).all()
+        and np.isfinite(pressure).all()
+        and np.isfinite(latitude_deg)
+        and np.isfinite(elevation_m)
+    ):
+        raise ValueError("Pressure conversion requires finite inputs")
+    if not -90 <= latitude_deg <= 90 or not -1000 <= elevation_m <= 9999:
+        raise ValueError(
+            "Pressure conversion latitude/elevation is outside the supported domain"
+        )
+    if np.any(temperature <= -273.15):
+        raise ValueError("Pressure conversion requires temperature above absolute zero")
+    effective = np.where(
+        temperature < -7,
+        0.500 * temperature + 275.0,
+        np.where(
+            temperature < 2, 0.535 * temperature + 275.6, 1.07 * temperature + 274.5
+        ),
+    )
+    if np.any(effective <= 0) or np.any(pressure <= 0):
+        raise ValueError(
+            "Pressure conversion requires positive pressure and layer temperature"
+        )
+    coefficient = 0.034163 * (1 - 0.0026373 * np.cos(np.deg2rad(2 * latitude_deg)))
+    return pressure * np.exp(-elevation_m * coefficient / effective)
+
+
 def dew_point(dry_bulb: pd.Series, relative_humidity: pd.Series) -> pd.Series:
     """Calculate dew-point temperature with the Magnus approximation.
 
@@ -750,6 +824,8 @@ def process(
     lon: float,
     *,
     measured_required: bool = False,
+    target_elevation_m: float = 0.0,
+    report: Optional[ProcessingReport] = None,
 ) -> ProcessingReport:
     """Run the full processing pipeline in-place and return diagnostics.
 
@@ -759,9 +835,14 @@ def process(
         Continuous hourly UTC ingestion frame, modified in-place.
     lat, lon
         Requested solar point in decimal degrees.
+    target_elevation_m
+        Height used to estimate surface pressure from sea-level QFF. Low-level
+        callers default to sea level; compile_epw always supplies the site height.
     measured_required
         If ``True``, unfillable measured GHI raises instead of falling back to
         STRÅNG.
+    report
+        Optional diagnostics from nearby-observation recovery, updated in place.
 
     Returns
     -------
@@ -787,7 +868,7 @@ def process(
     optional = list(C.METOBS_OPTIONAL_PARAMETERS.values())
     solar_columns = list(C.STRANG_PARAMETERS.values())
 
-    report = impute(frame, required, optional)
+    report = impute(frame, required, optional, report=report)
     impute_solar(frame, solar_columns, report)
 
     measured_column = C.METOBS_RADIATION_COLUMN
@@ -820,6 +901,9 @@ def process(
         )
 
     convert_units(frame)
+    frame["pressure"] = pressure_at_elevation(
+        frame["pressure"], frame["dry_bulb"], lat, target_elevation_m
+    )
 
     frame["dew_point"] = dew_point(frame["dry_bulb"], frame["relative_humidity"])
 

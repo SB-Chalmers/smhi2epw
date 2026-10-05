@@ -187,9 +187,10 @@ def build_header(
     time_zone
         Whole-hour LST offset from UTC.
     elevation
-        Meteorological-station elevation in metres above sea level.
+        Resolved target elevation in metres above sea level.
     year
-        Actual meteorological year; used to calculate January 1's weekday.
+        Actual meteorological year; determines January 1's weekday and whether
+        EnergyPlus should read February 29.
     station_id
         SMHI MetObs identifier recorded in provenance comments.
 
@@ -236,7 +237,7 @@ def build_header(
         "DESIGN CONDITIONS,0",
         "TYPICAL/EXTREME PERIODS,0",
         "GROUND TEMPERATURES,0",
-        "HOLIDAYS/DAYLIGHT SAVINGS,No,0,0,0",
+        f"HOLIDAYS/DAYLIGHT SAVINGS,{'Yes' if is_leap_year(year) else 'No'},0,0,0",
         (
             "COMMENTS 1,Generated via smhi2epw hybrid compiler utility. "
             f"SMHI MetObs station ID {station_id}; actual meteorological year {year}."
@@ -368,6 +369,16 @@ def write_epw(
     preserving an existing valid file if an earlier step fails.
     """
     _validate_header(header_lines)
+    leap_flag = "Yes" if is_leap_year(year) else "No"
+    if header_lines[4].split(",")[1] != leap_flag:
+        raise ValidationError(
+            f"EPW leap-day header must be {leap_flag} for actual year {year}"
+        )
+    expected_period = (
+        f"DATA PERIODS,1,1,Data,{calendar.day_name[date(year, 1, 1).weekday()]},1/1,12/31"
+    )
+    if header_lines[7] != expected_period:
+        raise ValidationError(f"EPW data-period header does not match actual year {year}")
     _validate_frame(frame, year)
     expected = expected_rows(year)
     rows = list(_row_iter(frame))

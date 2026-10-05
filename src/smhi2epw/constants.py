@@ -17,6 +17,7 @@ from __future__ import annotations
 # --------------------------------------------------------------------------- #
 METOBS_BASE = "https://opendata-download-metobs.smhi.se/api/version/1.0"
 METOBS_PERIOD = "corrected-archive"
+PRESSURE_METHOD = "smhi_qff_inverse_v1"
 
 # metobs parameter codes -> internal canonical column names.
 #
@@ -25,7 +26,7 @@ METOBS_PERIOD = "corrected-archive"
 METOBS_REQUIRED_PARAMETERS = {
     1: "dry_bulb",  # Air temperature, instantaneous (degC)
     6: "relative_humidity",  # Relative humidity (%)
-    9: "pressure",  # Air pressure at station level (hPa)
+    9: "pressure",  # Sea-level-reduced air pressure, QFF (hPa)
     4: "wind_speed",  # Wind speed (m/s)
     3: "wind_direction",  # Wind direction (degrees)
 }

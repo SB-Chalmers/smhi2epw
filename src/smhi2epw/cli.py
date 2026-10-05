@@ -80,6 +80,12 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--max-workers", type=int, default=8)
     parser.add_argument(
+        "--target-elevation-m",
+        type=float,
+        default=None,
+        help="target elevation for EPW and derived pressure (default: station height)",
+    )
+    parser.add_argument(
         "--radiation-station",
         type=int,
         default=None,
@@ -101,6 +107,17 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="KM",
         help=("maximum distance for auto-selected pyranometer data (default 50 km)"),
     )
+    parser.add_argument(
+        "--provenance",
+        help="Optional JSON receipt of source responses, quality and EPW hash",
+    )
+    parser.add_argument(
+        "--metobs-gap-fallback",
+        action="store_true",
+        help="Recover unfillable meteorological gaps from same-hour nearby observations",
+    )
+    parser.add_argument("--gap-fallback-max-distance-km", type=float, default=75.0)
+    parser.add_argument("--gap-fallback-max-stations", type=int, default=3)
     return parser
 
 
@@ -137,7 +154,11 @@ def main(argv=None) -> int:
         )
     config = EPWConfig(
         station_id=args.station,
+        metobs_gap_fallback=args.metobs_gap_fallback,
+        gap_fallback_max_distance_km=args.gap_fallback_max_distance_km,
+        gap_fallback_max_stations=args.gap_fallback_max_stations,
         year=args.year,
+        provenance_path=args.provenance,
         output_path=args.output,
         city=args.city,
         region=args.region,
@@ -147,6 +168,7 @@ def main(argv=None) -> int:
         max_workers=args.max_workers,
         latitude=args.latitude,
         longitude=args.longitude,
+        target_elevation_m=args.target_elevation_m,
         refresh=args.refresh,
         radiation_station_id=args.radiation_station_id,
         radiation_station_auto=not args.no_radiation,

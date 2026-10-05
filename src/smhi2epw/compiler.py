@@ -68,9 +68,21 @@ class EPWConfig:
         selection, an unusable explicit station causes compilation to fail.
     radiation_station_auto
         Discover a nearby full-year Sol station when no explicit ID is given.
+    target_elevation_m
+        Target height above sea level in metres. Defaults to station elevation.
+        Used for both the EPW header and derived atmospheric station pressure.
     radiation_station_max_distance_km
         Maximum automatic Sol-station distance in kilometres. ``None``
         disables the radius; the default is 50 km.
+
+    provenance_path
+        Optional separate JSON receipt with source, response and output hashes.
+    metobs_gap_fallback
+        Opt in to bounded same-hour nearby-observation recovery; default False.
+    gap_fallback_max_distance_km
+        Positive donor radius about the requested point; default 75 km.
+    gap_fallback_max_stations
+        Positive total candidate-attempt limit; default three stations.
 
     Examples
     --------
@@ -112,6 +124,11 @@ class EPWConfig:
     radiation_station_id: Optional[int] = None
     radiation_station_auto: bool = True
     radiation_station_max_distance_km: Optional[float] = 50.0
+    target_elevation_m: Optional[float] = None
+    provenance_path: Optional[str] = None
+    metobs_gap_fallback: bool = False
+    gap_fallback_max_distance_km: float = 75.0
+    gap_fallback_max_stations: int = 3
 
 
 @dataclass
@@ -125,7 +142,8 @@ class CompileResult:
     rows
         Number of hourly rows written: 8760 or 8784.
     station
-        Meteorological station used for observed parameters and elevation.
+        Meteorological station supplying observations; its elevation is kept
+        independently of the resolved target site.
     interpolated_fraction
         Mean fraction of samples filled across processed input columns.
     coordinate_distance_km
@@ -153,6 +171,10 @@ class CompileResult:
     report: processing.ProcessingReport
     radiation_station_id: Optional[int] = None
     radiation_station_distance_km: Optional[float] = None
+    target_latitude: Optional[float] = None
+    target_longitude: Optional[float] = None
+    target_elevation_m: Optional[float] = None
+    pressure_method: str = C.PRESSURE_METHOD
 
 
 def _validate_config(config: EPWConfig) -> None:
@@ -174,6 +196,20 @@ def _validate_config(config: EPWConfig) -> None:
     This function runs before constructing :class:`CachedClient`; configuration
     mistakes therefore never trigger an SMHI request.
     """
+    if not isinstance(config.metobs_gap_fallback, bool):
+        raise IngestionError("metobs_gap_fallback must be boolean")
+    if (
+        not isinstance(config.gap_fallback_max_distance_km, (int, float))
+        or not math.isfinite(config.gap_fallback_max_distance_km)
+        or config.gap_fallback_max_distance_km <= 0
+    ):
+        raise IngestionError("gap fallback distance must be finite and positive")
+    if (
+        isinstance(config.gap_fallback_max_stations, bool)
+        or not isinstance(config.gap_fallback_max_stations, int)
+        or config.gap_fallback_max_stations < 1
+    ):
+        raise IngestionError("gap fallback station count must be a positive integer")
     if not isinstance(config.year, int) or isinstance(config.year, bool):
         raise IngestionError("year must be an integer")
     if config.year < C.STRANG_MIN_YEAR:
@@ -194,6 +230,14 @@ def _validate_config(config: EPWConfig) -> None:
         and config.radiation_station_max_distance_km < 0
     ):
         raise IngestionError("radiation station maximum distance must be nonnegative")
+
+    if config.target_elevation_m is not None and (
+        not math.isfinite(config.target_elevation_m)
+        or not -1000 <= config.target_elevation_m <= 9999
+    ):
+        raise IngestionError(
+            "target elevation must be finite and between -1000 and 9999 metres"
+        )
 
     has_lat = config.latitude is not None
     has_lon = config.longitude is not None
@@ -267,7 +311,9 @@ def compile_epw(
     -----
     Requested coordinates and station coordinates have different roles. The
     requested point drives STRÅNG, solar geometry, and the EPW header; the
-    selected MetObs station supplies observed weather and elevation.
+    selected MetObs station supplies observed weather. Target elevation
+    defaults to the station height. Parameter 9 is sea-level pressure; surface
+    pressure is estimated at the target using the inverse SMHI QFF formula.
 
     The output is replaced atomically only after all 35 fields and all
     8760/8784 rows pass validation.
@@ -288,6 +334,13 @@ def compile_epw(
     _configure_logging()
     _validate_config(config)
 
+    if config.provenance_path is not None:
+        from pathlib import Path
+
+        if Path(config.provenance_path).resolve() == Path(config.output_path).resolve():
+            raise IngestionError("Provenance path must differ from EPW output")
+        if not Path(config.provenance_path).parent.is_dir():
+            raise IngestionError("Provenance parent directory must exist")
     client = client or CachedClient(
         cache_dir=config.cache_dir,
         refresh=config.refresh,
@@ -309,6 +362,11 @@ def compile_epw(
     else:
         request_lat, request_lon = meta.latitude, meta.longitude
     distance = meta.distance_km(request_lat, request_lon)
+    target_elevation = (
+        meta.elevation
+        if config.target_elevation_m is None
+        else config.target_elevation_m
+    )
 
     # STRÅNG is optimised for Sweden; accuracy degrades outside it (Lundström 2012 §3.1.1).
     _SE_LAT = (55.0, 69.5)
@@ -395,11 +453,27 @@ def compile_epw(
     log.info("ingested %d UTC hours for %d", len(frame), config.year)
 
     # 4. Process: impute, convert, derive dew point / IR / DNI.
+    recovery_report = None
+    if config.metobs_gap_fallback:
+        from .gap_recovery import recover
+
+        recovery_report = recover(
+            frame,
+            meta,
+            config.year,
+            request_lat,
+            request_lon,
+            client,
+            max_distance_km=config.gap_fallback_max_distance_km,
+            max_stations=config.gap_fallback_max_stations,
+        )
     report = processing.process(
         frame,
         request_lat,
         request_lon,
         measured_required=radiation_required,
+        report=recovery_report,
+        target_elevation_m=target_elevation,
     )
     log.info(
         "interpolated %.3f%% of observation samples",
@@ -428,7 +502,7 @@ def compile_epw(
         latitude=request_lat,
         longitude=request_lon,
         time_zone=config.utc_offset,
-        elevation=meta.elevation,
+        elevation=target_elevation,
         year=config.year,
         station_id=meta.station_id,
     )
@@ -440,7 +514,7 @@ def compile_epw(
     )
     log.info("STRÅNG spatial resolution for %d: %s", config.year, strang_res)
 
-    return CompileResult(
+    result = CompileResult(
         output_path=config.output_path,
         rows=rows,
         station=meta,
@@ -449,4 +523,12 @@ def compile_epw(
         report=report,
         radiation_station_id=rad_station_id,
         radiation_station_distance_km=rad_dist,
+        target_latitude=request_lat,
+        target_longitude=request_lon,
+        target_elevation_m=target_elevation,
     )
+    if config.provenance_path is not None:
+        from .provenance import write_provenance
+
+        write_provenance(config, result, client)
+    return result

@@ -21,6 +21,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from threading import Lock
 from typing import Dict, Optional, Tuple
 
 import pandas as pd
@@ -144,6 +145,8 @@ class CachedClient:
         See the class-level documentation for parameter semantics. The cache
         directory is created eagerly so later worker threads only write files.
         """
+        self.response_receipts = {}
+        self._receipt_lock = Lock()
         self.cache_dir = cache_dir
         self.timeout = timeout
         self.session = session or self._build_session(max_retries)
@@ -229,7 +232,9 @@ class CachedClient:
         if path and self._cache_valid(path):
             log.debug("cache hit: %s", url)
             with open(path, "r", encoding="utf-8") as fh:
-                return fh.read()
+                text = fh.read()
+            self._record_response(url, suffix, text, cached=True)
+            return text
         log.debug("GET %s", url)
         try:
             resp = self.session.get(url, timeout=self.timeout)
@@ -253,7 +258,20 @@ class CachedClient:
             finally:
                 if tmp_path and os.path.exists(tmp_path):
                     os.unlink(tmp_path)
+        self._record_response(url, suffix, text, cached=False)
         return text
+
+    def _record_response(self, url, suffix, text, *, cached):
+        """Pin the exact parser input for weather calibration provenance."""
+        sha = hashlib.sha256(text.encode("utf-8")).hexdigest()
+        with self._receipt_lock:
+            self.response_receipts[(url, sha)] = {
+                "url": url,
+                "sha256": sha,
+                "representation": suffix,
+                "cached": cached,
+                "hash_encoding": "UTF-8 parser response",
+            }
 
     def get_json(self, url: str) -> object:
         """Fetch and decode JSON, repairing one malformed cache entry.

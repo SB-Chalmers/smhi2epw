@@ -123,3 +123,53 @@ def test_read_epw_rejects_nonnumeric_weather_value(tmp_path):
     path.write_text("\n".join(",".join(row) for row in rows) + "\n", encoding="utf-8")
     with pytest.raises(ValidationError, match="nonnumeric"):
         read_epw(path)
+
+
+@pytest.mark.parametrize(
+    "year,flag,count,weekday",
+    [
+        (2020, "Yes", 8784, "Wednesday"),
+        (2021, "No", 8760, "Friday"),
+        (2000, "Yes", 8784, "Saturday"),
+        (2100, "No", 8760, "Friday"),
+    ],
+)
+def test_actual_year_export_header_and_february_rows(
+    tmp_path, year, flag, count, weekday
+):
+    path = _write_valid_epw(tmp_path / "weather.epw", year)
+    lines = path.read_text().splitlines()
+    assert lines[4] == f"HOLIDAYS/DAYLIGHT SAVINGS,{flag},0,0,0"
+    assert lines[7] == f"DATA PERIODS,1,1,Data,{weekday},1/1,12/31"
+    assert len(lines) == 8 + count
+    feb29 = [line for line in lines[8:] if line.split(",")[1:3] == ["2", "29"]]
+    assert len(feb29) == (24 if flag == "Yes" else 0)
+
+
+@pytest.mark.parametrize(
+    "line_number,value,message",
+    [
+        (4, "HOLIDAYS/DAYLIGHT SAVINGS,No,0,0,0", "leap-day header"),
+        (7, "DATA PERIODS,1,1,Data,Friday,1/1,12/31", "data-period header"),
+    ],
+)
+def test_export_rejects_inconsistent_actual_year_headers(
+    tmp_path, line_number, value, message, monkeypatch
+):
+    original = build_header
+
+    def inconsistent_header(*args, **kwargs):
+        header = original(*args, **kwargs)
+        header[line_number] = value
+        return header
+
+    monkeypatch.setattr(
+        __import__(__name__, fromlist=["build_header"]),
+        "build_header",
+        inconsistent_header,
+    )
+    path = tmp_path / "weather.epw"
+    path.write_text("preserve existing artifact")
+    with pytest.raises(ValidationError, match=message):
+        _write_valid_epw(path, 2020)
+    assert path.read_text() == "preserve existing artifact"

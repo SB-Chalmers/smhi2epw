@@ -43,9 +43,11 @@ known station:
        longitude=11.9746,
    )
 
-The station still supplies temperature, humidity, pressure, wind, and
-elevation. The requested coordinates control STRÅNG, solar geometry, and the
-EPW ``LOCATION`` header. If ``station_id`` is omitted, the same coordinates
+The station supplies temperature, humidity, sea-level pressure, and wind.
+The requested coordinates control STRÅNG, solar geometry, and the EPW
+``LOCATION`` header. Set ``target_elevation_m`` (CLI: ``--target-elevation-m``)
+to use a common elevation for paired weather comparisons; otherwise the station
+height is used. Surface pressure is derived from sea-level QFF at that height. If ``station_id`` is omitted, the same coordinates
 also select the nearest station covering every required parameter for the full
 year.
 

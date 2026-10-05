@@ -33,6 +33,7 @@ analyses suitable for students and practitioners.
    pipeline
    limitations
    provenance
+   weather_recovery
    troubleshooting
    bibliography
 
