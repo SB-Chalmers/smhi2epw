@@ -56,3 +56,11 @@ is separate from the tutorial extra. See [the validation guide](../docs/energypl
 These lessons do not independently validate building-site accuracy or
 reconstructed event peaks. They do not run a calibrated building model or supply
 precipitation, snow or illuminance inputs.
+
+Notebook 08 also reads the [corrected-source sensitivity check](data/solar_validation_2026-10-06.json):
+9 annual simulations with zero warnings across three weather-years and one
+fixed 100 m² illustrative building. A week-long solar outage changed annual
+sensible cooling by +3.04–6.79%; the 48-hour meteorology cases changed it by
+−0.166% to +0.102%. These paired cases used daily solar profiles and assessed
+meteorological donors, not ERA5. Their results are conditional on the chosen
+weather/model/masks and do not establish site accuracy or national error bounds.

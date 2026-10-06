@@ -49,7 +49,7 @@ semantics rather than assuming every reported value equals a raw EPW sample.
 Retain the EPW receipt, model, engine version, error log, and SQLite database.
 
 Required CI and publication gate
--------------------------------
+--------------------------------
 
 ``.github/workflows/ci.yml`` runs on pull requests, main/master pushes, release
 tags, manual dispatches, and a weekly schedule. Release validation requires:
@@ -89,3 +89,17 @@ are separate from reproducible release acceptance.
 These checks establish that generated weather can drive the shared consumer
 fixture. They do not establish building-site weather accuracy, preservation of
 reconstructed extremes, archetype qualification, or building calibration.
+
+Observed warning case
+---------------------
+
+Additional live Gothenburg 2016 and 2023 files ran without warnings. The 2020
+file completed with no severe errors but produced two ``PsyPsatFnTemp`` warnings
+from ``PsyTwbFnTdbWPb``, despite valid weather inputs. They persisted at twelve
+timesteps per hour. The tutorial's strict validator rejects this case.
+
+The reported negative temperatures are internal wet-bulb trial values, not EPW
+dry-bulb values; see the `EnergyPlus psychrometric implementation
+<https://raw.githubusercontent.com/NREL/EnergyPlus/v24.2.0/src/EnergyPlus/Psychrometrics.cc>`_.
+This does not justify changing valid input weather or accepting the warnings
+for cooling analysis. Engine completion alone does not establish acceptance.

@@ -269,6 +269,34 @@ reads it offline and records reconstruction diagnostics for new batches. The
 [recovery guide](docs/weather_recovery.rst) explains the separate earlier
 52-of-53 failed-job replay and the current run's limitations.
 
+## Corrected-source sensitivity check
+
+A fresh check on **6 October 2026**, after the solar fixes (`050d195`), rebuilt
+references and two outage cases for each selected weather-year. All **9 annual
+EnergyPlus simulations** completed with zero warnings; paired models and
+unmasked EPW rows were identical. One fixed, illustrative 100 m² ideal-load
+building was used. Changes below are signed differences from its corrected
+reference, not national uncertainty bounds or HVAC electricity.
+
+| Weather-year | 168 h solar outage: annual sensible cooling change | 48 h meteorology outage at temperature maximum: cooling change | Temperature MAE in hidden hours |
+| --- | ---: | ---: | ---: |
+| Gothenburg 2016 | +0.900 kWh/m² (+4.06%) | +0.102% | 0.923 °C |
+| Luleå 2023 | +0.618 kWh/m² (+3.04%) | +0.094% | 1.142 °C |
+| Gothenburg 2024 | +1.259 kWh/m² (+6.79%) | −0.166% | 0.856 °C |
+
+Nighttime zeros split the solar outages into daylight gaps filled by daily
+profiles. Meteorology used assessed fixed donors, with circular temporal wind
+recovery where a donor was rejected. None of these six outages selected ERA5;
+its transport and recovery are covered separately by deterministic integration
+tests. The reference solar partition still includes modelled STRÅNG radiation.
+These results describe the selected weather, model and masks; they do not
+independently validate DNI/DHI or establish a universal donor accuracy.
+
+The [portable sensitivity summary](examples/data/solar_validation_2026-10-06.json)
+contains assumptions, recovery decisions, source/model hashes and validation
+checks. Notebook 08 reads its results offline alongside completeness evidence.
+The earlier frozen campaign is retained with its original source identity.
+
 ## Run the weather in EnergyPlus
 
 [Notebook 09](examples/09_run_energyplus.ipynb) runs a generated AMY in a small,

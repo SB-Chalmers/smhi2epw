@@ -1,0 +1,839 @@
+{
+  "schema_version": 1,
+  "study": "Compact corrected-source actual-provider sensitivity diagnostic",
+  "date": "2026-10-06",
+  "status": "complete",
+  "output_directory_relative_to_epsm_workflows": "output/weather-imputation-solar-validation-2026-10-06-v2",
+  "final_invocation_started_utc": "2026-10-06T11:06:44.750034+00:00",
+  "completed_utc": "2026-10-06T11:07:08.193566+00:00",
+  "denominators": {
+    "selected_weather_years": 3,
+    "physical_outage_masks": 6,
+    "annual_simulations": 9,
+    "total_validated_annual_hours": 78984,
+    "fixed_illustrative_buildings": 1,
+    "floor_area_m2": 100,
+    "weather_records_shared_by_comparisons": 3
+  },
+  "source_identity": {
+    "smhi2epw_source_commit": "050d195f73ff347c2cc9577af2da23150333efea",
+    "smhi2epw_package_version": "1.1.0",
+    "logical_module_sha256": {
+      "smhi2epw/__init__.py": "73e660e36933b666734b6b8fddc9466736b0ebf9c8e7c46f28f69de21f5dfc25",
+      "smhi2epw/automatic.py": "9cd1a13d680ac6d784214f6031f2a180aefeaaf1b40244823950c3f7f5b41427",
+      "smhi2epw/export.py": "cdc8af010683e021b2695493dc44d69a4da966eaedda22aa10f430cfa212c935",
+      "smhi2epw/reanalysis.py": "241c4ca962ce209dd711386501775389aa572a2f577ee69113d421723f223440",
+      "smhi2epw/solar.py": "ba65a5c69411a502e65b045253567a00e371c8ce69d1a00be91a374260257dbc",
+      "smhi2epw/gap_recovery.py": "e5d8912aa516af1bd4e7f7007dd6afa84a0342318716edc58183b826cfa016ef",
+      "smhi2epw/ingestion.py": "c361415248836ccf6755954e1f6bdfad607d0e1e93140d97f44e965265df4673",
+      "smhi2epw/processing.py": "14e61cf64df889c8a6595fed23caaff6847facf2e2fb0012cef9472f8e8b2108",
+      "smhi2epw/constants.py": "9cebfb7bea73f8e34e3776ef6c5ce28d8339e2e9c5b0486ac4b362285e3d6050",
+      "epsm_workflows/examples/weather_imputation_sensitivity/weather.py": "8c214f6e2fed4fac6bfed908e3f7f96251c318cf98d334ce74d10887191e312b",
+      "epsm_workflows/examples/weather_imputation_sensitivity/campaign_sources.py": "3eabc5911bb70a49eb73ec4bc43f209de0ebc0451a19d9d56a83c9c9692ff679",
+      "epsm_workflows/examples/weather_imputation_sensitivity/building.py": "e70c3ec328c7d8081b6ab283d1a2a12d232fe01519042b253040f9033b97616c",
+      "epsm_workflows/examples/weather_imputation_sensitivity/metrics.py": "f21717f6ac45ed16531e5ed6b6d109481e29a2d1f0431aa478b38ee3e675c199",
+      "epsm_workflows/examples/weather_imputation_sensitivity/validate_solar_revision.py": "26ef50cabcdb2662ebb0e7a1b4d73eb5fbac3073e954a42a06f663283195a0f0"
+    },
+    "exact_executed_driver_sha256": "26ef50cabcdb2662ebb0e7a1b4d73eb5fbac3073e954a42a06f663283195a0f0",
+    "energyplus_version": "24.2.0",
+    "energyplus_build": "24.2.0-94a887817b",
+    "energyplus_executable_sha256": "5e0e8246df3dada575d1597a2448409ce31ffa58778f0218d0e6cfc5e508a30e",
+    "core_package_version": "0.1.0.dev0",
+    "core_compiler_sha256": "b7372238150ae3fb67a79549d2fe33952b554a5f2afc715310157a7520ebc172",
+    "source_summary_sha256": "ba13a7cd570ff8de723fa7e0f4014d560a7ed44199c8d6a9e618451cbaf02d5b",
+    "archived_campaign_analysis_manifest_sha256": "cda75c574d1456f5387350ab65cf5e5c1a9945f3dff7a74efb69f3f84ca7d1e6",
+    "archived_campaign_summary_figures_manifest_sha256": "938d9ae612590a9fd1d0fc50beacb96d1d3dedb1bee2f6d4cb48c9d897ad5bcb"
+  },
+  "validation": {
+    "unchanged_fingerprinted_sources": true,
+    "package_source_blobs_match_named_commit": true,
+    "exact_saved_driver_matches_execution_hash": true,
+    "all_paired_compiled_models_identical": true,
+    "all_unmasked_epw_rows_identical": true,
+    "all_annual_calendars_complete_and_ordered": true,
+    "all_sql_load_metrics_recomputed_and_match": true,
+    "all_weather_model_and_source_frame_hashes_verified": true,
+    "all_core_simulations_accepted": true,
+    "severe_or_fatal_engine_errors": 0,
+    "total_engine_warnings": 0,
+    "interrupted_first_six_simulations_resumed_from_validated_receipts": true,
+    "interrupted_comparison_hashes_unchanged": true,
+    "new_network_requests_on_final_resume": 0,
+    "maximum_pre_export_solar_closure_residual_w_m2": 1.1368683772161603e-13
+  },
+  "descriptive_ranges": {
+    "solar_168h_signed_annual_cooling_change_kwh_m2": [
+      0.6182680975815833,
+      1.2591436626277255
+    ],
+    "solar_168h_signed_annual_cooling_change_percent": [
+      3.040948632367068,
+      6.785369639212553
+    ],
+    "meteorology_48h_signed_annual_cooling_change_kwh_m2": [
+      -0.03080476844388386,
+      0.022682407972506553
+    ],
+    "meteorology_48h_temperature_mae_c": [
+      0.8562499999999998,
+      1.1416666666666666
+    ]
+  },
+  "fixed_building_settings": {
+    "model_constructor": "epsm_core.BuildingSpec + EnergyPlusRunner/EnergyPlusCompiler",
+    "floor_area_m2": 100.0,
+    "zone_height_m": 3.0,
+    "volume_m3": 300.0,
+    "orientation": "10 x 10 m square aligned to geographic north",
+    "zoning": "one whole-building zone; compact flat roof, no basement",
+    "wall_layers_outside_to_inside": "150 mm concrete / 120 mm insulation / 13 mm plaster",
+    "roof_layers_outside_to_inside": "160 mm insulation / 150 mm concrete / 13 mm plaster",
+    "floor_layers_outside_to_inside": "100 mm insulation / 150 mm concrete",
+    "concrete_conductivity_w_mk": 1.4,
+    "insulation_conductivity_w_mk": 0.035,
+    "plaster_conductivity_w_mk": 0.16,
+    "default_window_to_wall_ratio": 0.2,
+    "window_placement": "EPSM Core WindowLayoutSpec defaults; equal facade WWR",
+    "glazing_u_w_m2k": 1.8,
+    "glazing_shgc": 0.55,
+    "glazing_visible_transmittance": 0.65,
+    "infiltration_ach": 0.3,
+    "infiltration_coefficients": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "people_per_m2": 0.02,
+    "occupant_activity_w_person": 120.0,
+    "lighting_w_m2": 3.0,
+    "equipment_w_m2": 3.0,
+    "gains_schedule": "constant 24 hours/day, all year",
+    "ground_temperature_c": 18.0,
+    "ground_temperature_basis": "EPSM Core prescribed-temperature default; explicit uncalibrated boundary",
+    "heating_setpoint_c": 20.0,
+    "cooling_setpoint_c": 26.0,
+    "hvac": "Core ideal loads, NoLimit heating/cooling, no humidity control",
+    "ventilation": "natural topology S, 0.3 ACH infiltration only; no additional mechanical air",
+    "dhw_kwh_m2_year": 0.0,
+    "timestep_minutes": 10,
+    "reported_interval_minutes": 60,
+    "calendar": "Core explicit requested year, exact EPW calendar validation, no DST",
+    "limitations": "Illustrative box; fixed ground boundary and gains; delivered sensible loads are not HVAC electricity/fuel"
+  },
+  "weather_years": [
+    {
+      "name": "gothenburg-2016",
+      "year": 2016,
+      "primary_station": {
+        "station_id": 71420,
+        "name": "Göteborg A",
+        "latitude": 57.715642,
+        "longitude": 11.992377,
+        "elevation": 3.038,
+        "wmo_id": "999999"
+      },
+      "fixed_donor_station_id": 72420,
+      "fixed_donor_distance_km": 18.325872635244057,
+      "radiation_station_id": 71415,
+      "original_input_quality": {
+        "original_missing_hours": {
+          "dry_bulb": 1,
+          "relative_humidity": 3,
+          "pressure": 1,
+          "wind_speed": 3,
+          "wind_direction": 3
+        },
+        "original_max_gap_hours": {
+          "dry_bulb": 1,
+          "relative_humidity": 1,
+          "pressure": 1,
+          "wind_speed": 1,
+          "wind_direction": 1
+        },
+        "native_required_fraction": 0.0002504553734061931,
+        "fraction_grid": "exported Local Standard Time year",
+        "gap_grid": "buffered hourly UTC inputs",
+        "eligible": true,
+        "eligibility_reason": null
+      },
+      "reference": {
+        "hours": 8784,
+        "annual_heating_kwh_m2": 37.387741916245226,
+        "annual_cooling_kwh_m2": 22.17586267161344,
+        "solar_source": "measured+strang_partition",
+        "engine_warning_count": 0,
+        "weather_sha256": "9686d15ee1b38d3e85693de3d18731e457f9d56a1daea74a65fe45ec53f4064a",
+        "model_sha256": "4eaebc2aeafb3a5aaf34763525a4e282f6411e6493ead2f9742fda50ff325c64"
+      },
+      "comparisons": [
+        {
+          "case": "solar-168h",
+          "scope": "solar",
+          "duration_h": 168,
+          "anchor_utc": "2016-06-21 12:00:00+00:00",
+          "load_errors": {
+            "heating": {
+              "reference_annual_kwh_m2": 37.387741916245226,
+              "signed_annual_error_kwh_m2": -8.002643880899995e-11,
+              "absolute_annual_error_kwh_m2": 8.002643880899995e-11,
+              "signed_annual_error_percent": -2.140445897702849e-10,
+              "reference_peak_w_m2": 26.935532074613487,
+              "signed_peak_error_w_m2": 0.0,
+              "hourly_load_mae_w_m2": 1.0676085138417068e-10,
+              "maximum_hourly_load_error_w_m2": 1.9031909381794776e-09,
+              "nearest_annual_peak_separation_h": 0.0
+            },
+            "cooling": {
+              "reference_annual_kwh_m2": 22.17586267161344,
+              "signed_annual_error_kwh_m2": 0.8995180648595806,
+              "absolute_annual_error_kwh_m2": 0.8995180648595806,
+              "signed_annual_error_percent": 4.056293449233083,
+              "reference_peak_w_m2": 27.479668076074955,
+              "signed_peak_error_w_m2": 0.0,
+              "hourly_load_mae_w_m2": 0.10549066647209826,
+              "maximum_hourly_load_error_w_m2": 10.728962802933237,
+              "nearest_annual_peak_separation_h": 0.0
+            }
+          },
+          "engine_warning_count": 0,
+          "weather_sha256": "5c2940aedfa647e398c8b88c81ee9aa094ccd17066e901124c2fa641754aa161",
+          "hidden_variables": [
+            "ghi",
+            "dni",
+            "dirh",
+            "ghi_measured"
+          ],
+          "reference_basis": "Hybrid measured-GHI/model-component solar reference; not independent DNI/DHI observations",
+          "weather_errors": {
+            "ghi": {
+              "scored_exported_hours": 168,
+              "mean_error": 100.69642857142857,
+              "mae": 137.5297619047619,
+              "maximum_absolute_error": 592.0,
+              "unit": "Wh/m² over one hour (numerically W/m² hourly mean)"
+            },
+            "dni": {
+              "scored_exported_hours": 168,
+              "mean_error": 2.9761904761904763,
+              "mae": 85.26190476190476,
+              "maximum_absolute_error": 592.0,
+              "unit": "Wh/m² over one hour (numerically W/m² hourly mean)"
+            },
+            "dhi": {
+              "scored_exported_hours": 168,
+              "mean_error": 93.73214285714286,
+              "mae": 105.49404761904762,
+              "maximum_absolute_error": 463.0,
+              "unit": "Wh/m² over one hour (numerically W/m² hourly mean)"
+            }
+          },
+          "recovery": {
+            "method": "bounded daily-profile solar reconstruction with physical darkness zeros",
+            "solar_era5_hours": 0,
+            "maximum_daylight_gap_h": 19,
+            "report_scope": "Recovery counters include native gaps on the whole buffered input frame; this comparison changes only the fixed exported mask."
+          }
+        },
+        {
+          "case": "temperature-event-48h",
+          "scope": "meteorology",
+          "duration_h": 48,
+          "anchor_utc": "2016-06-03 14:00:00+00:00",
+          "load_errors": {
+            "heating": {
+              "reference_annual_kwh_m2": 37.387741916245226,
+              "signed_annual_error_kwh_m2": -2.2360381990438326e-10,
+              "absolute_annual_error_kwh_m2": 2.2360381990438326e-10,
+              "signed_annual_error_percent": -5.9806719647657e-10,
+              "reference_peak_w_m2": 26.935532074613487,
+              "signed_peak_error_w_m2": 0.0,
+              "hourly_load_mae_w_m2": 1.0933895982466578e-10,
+              "maximum_hourly_load_error_w_m2": 1.8800117018713536e-09,
+              "nearest_annual_peak_separation_h": 0.0
+            },
+            "cooling": {
+              "reference_annual_kwh_m2": 22.17586267161344,
+              "signed_annual_error_kwh_m2": 0.022682407972506553,
+              "absolute_annual_error_kwh_m2": 0.022682407972506553,
+              "signed_annual_error_percent": 0.10228421914580813,
+              "reference_peak_w_m2": 27.479668076074955,
+              "signed_peak_error_w_m2": -0.14068337872222614,
+              "hourly_load_mae_w_m2": 0.002678666745422994,
+              "maximum_hourly_load_error_w_m2": 1.5179345543773048,
+              "nearest_annual_peak_separation_h": 0.0
+            }
+          },
+          "engine_warning_count": 0,
+          "weather_sha256": "dad522aef85b457aa29cf547d134fb00498535b7bfd608cb20ac1fbfc04ab606",
+          "hidden_variables": [
+            "dry_bulb",
+            "relative_humidity",
+            "pressure",
+            "wind_speed",
+            "wind_direction"
+          ],
+          "reference_basis": "Original observation-supported reference on all 48 scored hours per variable",
+          "weather_errors": {
+            "dry_bulb": {
+              "scored_exported_hours": 48,
+              "mean_error": 0.7520833333333332,
+              "mae": 0.9229166666666666,
+              "maximum_absolute_error": 3.5,
+              "unit": "°C"
+            },
+            "relative_humidity": {
+              "scored_exported_hours": 48,
+              "mean_error": -2.0625,
+              "mae": 5.479166666666667,
+              "maximum_absolute_error": 20.0,
+              "unit": "percentage points"
+            },
+            "pressure": {
+              "scored_exported_hours": 48,
+              "mean_error": -18.895833333333332,
+              "mae": 22.6875,
+              "maximum_absolute_error": 50.0,
+              "unit": "Pa target-elevation surface pressure"
+            },
+            "wind_speed": {
+              "scored_exported_hours": 48,
+              "mean_error": 1.4291666666666665,
+              "mae": 1.575,
+              "maximum_absolute_error": 5.0,
+              "unit": "m/s"
+            },
+            "wind_direction": {
+              "scored_exported_hours": 48,
+              "mean_error": 28.0625,
+              "mae": 40.604166666666664,
+              "maximum_absolute_error": 150.0,
+              "unit": "degrees, shortest signed circular difference"
+            }
+          },
+          "recovery": {
+            "method": "assessed fixed same-year donor followed by bounded circular/scalar temporal reconstruction and ERA5 only for remaining gaps",
+            "donor_assessment_statuses": {
+              "dry_bulb": [
+                "accepted"
+              ],
+              "relative_humidity": [
+                "accepted"
+              ],
+              "pressure": [
+                "accepted"
+              ],
+              "wind_speed": [
+                "accepted"
+              ],
+              "wind_direction": [
+                "accepted"
+              ]
+            },
+            "era5_hours_by_variable": {
+              "dry_bulb": 0,
+              "relative_humidity": 0,
+              "pressure": 0,
+              "wind_speed": 0,
+              "wind_direction": 0
+            }
+          }
+        }
+      ],
+      "source_frame_sha256": {
+        "primary": "2ca9763ea1773f01ffc6d3c92f82ad5afc4c0c0a2531ec19eff0188ccfbe0ecd",
+        "reference": "7a9b8045e34a39615469336d83dee78bc4e19efed5fe0666b7430589629aa7d1",
+        "donor": "395626250aa07eb71dc68a7b16070bc4d2d9a16cb161b7ffc15c2cd789ea2d10",
+        "era5": "24ba7ff4806b7e83080a50d083eab82adb74b02d1a046e9f8d958ac49667a601"
+      },
+      "evidence_sha256": {
+        "source_receipt": "10b03d4ab805d000c40a8cc2e79f4ed148ad8b988c3e3ee1e7d6eae268f8ef5c",
+        "comparison": "4e47931d876884b02c23e2d30cbd59b1729286f05aeb5090514fe8353cfc25af"
+      }
+    },
+    {
+      "name": "lulea-2023",
+      "year": 2023,
+      "primary_station": {
+        "station_id": 162860,
+        "name": "Luleå-Kallax Flygplats",
+        "latitude": 65.543,
+        "longitude": 22.124,
+        "elevation": 19.9,
+        "wmo_id": "999999"
+      },
+      "fixed_donor_station_id": 161940,
+      "fixed_donor_distance_km": 37.54361588978177,
+      "radiation_station_id": 162015,
+      "original_input_quality": {
+        "original_missing_hours": {
+          "dry_bulb": 54,
+          "relative_humidity": 61,
+          "pressure": 54,
+          "wind_speed": 63,
+          "wind_direction": 61
+        },
+        "original_max_gap_hours": {
+          "dry_bulb": 11,
+          "relative_humidity": 18,
+          "pressure": 11,
+          "wind_speed": 18,
+          "wind_direction": 18
+        },
+        "native_required_fraction": 0.006689497716894977,
+        "fraction_grid": "exported Local Standard Time year",
+        "gap_grid": "buffered hourly UTC inputs",
+        "eligible": true,
+        "eligibility_reason": null
+      },
+      "reference": {
+        "hours": 8760,
+        "annual_heating_kwh_m2": 76.00173515799844,
+        "annual_cooling_kwh_m2": 20.33142194514232,
+        "solar_source": "measured+strang_partition",
+        "engine_warning_count": 0,
+        "weather_sha256": "ca403ccb7e8512a8c3238247f0bf6d296c5d4055a8c2094c82f314e85fa2f83d",
+        "model_sha256": "4351a95ec7af504539bc3d3b07b3a9031bf12ef7c1590e48db7de414955a6ebc"
+      },
+      "comparisons": [
+        {
+          "case": "solar-168h",
+          "scope": "solar",
+          "duration_h": 168,
+          "anchor_utc": "2023-06-21 12:00:00+00:00",
+          "load_errors": {
+            "heating": {
+              "reference_annual_kwh_m2": 76.00173515799844,
+              "signed_annual_error_kwh_m2": 9.946234058588743e-11,
+              "absolute_annual_error_kwh_m2": 9.946234058588743e-11,
+              "signed_annual_error_percent": 1.3086851290844506e-10,
+              "reference_peak_w_m2": 34.07016259356162,
+              "signed_peak_error_w_m2": 0.0,
+              "hourly_load_mae_w_m2": 1.435522423960588e-10,
+              "maximum_hourly_load_error_w_m2": 4.201662402334924e-09,
+              "nearest_annual_peak_separation_h": 0.0
+            },
+            "cooling": {
+              "reference_annual_kwh_m2": 20.33142194514232,
+              "signed_annual_error_kwh_m2": 0.6182680975815833,
+              "absolute_annual_error_kwh_m2": 0.6182680975815833,
+              "signed_annual_error_percent": 3.040948632367068,
+              "reference_peak_w_m2": 28.49996956969654,
+              "signed_peak_error_w_m2": 0.2979892268319517,
+              "hourly_load_mae_w_m2": 0.10337966110634354,
+              "maximum_hourly_load_error_w_m2": 14.479811755183487,
+              "nearest_annual_peak_separation_h": 0.0
+            }
+          },
+          "engine_warning_count": 0,
+          "weather_sha256": "ee948e4df2a88f69fac6227a9a7367dc078ef05ecd27e56126c265088eadba9b",
+          "hidden_variables": [
+            "ghi",
+            "dni",
+            "dirh",
+            "ghi_measured"
+          ],
+          "reference_basis": "Hybrid measured-GHI/model-component solar reference; not independent DNI/DHI observations",
+          "weather_errors": {
+            "ghi": {
+              "scored_exported_hours": 168,
+              "mean_error": 48.31547619047619,
+              "mae": 89.38690476190476,
+              "maximum_absolute_error": 495.0,
+              "unit": "Wh/m² over one hour (numerically W/m² hourly mean)"
+            },
+            "dni": {
+              "scored_exported_hours": 168,
+              "mean_error": 99.07738095238095,
+              "mae": 177.85119047619048,
+              "maximum_absolute_error": 703.0,
+              "unit": "Wh/m² over one hour (numerically W/m² hourly mean)"
+            },
+            "dhi": {
+              "scored_exported_hours": 168,
+              "mean_error": -11.011904761904763,
+              "mae": 42.95238095238095,
+              "maximum_absolute_error": 469.0,
+              "unit": "Wh/m² over one hour (numerically W/m² hourly mean)"
+            }
+          },
+          "recovery": {
+            "method": "bounded daily-profile solar reconstruction with physical darkness zeros",
+            "solar_era5_hours": 0,
+            "maximum_daylight_gap_h": 23,
+            "report_scope": "Recovery counters include native gaps on the whole buffered input frame; this comparison changes only the fixed exported mask."
+          }
+        },
+        {
+          "case": "temperature-event-48h",
+          "scope": "meteorology",
+          "duration_h": 48,
+          "anchor_utc": "2023-08-08 14:00:00+00:00",
+          "load_errors": {
+            "heating": {
+              "reference_annual_kwh_m2": 76.00173515799844,
+              "signed_annual_error_kwh_m2": 1.5528712538070978e-10,
+              "absolute_annual_error_kwh_m2": 1.5528712538070978e-10,
+              "signed_annual_error_percent": 2.0432050012790702e-10,
+              "reference_peak_w_m2": 34.07016259356162,
+              "signed_peak_error_w_m2": 0.0,
+              "hourly_load_mae_w_m2": 1.3608019244018322e-10,
+              "maximum_hourly_load_error_w_m2": 2.1069679334573266e-09,
+              "nearest_annual_peak_separation_h": 0.0
+            },
+            "cooling": {
+              "reference_annual_kwh_m2": 20.33142194514232,
+              "signed_annual_error_kwh_m2": 0.019160858610789547,
+              "absolute_annual_error_kwh_m2": 0.019160858610789547,
+              "signed_annual_error_percent": 0.09424258993044778,
+              "reference_peak_w_m2": 28.49996956969654,
+              "signed_peak_error_w_m2": 0.0,
+              "hourly_load_mae_w_m2": 0.0035059404696629725,
+              "maximum_hourly_load_error_w_m2": 1.1720574879877321,
+              "nearest_annual_peak_separation_h": 0.0
+            }
+          },
+          "engine_warning_count": 0,
+          "weather_sha256": "b4d8a18bb1816bc4d6c1d7950e53199fe415e2316bf09020142fa48a7377fc9e",
+          "hidden_variables": [
+            "dry_bulb",
+            "relative_humidity",
+            "pressure",
+            "wind_speed",
+            "wind_direction"
+          ],
+          "reference_basis": "Original observation-supported reference on all 48 scored hours per variable",
+          "weather_errors": {
+            "dry_bulb": {
+              "scored_exported_hours": 48,
+              "mean_error": 0.4291666666666669,
+              "mae": 1.1416666666666666,
+              "maximum_absolute_error": 2.8999999999999986,
+              "unit": "°C"
+            },
+            "relative_humidity": {
+              "scored_exported_hours": 48,
+              "mean_error": 1.125,
+              "mae": 4.75,
+              "maximum_absolute_error": 19.0,
+              "unit": "percentage points"
+            },
+            "pressure": {
+              "scored_exported_hours": 48,
+              "mean_error": 14.854166666666666,
+              "mae": 32.0625,
+              "maximum_absolute_error": 90.0,
+              "unit": "Pa target-elevation surface pressure"
+            },
+            "wind_speed": {
+              "scored_exported_hours": 48,
+              "mean_error": -0.375,
+              "mae": 1.4583333333333333,
+              "maximum_absolute_error": 4.0,
+              "unit": "m/s"
+            },
+            "wind_direction": {
+              "scored_exported_hours": 48,
+              "mean_error": -62.166666666666664,
+              "mae": 81.83333333333333,
+              "maximum_absolute_error": 168.0,
+              "unit": "degrees, shortest signed circular difference"
+            }
+          },
+          "recovery": {
+            "method": "assessed fixed same-year donor followed by bounded circular/scalar temporal reconstruction and ERA5 only for remaining gaps",
+            "donor_assessment_statuses": {
+              "dry_bulb": [
+                "accepted"
+              ],
+              "relative_humidity": [
+                "accepted"
+              ],
+              "pressure": [
+                "accepted"
+              ],
+              "wind_speed": [
+                "accepted"
+              ],
+              "wind_direction": [
+                "rejected"
+              ]
+            },
+            "era5_hours_by_variable": {
+              "dry_bulb": 0,
+              "relative_humidity": 0,
+              "pressure": 0,
+              "wind_speed": 0,
+              "wind_direction": 0
+            }
+          }
+        }
+      ],
+      "source_frame_sha256": {
+        "primary": "310f50793485acbd1d2b067a97f229960e6a0c21f7a1d9a85f58180de7e25870",
+        "reference": "839f86a170f05dc93fcac738415ac3d6dd39c3dc145003e41230cc39629e366e",
+        "donor": "aeb34c01677ac46923cd3f9579ff8ac8ee2e05b217b6957a73a6385737c9cabb",
+        "era5": "d2595b195de7c1cba9b0c3c07019473485e3a57926dbf2f1415724c00f34d315"
+      },
+      "evidence_sha256": {
+        "source_receipt": "7121b66593a0fae9c1ab1d64af9c62a439781e61b4c8560094543997688e4f99",
+        "comparison": "8f96f3493b2f16556d7bc087394a81b97acee4da987920b778222620b1a54399"
+      }
+    },
+    {
+      "name": "gothenburg-2024",
+      "year": 2024,
+      "primary_station": {
+        "station_id": 72420,
+        "name": "Göteborg-Landvetter Flygplats",
+        "latitude": 57.6764,
+        "longitude": 12.2919,
+        "elevation": 154.0,
+        "wmo_id": "999999"
+      },
+      "fixed_donor_station_id": 71420,
+      "fixed_donor_distance_km": 18.325872635244057,
+      "radiation_station_id": 71415,
+      "original_input_quality": {
+        "original_missing_hours": {
+          "dry_bulb": 13,
+          "relative_humidity": 33,
+          "pressure": 13,
+          "wind_speed": 26,
+          "wind_direction": 15
+        },
+        "original_max_gap_hours": {
+          "dry_bulb": 3,
+          "relative_humidity": 3,
+          "pressure": 3,
+          "wind_speed": 11,
+          "wind_direction": 3
+        },
+        "native_required_fraction": 0.002276867030965392,
+        "fraction_grid": "exported Local Standard Time year",
+        "gap_grid": "buffered hourly UTC inputs",
+        "eligible": true,
+        "eligibility_reason": null
+      },
+      "reference": {
+        "hours": 8784,
+        "annual_heating_kwh_m2": 41.8894294938094,
+        "annual_cooling_kwh_m2": 18.5567438412073,
+        "solar_source": "measured+strang_partition",
+        "engine_warning_count": 0,
+        "weather_sha256": "b7b2baef020276c0053184794a3a4811dcfb19e12cd6a89c0a68531336161945",
+        "model_sha256": "03dc32eb1acabd44b052e065d51766ff94ba3844b02a20e9b85b67e8e8e5a11c"
+      },
+      "comparisons": [
+        {
+          "case": "solar-168h",
+          "scope": "solar",
+          "duration_h": 168,
+          "anchor_utc": "2024-06-21 12:00:00+00:00",
+          "load_errors": {
+            "heating": {
+              "reference_annual_kwh_m2": 41.8894294938094,
+              "signed_annual_error_kwh_m2": 2.3973370844032613e-10,
+              "absolute_annual_error_kwh_m2": 2.3973370844032613e-10,
+              "signed_annual_error_percent": 5.723012018479627e-10,
+              "reference_peak_w_m2": 28.350776434788845,
+              "signed_peak_error_w_m2": 0.0,
+              "hourly_load_mae_w_m2": 1.2983058292097697e-10,
+              "maximum_hourly_load_error_w_m2": 2.3293599688001265e-09,
+              "nearest_annual_peak_separation_h": 0.0
+            },
+            "cooling": {
+              "reference_annual_kwh_m2": 18.5567438412073,
+              "signed_annual_error_kwh_m2": 1.2591436626277255,
+              "absolute_annual_error_kwh_m2": 1.2591436626277255,
+              "signed_annual_error_percent": 6.785369639212553,
+              "reference_peak_w_m2": 25.323519212691643,
+              "signed_peak_error_w_m2": 0.8546342838490606,
+              "hourly_load_mae_w_m2": 0.14334513468206636,
+              "maximum_hourly_load_error_w_m2": 16.631788973755445,
+              "nearest_annual_peak_separation_h": 0.0
+            }
+          },
+          "engine_warning_count": 0,
+          "weather_sha256": "0b7db739d31722c48acc4f8df1bbefbed7ba2bfb3b17392c6580fba412fa5998",
+          "hidden_variables": [
+            "ghi",
+            "dni",
+            "dirh",
+            "ghi_measured"
+          ],
+          "reference_basis": "Hybrid measured-GHI/model-component solar reference; not independent DNI/DHI observations",
+          "weather_errors": {
+            "ghi": {
+              "scored_exported_hours": 168,
+              "mean_error": 111.66071428571429,
+              "mae": 116.26785714285714,
+              "maximum_absolute_error": 736.0,
+              "unit": "Wh/m² over one hour (numerically W/m² hourly mean)"
+            },
+            "dni": {
+              "scored_exported_hours": 168,
+              "mean_error": 290.5,
+              "mae": 299.8095238095238,
+              "maximum_absolute_error": 913.0,
+              "unit": "Wh/m² over one hour (numerically W/m² hourly mean)"
+            },
+            "dhi": {
+              "scored_exported_hours": 168,
+              "mean_error": -55.76190476190476,
+              "mae": 66.32142857142857,
+              "maximum_absolute_error": 571.0,
+              "unit": "Wh/m² over one hour (numerically W/m² hourly mean)"
+            }
+          },
+          "recovery": {
+            "method": "bounded daily-profile solar reconstruction with physical darkness zeros",
+            "solar_era5_hours": 0,
+            "maximum_daylight_gap_h": 19,
+            "report_scope": "Recovery counters include native gaps on the whole buffered input frame; this comparison changes only the fixed exported mask."
+          }
+        },
+        {
+          "case": "temperature-event-48h",
+          "scope": "meteorology",
+          "duration_h": 48,
+          "anchor_utc": "2024-06-27 12:00:00+00:00",
+          "load_errors": {
+            "heating": {
+              "reference_annual_kwh_m2": 41.8894294938094,
+              "signed_annual_error_kwh_m2": 1.0950316209346055e-11,
+              "absolute_annual_error_kwh_m2": 1.0950316209346055e-11,
+              "signed_annual_error_percent": 2.614100106320221e-11,
+              "reference_peak_w_m2": 28.350776434788845,
+              "signed_peak_error_w_m2": 0.0,
+              "hourly_load_mae_w_m2": 9.75618579776969e-11,
+              "maximum_hourly_load_error_w_m2": 1.7477697067391773e-09,
+              "nearest_annual_peak_separation_h": 0.0
+            },
+            "cooling": {
+              "reference_annual_kwh_m2": 18.5567438412073,
+              "signed_annual_error_kwh_m2": -0.03080476844388386,
+              "absolute_annual_error_kwh_m2": 0.03080476844388386,
+              "signed_annual_error_percent": -0.1660030914231756,
+              "reference_peak_w_m2": 25.323519212691643,
+              "signed_peak_error_w_m2": -0.4225953698515017,
+              "hourly_load_mae_w_m2": 0.0035171928486466063,
+              "maximum_hourly_load_error_w_m2": 1.1939736288206482,
+              "nearest_annual_peak_separation_h": 0.0
+            }
+          },
+          "engine_warning_count": 0,
+          "weather_sha256": "8254d838dee762e7c7507c129a1e92c58536cd69ecec63a8ab0a7cec5a696c4a",
+          "hidden_variables": [
+            "dry_bulb",
+            "relative_humidity",
+            "pressure",
+            "wind_speed",
+            "wind_direction"
+          ],
+          "reference_basis": "Original observation-supported reference on all 48 scored hours per variable",
+          "weather_errors": {
+            "dry_bulb": {
+              "scored_exported_hours": 48,
+              "mean_error": -0.6854166666666667,
+              "mae": 0.8562499999999998,
+              "maximum_absolute_error": 2.3999999999999986,
+              "unit": "°C"
+            },
+            "relative_humidity": {
+              "scored_exported_hours": 48,
+              "mean_error": -4.5,
+              "mae": 5.5,
+              "maximum_absolute_error": 14.0,
+              "unit": "percentage points"
+            },
+            "pressure": {
+              "scored_exported_hours": 48,
+              "mean_error": -1.1458333333333333,
+              "mae": 19.729166666666668,
+              "maximum_absolute_error": 48.0,
+              "unit": "Pa target-elevation surface pressure"
+            },
+            "wind_speed": {
+              "scored_exported_hours": 48,
+              "mean_error": -0.40208333333333335,
+              "mae": 0.8520833333333334,
+              "maximum_absolute_error": 2.8,
+              "unit": "m/s"
+            },
+            "wind_direction": {
+              "scored_exported_hours": 48,
+              "mean_error": -1.2083333333333333,
+              "mae": 33.041666666666664,
+              "maximum_absolute_error": 100.0,
+              "unit": "degrees, shortest signed circular difference"
+            }
+          },
+          "recovery": {
+            "method": "assessed fixed same-year donor followed by bounded circular/scalar temporal reconstruction and ERA5 only for remaining gaps",
+            "donor_assessment_statuses": {
+              "dry_bulb": [
+                "accepted"
+              ],
+              "relative_humidity": [
+                "accepted"
+              ],
+              "pressure": [
+                "accepted"
+              ],
+              "wind_speed": [
+                "accepted"
+              ],
+              "wind_direction": [
+                "accepted"
+              ]
+            },
+            "era5_hours_by_variable": {
+              "dry_bulb": 0,
+              "relative_humidity": 0,
+              "pressure": 0,
+              "wind_speed": 0,
+              "wind_direction": 0
+            }
+          }
+        }
+      ],
+      "source_frame_sha256": {
+        "primary": "910e997ddf88a6fedf9815216df51fac9943d9f93fef961f5886c42a6401cb95",
+        "reference": "944bdc3ec7dc2f995709768c47a1dcb9f43450c034f9c6a607437b826889e18a",
+        "donor": "4566d83cc019e61d5e7a1a656e060d909a3ec291b19c5cbffc3829c3eee14e3f",
+        "era5": "2138f1cbc4c03f7c0dd094d62a6217317a6484c30b37044bfdf4cf85b6d5e4a8"
+      },
+      "evidence_sha256": {
+        "source_receipt": "912cb82a70e3c89c6e74ccceee6fccfcbfffcc639242fe2027b3fcab2081b565",
+        "comparison": "4d9d18cefe853ffc8848948e6f612d14ed94793d0450afcb1528a7834d4fd45e"
+      }
+    }
+  ],
+  "reproduction": {
+    "module": "examples.weather_imputation_sensitivity.validate_solar_revision",
+    "final_arguments": [
+      "--output",
+      "output/weather-imputation-solar-validation-2026-10-06-v2",
+      "--network-request-budget",
+      "0"
+    ],
+    "working_repository": "epsm_workflows",
+    "requirements": "Matching corrected SMHI2EPW and Core source, EnergyPlus 24.2.0, and the preserved provider responses in the separate cache. The aggregate supports offline evidence review; it does not contain or recreate the raw inputs.",
+    "driver_saved_in_output": "executed-driver.py",
+    "archived_campaign_helpers_modified": false,
+    "prepared_solar_compatibility_bridge": "The archived helper returns finalized GHI/DNI/mean horizontal beam but omits finalized DHI. Corrected automatic-prepared processing avoids a second finalization. The fresh driver therefore transfers masked DHI as max(GHI - mean horizontal beam, 0), preserving closure without changing the archived helper."
+  },
+  "limitations": [
+    "One fixed illustrative 100 m² ideal-load building; sensible thermal loads exclude HVAC electricity/fuel and use an uncalibrated fixed ground boundary and gains.",
+    "Three selected weather-years and summer deterministic outages; six paired responses share three source weather records. No population confidence intervals, significance claim, or acceptance threshold.",
+    "The 48 h event hides all five required meteorological variables around the originally observed temperature maximum; it is not a dry-bulb-only experiment. Heating changes are numerical noise in these summer cases.",
+    "Native meteorological gaps were bounded-filled in each reference. Meteorological errors are scored only where original observations exist; all selected 48 h masks have full original support.",
+    "Optional clouds and donor choices are fixed, and masked original truth is excluded from donor assessment. These comparisons do not validate production source discovery or independent optional-cloud reconstruction.",
+    "Solar references use measured GHI with STRÅNG modelled components and native fills; DNI/DHI errors are relative to a hybrid reference, not independent observed truth.",
+    "No outage selected ERA5: physical darkness divides each 168 h solar outage into 19–23 h daylight gaps filled by daily profiles, and meteorology is recovered by assessed donors/temporal paths. ERA5 transport/format behavior is checked separately by deterministic provider replay tests.",
+    "The earlier 9450-run campaign is preserved. Baseline/candidate solar errors shared by its frozen references can cancel, so its sensitivity estimates remain conditional on those references. This compact correction check does not replace that campaign or validate absolute irradiance.",
+    "The first nine-run exploratory directory is excluded because its solar comparisons retained reference DHI. It has an invalidation receipt and is preserved separately.",
+    "Zero engine warnings demonstrate clean execution of these cases; they do not establish general weather accuracy, extreme-event preservation, or suitability for every application."
+  ]
+}

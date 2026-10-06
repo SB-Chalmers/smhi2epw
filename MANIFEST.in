@@ -4,3 +4,5 @@ recursive-include examples *.ipynb *.md
 include examples/data/completeness_2026-10-05.json
 recursive-include examples/support *.py *.idf
 include scripts/install_energyplus.sh
+include examples/data/solar_validation_2026-10-06.json
+recursive-include tests/fixtures *.py

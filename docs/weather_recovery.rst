@@ -338,3 +338,32 @@ artifact directory is
 the status, quality summary, runtime manifest, verification and per-job weather
 and source receipts retain the full audit trail. Large EPWs and raw caches are
 not distributed with the examples. Notebook 08 reads the summary offline.
+
+Corrected-source sensitivity check, 6 October 2026
+--------------------------------------------------
+
+After the solar correction at ``050d195``, a small fresh experiment rebuilt
+three references and six outage cases: Gothenburg 2016, Luleå 2023 and Gothenburg
+2024, each with a 168-hour June solar outage and a 48-hour meteorological outage
+at its original observed temperature maximum. All nine annual simulations had
+complete calendars and zero engine warnings. The paired compiled models and
+unmasked weather rows were identical.
+
+For one illustrative 100 m² ideal-load building, annual sensible cooling changed
+by +0.618--1.259 kWh/m² (+3.04--6.79%) under the solar masks. Meteorological masks
+changed cooling by -0.166--+0.102%, with hidden-hour temperature MAE of
+0.856--1.142 °C. These are descriptive comparisons against corrected references,
+not national error bounds or independent validation of solar components.
+
+Physical nighttime zeros divided the solar outages into bounded daylight gaps
+filled by daily profiles. Meteorology used assessed fixed donors, with circular
+temporal recovery for rejected wind direction. None selected ERA5 in these six
+outages. The reference solar group includes modelled STRÅNG components and native
+bounded fills; optional clouds were frozen. The public provider/reanalysis
+transport is checked separately by deterministic compiler-to-engine fixtures.
+
+The :download:`portable summary <../examples/data/solar_validation_2026-10-06.json>`
+records assumptions, actual recovery methods, code and model hashes, and output
+checks. Notebook 08 reads this summary without running a new campaign. The
+original larger campaign and its inputs remain frozen under their original
+source identity.
