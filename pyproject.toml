@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "smhi2epw"
 version = "1.1.0"
-description = "Compile SMHI actual-year EPW weather with assessed donors and same-year ERA5 recovery."
+description = "Build complete-year EnergyPlus weather files from SMHI observations, with documented gap recovery."
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
