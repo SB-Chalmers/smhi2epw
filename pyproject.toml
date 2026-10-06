@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "smhi2epw"
-version = "1.1.0"
+version = "1.1.1"
 description = "Build complete-year EnergyPlus weather files from SMHI observations, with documented gap recovery."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -58,6 +58,7 @@ smhi2epw = "smhi2epw.cli:main"
 
 [project.urls]
 Homepage = "https://github.com/SB-Chalmers/smhi2epw"
+Documentation = "https://sb-chalmers.github.io/smhi2epw/"
 Repository = "https://github.com/SB-Chalmers/smhi2epw.git"
 Issues = "https://github.com/SB-Chalmers/smhi2epw/issues"
 
