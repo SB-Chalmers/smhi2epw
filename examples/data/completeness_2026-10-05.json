@@ -1,0 +1,316 @@
+{
+  "schema_version": 1,
+  "title": "SMHI2EPW national measurement-year weather completion evidence",
+  "audited_at_utc": "2026-10-06T01:21:37.503479+00:00",
+  "denominator": "Distinct requested municipality/measurement-year weather jobs in each frozen EPSM national run; this is not all Swedish stations or buildings.",
+  "stages": [
+    {
+      "artifact_directory": "epsm_workflows/output/national-mf-se02-random-baseline-2026-10-05-v1",
+      "completed_at_utc": "2026-10-05T04:58:23.753222+00:00",
+      "execution_stage": "completed",
+      "smhi2epw_git_commit": null,
+      "runtime_frozen_at_utc": null,
+      "requested_weather_jobs": 85,
+      "completed_weather_jobs": 32,
+      "failed_weather_jobs": 53,
+      "years": [
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "historical_outcomes_rechecked_from": "weather-status.json",
+      "recorded_successful_epws_currently_available": 0,
+      "recorded_workflow_weather_receipts_currently_available": 0,
+      "artifact_sha256": {
+        "weather-status.json": "dd4bcd25e37aac0ed4eb2ae0be548a832dac0bd645152c344e77a8edd090f770",
+        "weather-jobs.json": "4b70f64cd487a10793d7e716f741cecbc4c0e570e0c3748c9b38c85e76435677",
+        "runtime-manifest.json": "b1f47853c59ad66d0b3febbc9d2f9c23f153dbe2e20715d8f5e8b7039c12e4d6",
+        "execution.json": "6999664295567b4dd367ca0259ad4fecec774ef8f6cacf9246f8ade1722947db",
+        "verification.json": "1dc71a70aba1363690e95e38ac9aa355204a6bdef5c65dcfb0513555531cbf3f"
+      },
+      "policy": "Historical bounded temporal completion; donor recovery was not enabled.",
+      "source_identity_note": "This runtime manifest stores file hashes; it does not record a Git commit. Historical EPWs and per-job receipts are no longer available locally."
+    },
+    {
+      "artifact_directory": "epsm_workflows/output/national-mf-se02-random-baseline-2026-10-05-v2-roof-weather",
+      "completed_at_utc": "2026-10-05T06:55:11.063743+00:00",
+      "execution_stage": "completed",
+      "smhi2epw_git_commit": "4861f9ecdb0963cb564ab8ae67ff0137810d9d8a",
+      "runtime_frozen_at_utc": "2026-10-05T06:40:22.612540+00:00",
+      "requested_weather_jobs": 128,
+      "completed_weather_jobs": 124,
+      "failed_weather_jobs": 4,
+      "years": [
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "historical_outcomes_rechecked_from": "weather-status.json",
+      "recorded_successful_epws_currently_available": 0,
+      "recorded_workflow_weather_receipts_currently_available": 0,
+      "artifact_sha256": {
+        "weather-status.json": "b0eb1411e3e5d57d1c9e11ba53cab047775a42eb245628bb2d2e7584c119e000",
+        "weather-jobs.json": "39c8e04455a46153ac6c2a35b6e036147e5771ff1df931e671ce430031127dc3",
+        "runtime-manifest.json": "e82cd5eac85b0bf2d3863f9840124325324d6a4940b57f726ee36a4a1e02f86c",
+        "execution.json": "37fed88dd00a4eca4dd0d28ec177b919792dcb06e74b9945d0578adaaf60b2f1",
+        "rerun-manifest.json": "ebcae28ee4984b72b71adb689ed6d944eb91bd99dfed02e400fe90d892ef927f",
+        "verification.json": "cb2aa227d406a92c633a4dea6f3241aea56fdba3cf3e9f8a71aafb6d7ff206c2"
+      },
+      "policy": "Historical opt-in nearby raw-observation recovery; no ERA5 fallback or current assessed-donor policy.",
+      "remaining_failures": [
+        {
+          "municipality_year": "0880:2017",
+          "reason": "column 'wind_direction' has a 170-hour gap exceeding the 48-hour fill limit"
+        },
+        {
+          "municipality_year": "1493:2018",
+          "reason": "column 'relative_humidity' has a 96-hour gap exceeding the 48-hour fill limit"
+        },
+        {
+          "municipality_year": "2101:2018",
+          "reason": "column 'pressure' has a 86-hour gap exceeding the 48-hour fill limit"
+        },
+        {
+          "municipality_year": "2380:2018",
+          "reason": "column 'pressure' has a 495-hour gap exceeding the 48-hour fill limit"
+        }
+      ],
+      "source_identity_note": "Historical EPWs and per-job receipts are no longer available locally; outcome counts are retained in the status manifest."
+    },
+    {
+      "artifact_directory": "epsm_workflows/output/national-mf-se02-random-baseline-2026-10-05-v3-weather-shadow",
+      "completed_at_utc": "2026-10-05T10:17:02.008905+00:00",
+      "execution_stage": "completed",
+      "smhi2epw_git_commit": "5930c07c987bdbdd19c01be8d86a1fc0710c361e",
+      "runtime_frozen_at_utc": "2026-10-05T09:57:04.413725+00:00",
+      "requested_weather_jobs": 128,
+      "completed_weather_jobs": 128,
+      "failed_weather_jobs": 0,
+      "years": [
+        2017,
+        2018,
+        2019,
+        2020,
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "historical_outcomes_rechecked_from": "weather-status.json",
+      "recorded_successful_epws_currently_available": 128,
+      "recorded_workflow_weather_receipts_currently_available": 128,
+      "artifact_sha256": {
+        "weather-status.json": "3d8a9de0b67346a5d00c6e369ccb79ecea45079595f7a69e26d9c0bd9359d84f",
+        "weather-jobs.json": "39c8e04455a46153ac6c2a35b6e036147e5771ff1df931e671ce430031127dc3",
+        "runtime-manifest.json": "7da5d6729d1bc52c4f86d78f3be0489c8b0a7198bf67ca38d0a8e1e434329359",
+        "execution.json": "b5ab7419ffd7777fa87328ec69b901fc8f91105242c48cb0ef86e042aeae47dd",
+        "rerun-manifest.json": "5ea970e431c15c02415ad919e98304d3b0dbab14880cd9bbaeaab47f11eeefbf",
+        "verification.json": "f700aad4d5d7df5b157eb04e9c360b1ce1d40f6c024e11aeb6c96fa8f32032d2",
+        "weather-quality-summary.json": "d035d64b3bd345325a54a6a4f58f00fc9d4027934dacfc5452f77539b8386315"
+      },
+      "policy": "Automatic recovery: primary observations, short temporal fill, assessed same-year donors, bounded daily profiles, same-year ERA5.",
+      "current_output_audit": {
+        "all_128_epw_sha256_match_status_and_both_receipts": true,
+        "all_128_exact_ordered_local_standard_time_calendars": true,
+        "all_128_have_35_fields_per_data_row": true,
+        "all_128_required_export_values_finite_and_within_package_ranges": true,
+        "all_128_dew_point_consistent_with_dry_bulb": true,
+        "annual_cardinality_job_counts": {
+          "8760": 112,
+          "8784": 16
+        },
+        "total_exported_hours": 1121664,
+        "workflow_and_source_reports_match_for_all_jobs": true,
+        "source_fractions_finite_bounded_and_sum_to_one_for_each_variable": true,
+        "source_response_receipts_marked_complete": 128,
+        "source_receipt_package_version_job_counts": {
+          "1.1.0": 128
+        },
+        "source_receipt_accessed_at_utc_min": "2026-10-05T09:58:04.929696+00:00",
+        "source_receipt_accessed_at_utc_max": "2026-10-05T10:08:35.035335+00:00",
+        "weather_classification_job_counts": {
+          "mixed_reconstructed": 128
+        },
+        "jobs_using_source": {
+          "any_reported_variable": {
+            "primary": 128,
+            "temporal": 126,
+            "donor": 101,
+            "reanalysis": 35,
+            "physical": 128
+          },
+          "required_meteorology": {
+            "primary": 127,
+            "temporal": 126,
+            "donor": 101,
+            "reanalysis": 35,
+            "physical": 0
+          },
+          "solar_ghi": {
+            "primary": 128,
+            "temporal": 5,
+            "donor": 0,
+            "reanalysis": 0,
+            "physical": 128
+          }
+        },
+        "required_reconstructed_fraction": {
+          "minimum": 0.0001137915339098771,
+          "maximum": 1.0,
+          "jobs_above_0_05": 25
+        },
+        "required_export_value_ranges": {
+          "dry_bulb": {
+            "min": -39.9,
+            "max": 35.4,
+            "units": "degC"
+          },
+          "dew_point": {
+            "min": -44.0,
+            "max": 27.5,
+            "units": "degC"
+          },
+          "relative_humidity": {
+            "min": 7.0,
+            "max": 100.0,
+            "units": "percent"
+          },
+          "pressure": {
+            "min": 86573.0,
+            "max": 105403.0,
+            "units": "Pa"
+          },
+          "horizontal_ir": {
+            "min": 110.0,
+            "max": 465.0,
+            "units": "Wh/m2"
+          },
+          "ghi": {
+            "min": 0.0,
+            "max": 920.0,
+            "units": "Wh/m2"
+          },
+          "dni": {
+            "min": 0.0,
+            "max": 1080.0,
+            "units": "Wh/m2"
+          },
+          "dhi": {
+            "min": 0.0,
+            "max": 872.0,
+            "units": "Wh/m2"
+          },
+          "wind_direction": {
+            "min": 0.0,
+            "max": 360.0,
+            "units": "degrees"
+          },
+          "wind_speed": {
+            "min": 0.0,
+            "max": 22.7,
+            "units": "m/s"
+          }
+        },
+        "warning_occurrence_counts": {
+          "donor_correction_out_of_bounds": 11,
+          "donor_gap_filled": 2267,
+          "donor_rejected": 16209,
+          "nighttime_radiation": 301,
+          "reanalysis_disagreement": 3,
+          "reanalysis_used": 35,
+          "solar_decomposition": 9,
+          "source_boundary_jump": 20,
+          "source_unavailable": 10,
+          "temporal_reconstruction": 126
+        },
+        "jobs_with_warning_code": {
+          "donor_correction_out_of_bounds": 6,
+          "donor_gap_filled": 101,
+          "donor_rejected": 90,
+          "nighttime_radiation": 128,
+          "reanalysis_disagreement": 3,
+          "reanalysis_used": 35,
+          "solar_decomposition": 9,
+          "source_boundary_jump": 17,
+          "source_unavailable": 10,
+          "temporal_reconstruction": 126
+        },
+        "primary_station_distance_km": {
+          "minimum": 0.6938985275730153,
+          "maximum": 71.00338567593388
+        },
+        "accepted_donor_record_distance_km": {
+          "minimum": 1.2193610389258773,
+          "maximum": 72.10818305190567
+        },
+        "exported_hours_by_variable_source": {
+          "dry_bulb": {
+            "donor": 6883,
+            "primary": 1062569,
+            "reanalysis": 45477,
+            "temporal": 6735
+          },
+          "relative_humidity": {
+            "donor": 18462,
+            "primary": 1074096,
+            "reanalysis": 22390,
+            "temporal": 6716
+          },
+          "pressure": {
+            "donor": 4548,
+            "primary": 1084349,
+            "reanalysis": 23751,
+            "temporal": 9016
+          },
+          "wind_speed": {
+            "donor": 9844,
+            "primary": 1075654,
+            "reanalysis": 29605,
+            "temporal": 6561
+          },
+          "wind_direction": {
+            "donor": 13211,
+            "primary": 1024478,
+            "reanalysis": 76826,
+            "temporal": 7149
+          },
+          "ghi": {
+            "physical": 6886,
+            "primary": 1114600,
+            "temporal": 178
+          }
+        },
+        "persisted_workflow_validation": {
+          "all_128_weather_required_field_and_calendar_checks_passed": true,
+          "frozen_source_and_campaign_guard_passed": true
+        }
+      }
+    }
+  ],
+  "definitions": {
+    "weather_classification": "All v3 files are mixed_reconstructed: at least one required meteorological variable or GHI hour was reconstructed. This does not mean all inputs are ERA5.",
+    "jobs_using_source": "Count a job once when a source tag has positive share in any variable in the named scope. Source categories overlap within a job and must not be added.",
+    "source_fractions": "Shares of exported hours separately for each of the five required meteorological variables and GHI. Optional cloud cover is outside this mapping.",
+    "required_reconstructed_fraction": "Missing or invalid original primary cells divided by five required meteorological variables on the buffered ingestion grid, including calendar-boundary hours. It excludes solar and is not an accuracy score.",
+    "warning_counts": "Warnings are recorded occurrences or jobs with each code, not failures or independent climate events.",
+    "five_percent_highlight": "Descriptive reporting aid only; it is not a validated acceptance threshold."
+  },
+  "interpretation": [
+    "The v1 denominator is 85 jobs; improved preparation expanded v2 and v3 to the same 128-job set. Do not interpret 32/85 to 128/128 as a paired weather-only comparison.",
+    "V2 and v3 weather-jobs.json have identical hashes. Their source policy and frozen source code differ; all v3 EPWs were regenerated.",
+    "V1/v2 outcomes are historical manifest counts; their successful EPWs and per-job weather receipts are not currently available locally. V3 outputs were independently read and checked during this audit.",
+    "Complete ordered finite range-valid weather establishes export usability, not local meteorological accuracy, extreme-event preservation, measured-building accuracy or archetype qualification.",
+    "The frozen v3 source commit is 5930c07. This run does not automatically validate later source changes or provider availability for every external request.",
+    "National building-stock completeness audits measure building fields using different populations and contain no SMHI2EPW weather-completion denominator."
+  ]
+}

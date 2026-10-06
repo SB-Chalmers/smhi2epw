@@ -1,3 +1,4 @@
 include .readthedocs.yaml
 recursive-include docs *.nblink *.py *.rst
 recursive-include examples *.ipynb *.md
+include examples/data/completeness_2026-10-05.json

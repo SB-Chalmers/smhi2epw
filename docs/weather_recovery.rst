@@ -290,3 +290,37 @@ invalid configuration before requests, preserving valid observations and the
 48-hour temporal ceiling. The EPSM workflow suite passed 236 tests with one
 skip. Live donor retrieval was exercised by the separate replay, not the
 network-marked test suite.
+
+Current national completion run
+--------------------------------
+
+On 5 October 2026 the frozen automatic policy at ``5930c07`` completed all
+128 requested municipality/year jobs from 2017--2024. The preceding national
+run at ``4861f9e`` completed 124 of the same 128 jobs using opt-in raw donors
+without ERA5. The original temporal-only run completed 32 of 85 jobs; preparation
+changes expanded the later denominator. The separate 52-of-53 replay above
+uses another denominator and the earlier policy.
+
+The current 128 EPWs were independently rechecked on 6 October: hashes matched
+both recorded receipts, ordered calendars and 35-field rows were correct, and
+required exported values passed finite/range and dew-point checks. There are
+112 common-year and 16 leap-year files, totaling 1,121,664 exported hours.
+Historical v1/v2 EPWs and their per-job receipts are no longer available locally;
+their retained status manifests support the earlier counts.
+
+All current files are ``mixed_reconstructed``. Donors supply meteorology in
+101 jobs, ERA5 in 35, and temporal filling in 126; these groups overlap.
+Twenty-five jobs exceed 5% reconstructed required meteorological cells on the
+buffered ingestion grid, ranging from 0.0114% to 100% across all jobs. This
+fraction excludes solar and differs from exported-hour source fractions.
+Five percent is descriptive, not an acceptance threshold. The run checks
+completion and export usability, not local weather accuracy or event preservation.
+
+The portable :download:`completion evidence summary
+<../examples/data/completeness_2026-10-05.json>` includes definitions, source
+commits, artifact hashes, warning counts and the audit checks. Its original
+artifact directory is
+``epsm_workflows/output/national-mf-se02-random-baseline-2026-10-05-v3-weather-shadow``;
+the status, quality summary, runtime manifest, verification and per-job weather
+and source receipts retain the full audit trail. Large EPWs and raw caches are
+not distributed with the examples. Notebook 08 reads the summary offline.

@@ -32,14 +32,19 @@ directly.
 Install for normal use
 ----------------------
 
-Install the released command line and Python API::
+Install the command line and Python API from the repository::
 
-   python -m pip install smhi2epw
+   git clone https://github.com/SB-Chalmers/smhi2epw.git
+   cd smhi2epw
+   python -m pip install .
 
-Install the optional tutorial environment when working through notebooks::
+No release was available on PyPI when checked on 6 October 2026. Confirm the
+checkout's commit and installed version when reproducing a study.
 
-   python -m pip install "smhi2epw[tutorials]"
-   jupyter lab
+The notebooks live in the repository; the tutorial extra installs dependencies::
+
+   python -m pip install -e ".[tutorials]"
+   jupyter lab examples/
 
 Install from a source checkout
 ------------------------------
@@ -47,7 +52,7 @@ Install from a source checkout
 Contributors and readers of the bundled notebooks should clone the repository
 and use an editable installation::
 
-   git clone https://github.com/snjsomnath/smhi2epw.git
+   git clone https://github.com/SB-Chalmers/smhi2epw.git
    cd smhi2epw
    python -m pip install -e ".[dev,docs,tutorials]"
 

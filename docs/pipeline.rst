@@ -58,7 +58,9 @@ All paths enforce
 
    GHI = DHI + DNI \cos(\theta_z)
 
-At very low solar elevation, DNI is set to zero and GHI is treated as diffuse.
+At solar elevation below approximately five degrees, DNI is set to zero and
+GHI is treated as diffuse, including when DNI was supplied by a provider. This
+approximation can lose real low-sun direct gains; see :doc:`limitations`.
 DNI cannot exceed extraterrestrial direct-normal irradiance. DHI is always
 recomputed after caps so the balance remains closed.
 

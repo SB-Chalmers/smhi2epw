@@ -27,9 +27,16 @@ EPW file.
 
 ## Install
 
+Install from a source checkout:
+
 ```bash
-python -m pip install smhi2epw
+git clone https://github.com/SB-Chalmers/smhi2epw.git
+cd smhi2epw
+python -m pip install .
 ```
+
+No release was available on PyPI when checked on 6 October 2026. The version in
+this checkout is 1.1.0; confirm the checkout's commit when reproducing a study.
 
 Dependencies are limited to `numpy`, `pandas`, and `requests`.
 Python 3.11 or newer is required.
@@ -37,11 +44,12 @@ Python 3.11 or newer is required.
 For the executable, student-friendly notebooks:
 
 ```bash
-python -m pip install "smhi2epw[tutorials]"
-jupyter lab
+python -m pip install -e ".[tutorials]"
+jupyter lab examples/
 ```
 
-Contributors working from a checkout can use
+The notebooks are included in the checkout; tutorial extras install their
+dependencies. Contributors can use
 `python -m pip install -e ".[dev,docs,tutorials]"`. See the
 [installation guide](docs/installation.rst) for virtual-environment and kernel
 setup on Windows, macOS, and Linux.
@@ -196,9 +204,12 @@ the site does not contact SMHI, Open-Meteo or OneBuilding. The generated
 - STRÅNG parameter semantics are resolved against the live `strang1g` v1 API:
   `117` = global horizontal, `118` = direct *normal*, `121` = direct beam on
   the horizontal plane; diffuse horizontal is derived as `117 − 121`.
-  Params 118 and 121 are only available from April 2017. Because 2017 is not a
-  complete direct-radiation year, full-year 2017 and earlier AMYs use Erbs
-  (1982) decomposition on GHI; STRÅNG direct fields are used from 2018.
+  Direct-horizontal parameter 121 starts on 18 April 2017; parameter 118
+  (DNI) is available earlier. The current compiler nevertheless requests only
+  GHI for 2017 and earlier and estimates the partition with Erbs (1982).
+  It uses the full STRÅNG component group from 2018. This is an implementation
+  choice, not evidence that historical DNI is unavailable; see the
+  [SMHI extraction guide](https://strang.smhi.se/extraction/index.php).
 - STRÅNG values are instantaneous irradiance at the full hour. The pipeline
   converts them to EPW interval-averaged irradiance (preceding-hour mean) by
   averaging adjacent samples, reducing hourly RMSD by ~5 pp (Lundström 2012).
@@ -218,11 +229,46 @@ the site does not contact SMHI, Open-Meteo or OneBuilding. The generated
 - A warning is logged when the solar query point is outside Sweden (~55–69.5°N,
   10–24.5°E), where STRÅNG accuracy degrades (RMSD up to 30–40% for GHI).
 
+## Completeness-run results
+
+The EPSM national measurement-year weather runs on **5 October 2026** covered
+requested municipality/year jobs from **2017–2024**:
+
+| Run | Weather policy / source commit | Completed | Failed |
+| --- | --- | ---: | ---: |
+| v1 | Historical bounded temporal filling; Git commit unrecorded | 32 / 85 | 53 |
+| v2 | Opt-in raw nearby observations, `4861f9e`; no ERA5 | 124 / 128 | 4 |
+| v3 | Automatic assessed donors + ERA5, `5930c07` | **128 / 128** | **0** |
+
+Preparation expanded the job set from 85 to 128; v2 and v3 use the same job
+manifest. V1/v2 figures are retained historical status counts; their EPWs are
+no longer available locally. On 6 October, all 128 v3 files were independently
+rechecked against recorded hashes, exact ordered calendars, 35-field rows,
+finite required fields, export ranges and dew-point consistency. They contain
+112 common-year and 16 leap-year files: **1,121,664 exported hours**.
+
+Completeness includes reconstruction. All 128 v3 files are
+`mixed_reconstructed`: 101 use donor meteorology, 35 use ERA5 meteorology, and
+126 use temporal filling. These groups overlap. **25 / 128** reconstruct more
+than 5% of required meteorological cells; the fraction ranges from 0.0114% to
+100%. This statistic uses five meteorological variables on the buffered UTC
+grid and excludes solar; exported-hour source shares are reported separately.
+Five percent is a reporting aid, not a validated acceptance threshold. Review
+source fractions and warnings before calibration or extreme-event analysis.
+Successful export establishes usable complete inputs, not local weather accuracy.
+
+The [portable evidence summary](examples/data/completeness_2026-10-05.json)
+includes policies, source identities, artifact hashes, warning counts and
+validation definitions. [Notebook 08](examples/08_batch_generation.ipynb)
+reads it offline and records reconstruction diagnostics for new batches. The
+[recovery guide](docs/weather_recovery.rst) explains the separate earlier
+52-of-53 failed-job replay and the current run's limitations.
+
 ## Development
 
 ```bash
 pip install -e ".[dev]"
-pytest               # offline suite (synthetic SMHI client)
+pytest -m "not network"  # offline suite (synthetic SMHI client)
 pytest -m network    # live integration tests against weather-source endpoints
 ruff check src tests examples
 ruff format --check src tests examples
@@ -232,9 +278,9 @@ pytest --doctest-modules src/smhi2epw
 python -m sphinx -W --keep-going -b html docs docs/_build/html
 ```
 
-The default test suite runs fully offline using a synthetic SMHI client;
-network-marked tests are skipped unless explicitly requested. Provider access
-and quotas apply to live SMHI and Open-Meteo requests.
+Use `pytest -m "not network"` for the offline suite. Plain `pytest` also
+selects live integration tests; the `network` marker does not skip them by itself.
+Provider access and quotas apply to live SMHI and Open-Meteo requests.
 
 ## License
 

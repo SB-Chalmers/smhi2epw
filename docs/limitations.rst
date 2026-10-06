@@ -9,8 +9,14 @@ reported alongside simulation studies:
   microclimate at the requested coordinates may differ.
 * STRÅNG is a gridded model optimized for the Nordic region. Historical grid
   resolution and accuracy vary by era and location.
-* Before 2018, complete direct-radiation parameters are unavailable, so direct
-  and diffuse components are estimated from GHI with Erbs.
+* The current compiler uses GHI with Erbs for 2017 and earlier. SMHI's
+  direct-horizontal parameter starts in April 2017, but historical DNI is
+  available earlier and is not currently used by this path.
+* Below approximately five degrees solar elevation, the current implementation
+  suppresses DNI even when the provider supplies it and assigns GHI to diffuse
+  radiation. This can underestimate direct gains on vertical glazing or tilted
+  PV surfaces, especially during northern winter. Closed horizontal solar
+  balance does not independently validate the direct/diffuse partition.
 * Total cloud cover is used as an explicit proxy in longwave estimation; opaque
   cloud cover remains unknown.
 * Gaps up to 48 hours may contain reconstructed values. Diagnostics must be
