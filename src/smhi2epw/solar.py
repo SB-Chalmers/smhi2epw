@@ -3,7 +3,7 @@
 The vectorized helpers use the NOAA fractional-year approximation and the Erbs
 hourly diffuse-fraction correlation. They depend only on NumPy and pandas,
 keeping the core package lightweight. Timestamps must be timezone-aware; the
-compiler evaluates them at preceding-hour interval midpoints.
+compiler integrates them over the preceding-hour radiation interval.
 """
 
 from __future__ import annotations
@@ -64,7 +64,8 @@ def solar_zenith(index: pd.DatetimeIndex, latitude: float, longitude: float):
     )
 
     # Fractional year (radians).
-    gamma = 2.0 * np.pi / 365.0 * (doy - 1.0 + (hour - 12.0) / 24.0)
+    year_days = np.where(utc.is_leap_year, 366.0, 365.0)
+    gamma = 2.0 * np.pi / year_days * (doy - 1.0 + (hour - 12.0) / 24.0)
 
     # Equation of time (minutes).
     eqtime = 229.18 * (
@@ -137,6 +138,42 @@ def extraterrestrial_radiation(index: pd.DatetimeIndex, cos_zenith):
     # Convention (matches EnergyPlus TMY): etrn is 0 when sun is below horizon.
     direct_normal = np.where(cos_z > 0.0, direct_normal, 0.0)
     return horizontal, direct_normal
+
+
+def interval_solar_geometry(index: pd.DatetimeIndex, latitude: float, longitude: float):
+    """Estimate geometry and extraterrestrial means over each preceding hour.
+
+    Five-minute trapezoidal integration includes partially sunlit intervals.
+    The mean positive cosine is useful when only horizontal radiation is known;
+    supplied hourly DNI and beam-horizontal radiation retain their own means.
+
+    Parameters
+    ----------
+    index
+        Timezone-aware timestamps labelling the end of each interval.
+    latitude, longitude
+        Observer coordinates in decimal degrees.
+
+    Returns
+    -------
+    tuple of numpy.ndarray
+        Mean positive zenith cosine, mean extraterrestrial horizontal and
+        normal irradiance (W/m²), and a mask of wholly dark intervals.
+    """
+    cosine_mean = np.zeros(len(index), dtype=float)
+    horizontal_mean = np.zeros(len(index), dtype=float)
+    normal_mean = np.zeros(len(index), dtype=float)
+    dark = np.ones(len(index), dtype=bool)
+    for minutes in range(0, 61, 5):
+        sample = index - pd.Timedelta(minutes=minutes)
+        _, cosine = solar_zenith(sample, latitude, longitude)
+        horizontal, normal = extraterrestrial_radiation(sample, cosine)
+        weight = 0.5 if minutes in (0, 60) else 1.0
+        cosine_mean += weight * np.maximum(cosine, 0.0) / 12.0
+        horizontal_mean += weight * horizontal / 12.0
+        normal_mean += weight * normal / 12.0
+        dark &= cosine <= 0.0
+    return cosine_mean, horizontal_mean, normal_mean, dark
 
 
 def erbs_decomposition(ghi, etrh, cos_zenith):

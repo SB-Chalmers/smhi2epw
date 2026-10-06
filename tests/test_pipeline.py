@@ -174,7 +174,7 @@ def test_horizontal_ir_reasonable_range():
     assert 200.0 < ir.iloc[0] < 450.0
 
 
-def test_apply_solar_floor_and_diffuse():
+def test_apply_solar_preserves_supplied_components_until_physical_caps():
     idx = pd.date_range("2021-06-21", periods=24, freq="h", tz="UTC")
     frame = pd.DataFrame(
         {
@@ -185,12 +185,12 @@ def test_apply_solar_floor_and_diffuse():
         index=idx,
     )
     processing.apply_solar(frame, LAT, LON)
-    _, cos_z = solar.solar_zenith(idx - pd.Timedelta(minutes=30), LAT, LON)
-    # STRÅNG path: DNI forced to 0 when the sun is below the horizon floor.
-    assert (frame["dni"].to_numpy()[cos_z <= C.COS_ZENITH_FLOOR] == 0).all()
-    # DHI closes with the exported DNI and is never negative.
+    _, _, _, dark = solar.interval_solar_geometry(idx, LAT, LON)
+    assert (frame["dni"].to_numpy()[dark] == 0).all()
+    assert (frame["dni"].to_numpy()[~dark] > 0).all()
     assert (frame["dhi"] >= 0).all()
-    residual = frame["ghi"] - (frame["dhi"] + frame["dni"] * np.clip(cos_z, 0.0, None))
+    # Independent hourly component means close with the horizontal beam mean.
+    residual = frame["ghi"] - (frame["dhi"] + frame["dirh"])
     assert np.max(np.abs(residual)) < 1e-9
 
 
@@ -406,11 +406,11 @@ def test_extraterrestrial_columns_present_and_nonnegative():
     processing.apply_solar(frame, LAT, LON)
     assert "etrh" in frame.columns and "etrn" in frame.columns
     assert (frame["etrh"] >= 0).all()
-    # etrn is non-zero only when sun is above horizon.
-    _, cos_z = solar.solar_zenith(idx - pd.Timedelta(minutes=30), LAT, LON)
-    daytime = cos_z > 0.0
-    assert (frame["etrn"].to_numpy()[daytime] > 1300).all()
-    assert (frame["etrn"].to_numpy()[~daytime] == 0.0).all()
+    # Partly sunlit intervals receive the corresponding extraterrestrial mean.
+    _, _, expected_normal, dark = solar.interval_solar_geometry(idx, LAT, LON)
+    np.testing.assert_allclose(frame["etrn"], expected_normal)
+    assert (frame["etrn"].to_numpy()[~dark] > 0).all()
+    assert (frame["etrn"].to_numpy()[dark] == 0.0).all()
 
 
 def test_erbs_decomposition_energy_balance():
@@ -523,9 +523,8 @@ def test_measured_partition_closes_under_extreme_disagreement():
     )
     report = processing.ProcessingReport()
     processing.apply_solar(frame, LAT, LON, report)
-    _, cos_z = solar.solar_zenith(idx - pd.Timedelta(minutes=30), LAT, LON)
     residual = frame["ghi"].to_numpy() - (
-        frame["dhi"].to_numpy() + frame["dni"].to_numpy() * np.clip(cos_z, 0, None)
+        frame["dhi"].to_numpy() + frame["dirh"].to_numpy()
     )
     assert report.solar_source == "measured+strang_partition"
     assert np.max(np.abs(residual)) < 1e-9
@@ -660,14 +659,16 @@ def test_auto_measured_ghi_gap_falls_back_but_explicit_fails(tmp_path):
         )
 
 
-def test_2017_ingestion_uses_ghi_only():
+def test_2017_ingestion_uses_dni_and_available_horizontal_beam():
     from smhi2epw.ingestion import StationMeta, ingest
 
     client = FakeClient()
     ingest(StationMeta(STATION_ID, "Synthetic", LAT, LON), 2017, client)
     assert any("/parameter/117/" in url for url in client.urls)
-    assert not any("/parameter/118/" in url for url in client.urls)
-    assert not any("/parameter/121/" in url for url in client.urls)
+    assert any("/parameter/118/" in url for url in client.urls)
+    beam_urls = [url for url in client.urls if "/parameter/121/" in url]
+    assert len(beam_urls) == 1
+    assert "from=2017-04-18T00:00:00" in beam_urls[0]
 
 
 def test_shift_to_lst_rejects_fractional_offset():

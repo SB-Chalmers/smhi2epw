@@ -10,7 +10,7 @@ import pytest
 
 from smhi2epw.compiler import EPWConfig, compile_epw
 
-# Göteborg A (automatic station) across pre-direct, leap, and recent paths.
+# Göteborg A (automatic station) across historical, leap, and recent paths.
 STATION_ID = 71420
 
 
@@ -18,7 +18,7 @@ STATION_ID = 71420
 @pytest.mark.parametrize(
     "station_id,year,radiation_auto,expected_source,expected_rows",
     [
-        (71420, 2016, True, "measured+erbs", 8784),
+        (71420, 2016, True, "measured+strang_partition", 8784),
         (72420, 2020, False, "strang", 8784),
         (71420, 2023, True, "measured+strang_partition", 8760),
     ],

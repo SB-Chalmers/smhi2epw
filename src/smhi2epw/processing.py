@@ -18,7 +18,7 @@ import pandas as pd
 
 from . import constants as C
 from .errors import DataGapError
-from .solar import erbs_decomposition, extraterrestrial_radiation, solar_zenith
+from .solar import erbs_decomposition, interval_solar_geometry
 
 log = logging.getLogger("smhi2epw")
 
@@ -37,7 +37,8 @@ class ProcessingReport:
         Hours whose positive DNI was reduced by horizon or extraterrestrial
         limits. Routine nighttime zeros are not counted.
     energy_balance_max_residual
-        Maximum absolute residual of ``GHI - (DHI + DNI*cos(zenith))`` in W/m².
+        Maximum absolute interval residual of ``GHI - (DHI + dirh)`` in W/m².
+        Mean DNI times a midpoint cosine need not equal mean horizontal beam.
     missing_columns
         Optional source columns that were absent or entirely missing.
     cloud_available
@@ -694,19 +695,85 @@ def sky_cover_tenths(cloud_octas: pd.Series) -> pd.Series:
 # --------------------------------------------------------------------------- #
 # Solar transformation: finalize EPW solar fields
 # --------------------------------------------------------------------------- #
+def _finalize_solar(
+    frame: pd.DataFrame,
+    ghi: pd.Series,
+    measured: pd.Series,
+    lat: float,
+    lon: float,
+) -> tuple[np.ndarray, int]:
+    """Finalize one solar group without replacing valid interval means.
+
+    Supplied DNI and beam-horizontal are separate hourly averages: their
+    product identity applies instantaneously, not at one hourly midpoint.
+    Only inferred DNI uses the low-angle inversion guard. Missing horizontal
+    beam with supplied DNI uses mean positive interval geometry as an estimate.
+    """
+    cosine, etrh, etrn, dark = interval_solar_geometry(
+        pd.DatetimeIndex(frame.index), lat, lon
+    )
+    selected = np.maximum(ghi.to_numpy(dtype=float), 0.0)
+    model_ghi = frame["ghi"].to_numpy(dtype=float)
+    provided_dni = frame.get("dni", pd.Series(np.nan, index=frame.index)).to_numpy(
+        dtype=float
+    )
+    provided_beam = frame.get("dirh", pd.Series(np.nan, index=frame.index)).to_numpy(
+        dtype=float
+    )
+    direct = np.isfinite(provided_dni) & (provided_dni >= 0.0)
+    known_beam = np.isfinite(provided_beam) & (provided_beam >= 0.0)
+    beam = np.where(known_beam, provided_beam, provided_dni * cosine)
+    beam = np.where(provided_dni > 0.0, beam, 0.0)
+
+    # Transfer model components to measured GHI without a small-angle division.
+    partition = measured.to_numpy(dtype=bool) & direct & (model_ghi > 0.0)
+    scale = np.divide(selected, model_ghi, out=np.ones(len(frame)), where=partition)
+    supplied_dni = provided_dni * scale
+    supplied_beam = beam * scale
+    _, estimated_dni = erbs_decomposition(selected, etrh, cosine)
+    dni = np.where(direct, supplied_dni, estimated_dni)
+    beam = np.where(direct, supplied_beam, estimated_dni * cosine)
+    original_dni = dni.copy()
+
+    # A physical cap changes both members of the supplied component pair.
+    capped_dni = np.minimum(np.maximum(dni, 0.0), etrn)
+    beam *= np.divide(capped_dni, dni, out=np.zeros(len(frame)), where=dni > 0.0)
+    capped_beam = np.minimum(np.maximum(beam, 0.0), selected)
+    dni = capped_dni * np.divide(
+        capped_beam, beam, out=np.ones(len(frame)), where=beam > 0.0
+    )
+    dni = np.where(dark, 0.0, dni)
+    beam = np.where(dark, 0.0, capped_beam)
+    selected = np.where(dark, 0.0, selected)
+    frame["ghi"] = selected
+    frame["dni"] = dni
+    frame["dirh"] = beam
+    frame["dhi"] = np.maximum(selected - beam, 0.0)
+    frame["etrh"] = etrh
+    frame["etrn"] = etrn
+    clamped = int(np.count_nonzero(dni < original_dni - 1e-9))
+    return direct | dark, clamped
+
+
 def apply_solar(
     frame: pd.DataFrame,
     lat: float,
     lon: float,
     report: Optional[ProcessingReport] = None,
 ) -> None:
-    """Finalize DNI, DHI and extraterrestrial EPW fields in-place.
+    """Finalize solar components using their preceding-hour interval semantics.
+
+    Supplied DNI is retained at low solar elevation. Supplied horizontal beam
+    closes GHI with DHI; measured GHI scales the model component group. Erbs
+    decomposition and a five-degree inversion guard apply only without usable
+    supplied DNI. Extraterrestrial caps and wholly dark intervals remain
+    physical constraints. Automatic recovery already uses this same finalizer.
 
     Parameters
     ----------
     frame
-        Hourly UTC frame modified in-place. It must contain GHI and may contain
-        measured GHI, STRÅNG DNI, and direct-horizontal irradiance.
+        Hourly UTC frame modified in place. It must contain GHI and may contain
+        measured GHI, supplied DNI, and direct-horizontal irradiance.
     lat, lon
         Requested solar coordinates in decimal degrees.
     report
@@ -714,133 +781,36 @@ def apply_solar(
 
     Notes
     -----
-    Solar geometry is evaluated 30 minutes before each timestamp because EPW
-    radiation describes the preceding-hour interval. At solar elevations below
-    roughly 5° (``cos(zenith) <= 0.087``), DNI is zero and GHI is assigned to
-    diffuse radiation. DNI is capped by extraterrestrial direct-normal
-    radiation and DHI is recomputed so the energy balance closes exactly.
-
-    Solar path selection, in priority order:
-
-    1. **Measured GHI + STRÅNG partition** — pyranometer GHI scaled by the
-       STRÅNG direct-horizontal fraction; DNI/DHI are closed to measured GHI.
-    2. **Measured GHI + Erbs** — pyranometer GHI with Erbs decomposition (through 2017
-       when direct-beam params are unavailable).
-    3. **STRÅNG all-params** — GHI/DNI/dirh directly from STRÅNG (2018+).
-    4. **STRÅNG GHI + Erbs** — only param 117 available (through 2017, no Sol station).
+    DHI closes against the supplied or estimated horizontal beam interval mean.
+    Mean DNI times a midpoint cosine need not equal mean horizontal beam when
+    DNI or solar geometry changes within the hour. Measured GHI transfers the
+    model partition by scaling both DNI and horizontal beam by the GHI ratio.
 
     Raises
     ------
     KeyError
-        If no usable GHI column exists; callers normally prevent this through
+        If no GHI column exists; callers normally prevent this through
         :func:`impute_solar`.
     """
-    # EPW radiation represents the interval preceding the timestamp. STRÅNG is
-    # converted to that interval during ingestion, so geometry belongs at the
-    # interval midpoint rather than at the full-hour label.
-    midpoint_index = pd.DatetimeIndex(frame.index) - pd.Timedelta(minutes=30)
-    _, cos_z = solar_zenith(midpoint_index, lat, lon)
-    etrh, etrn = extraterrestrial_radiation(midpoint_index, cos_z)
-    frame["etrh"] = etrh
-    frame["etrn"] = etrn
-
-    use_measured = (
-        C.METOBS_RADIATION_COLUMN in frame.columns
-        and not frame[C.METOBS_RADIATION_COLUMN].isna().all()
-    )
-    has_strang_direct = (
-        "dirh" in frame.columns
-        and not frame["dirh"].isna().all()
-        and "dni" in frame.columns
-        and not frame["dni"].isna().all()
-    )
-
-    below = cos_z <= C.COS_ZENITH_FLOOR
-    original_dni = np.zeros(len(frame), dtype=float)
-
-    if use_measured and has_strang_direct:
-        ghi_m = np.clip(
-            frame[C.METOBS_RADIATION_COLUMN].to_numpy(dtype=float), 0.0, None
+    if not frame.attrs.get("automatic_prepared"):
+        measured_values = frame.get(
+            C.METOBS_RADIATION_COLUMN, pd.Series(np.nan, index=frame.index)
         )
-        ghi_model = np.clip(frame["ghi"].to_numpy(dtype=float), 0.0, None)
-        dirh_model = np.clip(frame["dirh"].to_numpy(dtype=float), 0.0, None)
-        beam_fraction = np.divide(
-            dirh_model,
-            ghi_model,
-            out=np.zeros_like(dirh_model),
-            where=ghi_model > 0.0,
-        )
-        beam_fraction = np.clip(beam_fraction, 0.0, 1.0)
-        beam_h = ghi_m * beam_fraction
-        cos_safe = np.where(~below, cos_z, 1.0)
-        dni = np.where(~below, beam_h / cos_safe, 0.0)
-        original_dni = dni.copy()
-        dni = np.minimum(np.clip(dni, 0.0, None), etrn)
-        beam_h = np.minimum(dni * np.clip(cos_z, 0.0, None), ghi_m)
-        frame["ghi"] = ghi_m
-        frame["dni"] = dni
-        frame["dhi"] = np.clip(ghi_m - beam_h, 0.0, None)
+        measured = measured_values.notna()
+        ghi = measured_values.combine_first(frame["ghi"])
+        direct, clamped = _finalize_solar(frame, ghi, measured, lat, lon)
         if report is not None:
-            report.solar_source = "measured+strang_partition"
-
-    elif use_measured:
-        # Through 2017: decompose measured GHI via Erbs (no full-year beam data).
-        ghi_m = np.clip(
-            frame[C.METOBS_RADIATION_COLUMN].to_numpy(dtype=float), 0.0, None
-        )
-        _, dni_erbs = erbs_decomposition(ghi_m, etrh, cos_z)
-        original_dni = np.clip(dni_erbs, 0.0, None)
-        dni_final = np.where(below, 0.0, np.minimum(original_dni, etrn))
-        beam_h = np.minimum(dni_final * np.clip(cos_z, 0.0, None), ghi_m)
-        frame["ghi"] = ghi_m
-        frame["dhi"] = np.clip(ghi_m - beam_h, 0.0, None)
-        frame["dni"] = dni_final
-        if "dirh" not in frame.columns:
-            frame["dirh"] = beam_h
-        if report is not None:
-            report.solar_source = "measured+erbs"
-
-    elif has_strang_direct:
-        # 2018+ STRÅNG-only path.
-        ghi = np.clip(frame["ghi"].to_numpy(dtype=float), 0.0, None)
-        original_dni = np.clip(frame["dni"].to_numpy(dtype=float), 0.0, None)
-        dni = np.where(below, 0.0, np.minimum(original_dni, etrn))
-        beam_h = np.minimum(dni * np.clip(cos_z, 0.0, None), ghi)
-        frame["ghi"] = ghi
-        frame["dni"] = np.divide(
-            beam_h,
-            np.where(~below, cos_z, 1.0),
-            out=np.zeros_like(beam_h),
-            where=~below,
-        )
-        frame["dhi"] = np.clip(ghi - beam_h, 0.0, None)
-        if report is not None:
-            report.solar_source = "strang"
-
-    else:
-        # Through 2017 STRÅNG GHI-only: decompose via Erbs.
-        ghi = frame["ghi"].to_numpy(dtype=float)
-        _, dni_erbs = erbs_decomposition(ghi, etrh, cos_z)
-        original_dni = np.clip(dni_erbs, 0.0, None)
-        dni_final = np.where(below, 0.0, np.minimum(original_dni, etrn))
-        beam_h = np.minimum(dni_final * np.clip(cos_z, 0.0, None), ghi)
-        frame["dhi"] = np.clip(ghi - beam_h, 0.0, None)
-        frame["dni"] = dni_final
-        frame["dirh"] = beam_h
-        if report is not None:
-            report.solar_source = "strang_ghi+erbs"
-
+            report.clamped_dni_hours = clamped
+            if measured.any():
+                report.solar_source = (
+                    "measured+strang_partition" if direct.all() else "measured+erbs"
+                )
+            else:
+                report.solar_source = "strang" if direct.all() else "strang_ghi+erbs"
     if report is not None:
-        report.clamped_dni_hours = int(
-            np.count_nonzero(frame["dni"].to_numpy(dtype=float) < original_dni - 1e-9)
-        )
-        beam_h = frame["dni"].to_numpy(dtype=float) * np.clip(cos_z, 0.0, None)
-        residual = np.abs(
-            frame["ghi"].to_numpy(dtype=float)
-            - (frame["dhi"].to_numpy(dtype=float) + beam_h)
-        )
+        residual = np.abs(frame["ghi"] - (frame["dhi"] + frame["dirh"]))
         report.energy_balance_max_residual = (
-            float(np.nanmax(residual)) if len(residual) else 0.0
+            float(residual.max()) if len(frame) else 0.0
         )
 
 

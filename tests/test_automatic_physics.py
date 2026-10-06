@@ -19,7 +19,7 @@ def weather_frame(hours=240, start="2021-06-01", latitude=LAT):
     index = pd.date_range(start, periods=hours, freq="h", tz="UTC")
     _, cosine = solar_zenith(index - pd.Timedelta(minutes=30), latitude, LON)
     positive = np.maximum(cosine, 0)
-    dni = np.where(cosine > C.COS_ZENITH_FLOOR, 500.0, 0.0)
+    dni = np.where(cosine > 0.0, 500.0, 0.0)
     return pd.DataFrame(
         {
             "dry_bulb": 20.0,

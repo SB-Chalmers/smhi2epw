@@ -26,6 +26,7 @@ from datetime import datetime, timezone
 from threading import Lock
 from typing import Dict, Optional, Tuple
 
+import numpy as np
 import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
@@ -869,6 +870,10 @@ def fetch_strang_parameter(
         If the endpoint does not return the expected list payload.
     """
     start_ts, end_ts = window
+    if param == 121:
+        start_ts = max(start_ts, pd.Timestamp(C.STRANG_DIRECT_HORIZONTAL_START))
+        if start_ts > end_ts:
+            return pd.Series(dtype=float, name=column)
     start = start_ts.strftime("%Y-%m-%dT%H:%M:%S")
     end = end_ts.strftime("%Y-%m-%dT%H:%M:%S")
     url = (
@@ -954,8 +959,8 @@ def ingest(
     the full hour, so adjacent samples are averaged to represent the preceding
     EPW interval.
 
-    Before 2018 only full-year GHI is requested because direct parameters begin
-    partway through 2017; downstream processing uses Erbs decomposition.
+    GHI and DNI are requested throughout supported history. Before horizontal
+    beam data begins in April 2017, instantaneous DNI is projected before averaging.
     """
     buffer_hours = int(math.ceil(abs(utc_offset))) + 1
     grid_start = datetime(year, 1, 1, tzinfo=timezone.utc)
@@ -967,19 +972,12 @@ def ingest(
     solar_lat = meta.latitude if solar_latitude is None else solar_latitude
     solar_lon = meta.longitude if solar_longitude is None else solar_longitude
 
-    # Direct/beam STRÅNG params (118, 121) are only available from Apr 18 2017,
-    # so 2018 is the first complete AMY that can use them.
-    if year < C.STRANG_DIRECT_AVAILABLE_YEAR:
-        log.warning(
-            "year %d pre-dates STRÅNG direct/beam parameters (available from "
-            "Apr 2017); DNI and DHI will be estimated via Erbs decomposition "
-            "on STRÅNG GHI only",
-            year,
-        )
+    # DNI is available throughout history. The separate horizontal beam field
+    # begins during 2017; fetch its available portion and project earlier DNI.
     strang_params = (
         C.STRANG_PARAMETERS
-        if year >= C.STRANG_DIRECT_AVAILABLE_YEAR
-        else C.STRANG_GHI_ONLY_PARAMETERS
+        if win_end >= pd.Timestamp(C.STRANG_DIRECT_HORIZONTAL_START)
+        else C.STRANG_HISTORICAL_PARAMETERS
     )
 
     tasks = {}
@@ -1048,7 +1046,7 @@ def ingest(
     ordered = (
         list(C.METOBS_PARAMETERS.values())
         + ([C.METOBS_RADIATION_COLUMN] if radiation_station_id is not None else [])
-        + list(strang_params.values())
+        + list(C.STRANG_PARAMETERS.values())
     )
     for column in ordered:
         series = collected.get(column, pd.Series(dtype=float, name=column))
@@ -1064,6 +1062,16 @@ def ingest(
             else:
                 series = series.resample("h").mean()
         frame[column] = series.reindex(grid)
+
+    # Project instantaneous DNI before averaging. Multiplying an hourly DNI
+    # mean by a midpoint cosine would lose its covariance with solar position.
+    from .solar import solar_zenith
+
+    _, cosine = solar_zenith(grid, solar_lat, solar_lon)
+    projected_beam = frame["dni"].clip(lower=0.0) * np.maximum(cosine, 0.0)
+    projected = frame["dirh"].isna() & projected_beam.notna()
+    frame["dirh"] = frame["dirh"].combine_first(projected_beam)
+    frame.attrs["projected_beam_hours"] = int(projected.sum())
 
     # STRÅNG values are instantaneous at the full hour; EPW expects the mean
     # over the *preceding* hour.  Average adjacent samples: EPW[t] = (t-1 + t) / 2.

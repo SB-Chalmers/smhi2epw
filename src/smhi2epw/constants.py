@@ -5,9 +5,9 @@ by ingestion, processing, and export easy to audit. Parameter mappings translate
 SMHI numeric IDs to canonical internal column names. Missing-value dictionaries
 are field-specific because EPW does not use one universal missing token.
 
-The STRÅNG direct parameters begin on 18 April 2017, so 2018 is intentionally
-the first complete year allowed to use them. Earlier years request GHI only and
-use Erbs decomposition downstream.
+STRÅNG GHI and direct-normal radiation are available from 1999. The separately
+published direct-horizontal field begins on 18 April 2017; earlier hours derive
+it from instantaneous DNI and solar geometry before interval averaging.
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ METOBS_OPTIONAL_PARAMETERS = {
 METOBS_PARAMETERS = {**METOBS_REQUIRED_PARAMETERS, **METOBS_OPTIONAL_PARAMETERS}
 
 # Radiation (pyranometer) parameter — fetched from a separate "Sol" station when
-# available and partitioned with STRÅNG beam fractions from 2018 onward.
+# available and partitioned with STRÅNG direct components throughout history.
 METOBS_RADIATION_PARAMETER = 11  # Global Irradiance (W/m², hourly mean)
 METOBS_RADIATION_COLUMN = "ghi_measured"
 
@@ -54,23 +54,22 @@ STRANG_BASE = (
 
 # STRÅNG parameter codes -> internal canonical column names.
 #
-# NOTE: the live STRÅNG (strang1g v1) API semantics differ from the original
-# spec's assumptions. Verified empirically (param 118 * cos(zenith) == param
-# 121 at every hour):
+# Parameter meanings follow SMHI's STRÅNG extraction documentation:
+# https://strang.smhi.se/extraction/index.php
 #   117 = Global Horizontal Irradiance (W/m^2)
 #   118 = Direct *Normal* Irradiance   (W/m^2)  -- already normal, no projection
 #   121 = Direct beam on the horizontal plane (W/m^2)  -- used to close diffuse
 # Diffuse Horizontal is therefore derived as GHI - beam_horizontal (117 - 121).
 #
-# Params 118 and 121 are only available from April 18, 2017 onwards. Full-year
-# AMYs therefore use them from 2018; earlier years use GHI + Erbs.
+# Parameter 118 is available throughout supported history. Parameter 121 starts
+# on April 18, 2017; ingestion projects instantaneous DNI for earlier hours.
 STRANG_PARAMETERS = {
     117: "ghi",  # Global Horizontal Irradiance (W/m^2)
     118: "dni",  # Direct Normal Irradiance (W/m^2)
     121: "dirh",  # Direct beam on horizontal plane (W/m^2)
 }
-STRANG_GHI_ONLY_PARAMETERS = {117: "ghi"}  # params available before Apr 2017
-STRANG_DIRECT_AVAILABLE_YEAR = 2018  # first complete calendar year
+STRANG_HISTORICAL_PARAMETERS = {117: "ghi", 118: "dni"}
+STRANG_DIRECT_HORIZONTAL_START = "2017-04-18T00:00:00Z"
 STRANG_MIN_YEAR = 1999  # STRÅNG operational since Jan 1999
 
 # Spatial resolution by era (year-based approximation; exact switch dates are
@@ -88,7 +87,7 @@ STEFAN_BOLTZMANN = 5.670374419e-8  # W/(m^2 K^4)
 KELVIN = 273.15
 SOLAR_CONSTANT = 1367.0  # W/m^2 (mean extraterrestrial irradiance)
 
-# Solar-elevation floor for the DHI -> DNI projection.
+# Solar-elevation floor only for inferred horizontal-to-normal radiation.
 # cos(zenith) <= 0.087 corresponds to a solar elevation below ~5 degrees.
 COS_ZENITH_FLOOR = 0.087
 

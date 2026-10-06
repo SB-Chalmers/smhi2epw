@@ -19,7 +19,7 @@ from . import processing as P
 from . import reanalysis
 from .errors import DataGapError, IngestionError
 from .ingestion import CachedClient, StationMeta
-from .solar import erbs_decomposition, extraterrestrial_radiation, solar_zenith
+from .solar import interval_solar_geometry
 
 REQUIRED = list(C.METOBS_REQUIRED_PARAMETERS.values())
 SOLAR = ["ghi", "dni", "dirh", C.METOBS_RADIATION_COLUMN]
@@ -49,11 +49,7 @@ def _temporal(series: pd.Series, column: str, report: P.ProcessingReport) -> pd.
 
 def _dark_hours(index: pd.DatetimeIndex, lat: float, lon: float) -> np.ndarray:
     """Identify preceding intervals entirely below the geometric solar horizon."""
-    cosines = [
-        solar_zenith(index - pd.Timedelta(minutes=minutes), lat, lon)[1]
-        for minutes in (0, 30, 60)
-    ]
-    return np.logical_and.reduce([cosine <= 0 for cosine in cosines])
+    return interval_solar_geometry(index, lat, lon)[3]
 
 
 def _solar_inputs(
@@ -383,26 +379,8 @@ def _finish_solar(
     report: P.ProcessingReport,
 ) -> None:
     """Close radiation per hour using provided direct values or Erbs estimates."""
-    midpoint = pd.DatetimeIndex(frame.index) - pd.Timedelta(minutes=30)
-    _, cosine = solar_zenith(midpoint, lat, lon)
-    etrh, etrn = extraterrestrial_radiation(midpoint, cosine)
-    _, estimated_dni = erbs_decomposition(ghi, etrh, cosine)
-    direct = frame["dni"].notna() & frame["dirh"].notna()
-    dni = np.where(direct, frame["dni"], estimated_dni)
-    partition = measured & direct & frame["ghi"].gt(0)
-    fraction = (frame["dirh"] / frame["ghi"]).clip(0, 1)
-    dni = np.where(
-        partition, ghi * fraction / np.maximum(cosine, C.COS_ZENITH_FLOOR), dni
-    )
-    original_dni = dni.copy()
-    dni = np.where(cosine > C.COS_ZENITH_FLOOR, np.minimum(dni, etrn), 0.0)
-    dni = np.minimum(dni, ghi / np.maximum(cosine, C.COS_ZENITH_FLOOR))
-    frame.attrs["automatic_clamped_dni_hours"] = int(
-        np.count_nonzero(dni < original_dni - 1e-9)
-    )
-    frame["ghi"] = ghi
-    frame["dni"] = dni
-    frame["dirh"] = dni * np.maximum(cosine, 0)
+    direct, clamped = P._finalize_solar(frame, ghi, measured, lat, lon)
+    frame.attrs["automatic_clamped_dni_hours"] = clamped
     frame.drop(columns=[C.METOBS_RADIATION_COLUMN], inplace=True)
     reanalysis_hours = int((tags["ghi"] == "reanalysis").sum())
     if reanalysis_hours:

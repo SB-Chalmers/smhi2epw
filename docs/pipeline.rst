@@ -38,31 +38,39 @@ and a scalar median offset compete on held-out errors; wind direction is never
 rotated. See :doc:`weather_recovery` for thresholds and training requirements.
 The pipeline preserves usable primary extremes and reports source-boundary
 jumps. Reconstructed gaps can still alter event peaks and persistence. A
-single-year sensitivity experiment motivated donor precedence; it does not
-establish universal accuracy across sites and years.
+17-weather-year sensitivity campaign supports small annual-load errors for
+short gaps under its tested conditions; it does not establish universal accuracy
+or preservation of missing peaks.
 
 Solar radiation
 ---------------
 
-EPW radiation represents the preceding hour, so geometry is evaluated at the
-interval midpoint. Depending on year and station availability, the pipeline
-uses measured GHI with STRÅNG beam fractions, measured GHI with Erbs, all
-STRÅNG components, or STRÅNG GHI with Erbs. Automatic recovery can use ERA5
-solar component groups for unresolved hours. Reanalysis radiation already
-describes the preceding-hour mean, so only instantaneous STRÅNG values undergo
-adjacent-sample averaging.
+EPW radiation represents the preceding hour. Instantaneous STRÅNG samples
+are averaged in adjacent pairs. GHI and DNI are requested from 1999 onward;
+direct-horizontal data is requested from its 18 April 2017 availability date.
+Earlier horizontal beam is projected from instantaneous DNI before averaging.
+ERA5 radiation already describes the preceding-hour mean and is not averaged
+again. Measured GHI, when available, scales the model DNI and horizontal beam
+together; missing usable DNI uses Erbs decomposition.
 
-All paths enforce
+The interval balance is
 
 .. math::
 
-   GHI = DHI + DNI \cos(\theta_z)
+   \overline{GHI} = \overline{DHI} + \overline{DNI\cos(\theta_z)}
 
-At solar elevation below approximately five degrees, DNI is set to zero and
-GHI is treated as diffuse, including when DNI was supplied by a provider. This
-approximation can lose real low-sun direct gains; see :doc:`limitations`.
-DNI cannot exceed extraterrestrial direct-normal irradiance. DHI is always
-recomputed after caps so the balance remains closed.
+Supplied hourly DNI and horizontal beam retain their own means. Their
+instantaneous product identity cannot be imposed using one midpoint cosine;
+within-hour changes affect the projection. The reported closure residual uses
+GHI minus DHI and horizontal beam.
+
+Supplied DNI remains usable below five degrees solar elevation. That floor
+applies only to an inferred horizontal-to-normal division. Geometry and
+extraterrestrial caps are integrated at five-minute spacing, so a partially
+sunlit interval is retained even when its midpoint is dark. Fully dark intervals
+have zero solar radiation. Physical caps scale DNI and horizontal beam together,
+then DHI closes the horizontal balance. NOAA fractional-year geometry uses
+366 days in leap years, including UTC year-boundary buffers.
 
 Longwave and cloud cover
 ------------------------
@@ -82,6 +90,7 @@ The UTC source is mapped to a constant whole-hour Local Standard Time offset.
 No broad forward/backward fill is used during this shift. Each target hour must
 have a complete processed value at its exact timestamp. The destination is
 replaced only after eight headers, all 35 fields, physical ranges and all
-8760/8784 rows validate. Export comments summarize recovery and attribution;
+8760/8784 rows validate. DATA PERIODS start/end dates include the actual year
+for EnergyPlus actual-weather RunPeriods. Export comments summarize recovery and attribution;
 the sidecar retains the complete warning and reconstruction record.
 

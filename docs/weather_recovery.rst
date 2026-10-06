@@ -37,9 +37,22 @@ can include earlier reconstructions. Wind direction uses sine/cosine components.
 Solar gaps use day-aware profiles without donor transfer. Longer gaps are filled
 from another source, never by extending interpolation.
 
-A single-year building/weather sensitivity experiment motivated placing
-assessed donors before daily profiles. It does not establish universal donor
-superiority across locations, seasons or extreme events.
+The frozen sensitivity campaign covered 17 weather-years, six regions and
+six building profiles. For its 3--12-hour gaps, the largest group-level 95th
+percentile annual-load error was 0.893%. Four week-long seasonal solar gaps
+reached 12.728% at the 95th percentile for annual sensible cooling. In its
+48-hour event-centred meteorology cases, the winning peak moved more than
+24 hours in 13/41 heating and 14/44 cooling cases. Annual energy and event timing
+therefore need separate checks.
+
+These results compare reconstructions with the campaign's own reference weather;
+4,146 automatic comparisons are not 4,146 independent climate samples. Both
+reference and candidate used the same solar finalizer, so a shared error can
+cancel in a paired comparison. The original campaign is frozen at source commit
+5930c07, before the low-sun and historical-DNI corrections. It supports the
+reported conditional comparisons, not site-weather accuracy or national error
+bounds. Regenerated references and targeted paired runs are needed when the
+solar method changes. The portable campaign context below preserves that scope.
 
 Automatic station selection prefers full coverage but can use a partial station.
 Source failures are reported while other requests continue. If station discovery
