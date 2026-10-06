@@ -225,7 +225,7 @@ def test_actual_year_export_header_and_february_rows(
     path = _write_valid_epw(tmp_path / "weather.epw", year)
     lines = path.read_text().splitlines()
     assert lines[4] == f"HOLIDAYS/DAYLIGHT SAVINGS,{flag},0,0,0"
-    assert lines[7] == f"DATA PERIODS,1,1,Data,{weekday},1/1,12/31"
+    assert lines[7] == f"DATA PERIODS,1,1,Data,{weekday},1/1/{year},12/31/{year}"
     assert len(lines) == 8 + count
     feb29 = [line for line in lines[8:] if line.split(",")[1:3] == ["2", "29"]]
     assert len(feb29) == (24 if flag == "Yes" else 0)

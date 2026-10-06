@@ -243,7 +243,7 @@ def test_header_has_eight_lines():
     assert header[0].startswith("LOCATION,Stockholm,SE,SWE,SMHI-AMY,024640")
     assert header[2] == "TYPICAL/EXTREME PERIODS,0"
     assert header[3] == "GROUND TEMPERATURES,0"
-    assert header[7] == "DATA PERIODS,1,1,Data,Friday,1/1,12/31"
+    assert header[7] == "DATA PERIODS,1,1,Data,Friday,1/1/2021,12/31/2021"
 
 
 # --------------------------------------------------------------------------- #

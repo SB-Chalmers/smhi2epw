@@ -228,6 +228,8 @@ def build_header(
         raise ValidationError(
             "EPW header text fields cannot contain commas or newlines"
         )
+    # Actual-weather RunPeriods require explicit years in both DATA PERIODS dates.
+    # Row years alone do not tell EnergyPlus to match the requested calendar.
     start_weekday = calendar.day_name[date(year, 1, 1).weekday()]
     return [
         (
@@ -248,7 +250,7 @@ def build_header(
             "STRÅNG data produced with support from the Swedish Radiation "
             "Protection Authority and the Swedish Environmental Agency."
         ),
-        f"DATA PERIODS,1,1,Data,{start_weekday},1/1,12/31",
+        f"DATA PERIODS,1,1,Data,{start_weekday},1/1/{year},12/31/{year}",
     ]
 
 
@@ -374,7 +376,7 @@ def write_epw(
         raise ValidationError(
             f"EPW leap-day header must be {leap_flag} for actual year {year}"
         )
-    expected_period = f"DATA PERIODS,1,1,Data,{calendar.day_name[date(year, 1, 1).weekday()]},1/1,12/31"
+    expected_period = f"DATA PERIODS,1,1,Data,{calendar.day_name[date(year, 1, 1).weekday()]},1/1/{year},12/31/{year}"
     if header_lines[7] != expected_period:
         raise ValidationError(
             f"EPW data-period header does not match actual year {year}"
