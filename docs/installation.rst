@@ -38,11 +38,9 @@ directly.
 Install for normal use
 ----------------------
 
-Install the command line and Python API from the repository::
+Install the command line and Python API from PyPI::
 
-   git clone https://github.com/SB-Chalmers/smhi2epw.git
-   cd smhi2epw
-   python -m pip install .
+   python -m pip install smhi2epw
 
 To reproduce a study, record the installed package version and the source data
 receipt written beside each automatically recovered EPW.

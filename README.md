@@ -1,7 +1,8 @@
 # smhi2epw
 
 [![CI](https://github.com/SB-Chalmers/smhi2epw/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SB-Chalmers/smhi2epw/actions/workflows/ci.yml)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/)
+[![PyPI](https://img.shields.io/pypi/v/smhi2epw)](https://pypi.org/project/smhi2epw/)
+[![Python versions](https://img.shields.io/pypi/pyversions/smhi2epw)](https://pypi.org/project/smhi2epw/)
 [![MIT license](https://img.shields.io/github/license/SB-Chalmers/smhi2epw)](LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://sb-chalmers.github.io/smhi2epw/)
 
@@ -12,13 +13,10 @@ writes a JSON receipt describing its sources and recovery steps.
 
 ## Install
 
-Python 3.11 or newer is required. Until the PyPI package is available, install
-from the repository:
+Python 3.11 or newer is required:
 
 ```bash
-git clone https://github.com/SB-Chalmers/smhi2epw.git
-cd smhi2epw
-python -m pip install .
+python -m pip install smhi2epw
 ```
 
 Creating a weather file needs internet access to SMHI and may use Open-Meteo for
@@ -45,8 +43,9 @@ print(result.report.warnings)
 ```
 
 Automatic recovery is the default. Use `--weather-policy strict` to stop when
-required source data are missing. See the [quick start](docs/quickstart.rst) and [CLI guide](docs/cli.rst) for
-options and the [method limitations](docs/limitations.rst) before using
+required source data are missing. See the [quick start](docs/quickstart.rst)
+and [CLI guide](docs/cli.rst) for options, and the
+[method limitations](docs/limitations.rst) before using
 reconstructed weather in calibration or event analysis.
 
 ## Docs and examples
@@ -54,9 +53,11 @@ reconstructed weather in calibration or event analysis.
 The [online documentation](https://sb-chalmers.github.io/smhi2epw/) covers the API,
 methods, and limitations. The [notebook course](examples/README.md) covers EPW
 inspection, comparisons, heat waves, gap filling, solar components, batch runs,
-and EnergyPlus. Start it with:
+and EnergyPlus. To run the notebooks from a source checkout:
 
 ```bash
+git clone https://github.com/SB-Chalmers/smhi2epw.git
+cd smhi2epw
 python -m pip install -e ".[tutorials]"
 jupyter lab examples/
 ```
