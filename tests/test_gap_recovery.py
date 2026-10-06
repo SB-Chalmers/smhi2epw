@@ -212,7 +212,8 @@ def test_wind_only_donor_uses_parameter_metadata_and_angular_errors(monkeypatch)
     assert assessment["method"] == "same_hour_observation"
     assert assessment["corrected_mae"] is None
     assert assessment["offset"] == 0
-    assert (f.wind_direction.iloc[300:370] == 1).all()
+    # Donor angles pass through trigonometric conversion before assignment.
+    np.testing.assert_allclose(f.wind_direction.iloc[300:370], 1, rtol=0, atol=1e-12)
     assert (f.wind_direction.iloc[:300] == 359).all()
 
 

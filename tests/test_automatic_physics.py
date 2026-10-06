@@ -343,7 +343,8 @@ def test_temporal_wind_interpolation_respects_north_wrap():
     assert min(frame.wind_direction.iloc[1], 360 - frame.wind_direction.iloc[1]) < 1e-8
     assert tags.wind_direction.iloc[1] == "temporal"
     assert frame.wind_direction.iloc[0] == 359
-    assert frame.wind_direction.iloc[2] == 1
+    # Circular interpolation may round an unchanged angle at machine precision.
+    np.testing.assert_allclose(frame.wind_direction.iloc[2], 1, rtol=0, atol=1e-12)
 
 
 def test_temporal_opposite_wind_vectors_remain_unresolved_for_model():
