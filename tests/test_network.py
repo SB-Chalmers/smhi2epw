@@ -1,7 +1,7 @@
 """Network integration test for smhi2epw.
 
-These tests hit the live SMHI MetObs + STRÅNG endpoints and are skipped by
-default. Run them explicitly with ``pytest -m network``.
+These tests hit live SMHI MetObs, STRÅNG and Open-Meteo endpoints. Select them
+with ``pytest -m network``; use ``-m "not network and not energyplus"`` offline.
 """
 
 from __future__ import annotations

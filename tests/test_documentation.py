@@ -28,6 +28,7 @@ EXPECTED_NOTEBOOKS = [
     "06_data_quality_and_gap_filling.ipynb",
     "07_solar_components.ipynb",
     "08_batch_generation.ipynb",
+    "09_run_energyplus.ipynb",
 ]
 
 
@@ -110,6 +111,8 @@ def test_notebook_metadata_content_and_code_syntax(name):
         assert "requires-network" in tags
     if policy["requires_tmy"]:
         assert "requires-tmy" in tags
+    if policy.get("requires_energyplus", False):
+        assert "requires-energyplus" in tags
 
     for cell_number, cell in enumerate(notebook["cells"], start=1):
         if cell["cell_type"] != "code":

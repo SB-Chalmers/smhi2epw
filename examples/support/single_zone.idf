@@ -1,0 +1,460 @@
+! Illustrative 100 m2, one-zone box with a 12 m2 south-facing window.
+! Constant 6 W/m2 gains, 0.3 ACH infiltration, 20/26 C ideal sensible loads.
+! Fixed adiabatic floor; no humidity controls, plant sizing, or HVAC efficiency.
+! Six timesteps per hour; report weather and energy hourly and annually.
+! The runner replaces @YEAR@ with the EPW actual year before simulation.
+! This fixture checks weather consumption; it is not a calibrated building.
+
+Building,
+  Weather test box,
+  0,
+  Suburbs,
+  ,
+  ,
+  FullExterior,
+  50,
+  6;
+
+BuildingSurface:Detailed,
+  East,
+  Wall,
+  Opaque,
+  Box,
+  ,
+  Outdoors,
+  ,
+  SunExposed,
+  WindExposed,
+  ,
+  4,
+  10.0,
+  0.0,
+  3.0,
+  10.0,
+  0.0,
+  0.0,
+  10.0,
+  10.0,
+  0.0,
+  10.0,
+  10.0,
+  3.0;
+
+BuildingSurface:Detailed,
+  Floor,
+  Floor,
+  Opaque,
+  Box,
+  ,
+  Adiabatic,
+  ,
+  NoSun,
+  NoWind,
+  ,
+  4,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  10.0,
+  0.0,
+  10.0,
+  10.0,
+  0.0,
+  10.0,
+  0.0,
+  0.0;
+
+BuildingSurface:Detailed,
+  North,
+  Wall,
+  Opaque,
+  Box,
+  ,
+  Outdoors,
+  ,
+  SunExposed,
+  WindExposed,
+  ,
+  4,
+  10.0,
+  10.0,
+  3.0,
+  10.0,
+  10.0,
+  0.0,
+  0.0,
+  10.0,
+  0.0,
+  0.0,
+  10.0,
+  3.0;
+
+BuildingSurface:Detailed,
+  Roof,
+  Roof,
+  Opaque,
+  Box,
+  ,
+  Outdoors,
+  ,
+  SunExposed,
+  WindExposed,
+  ,
+  4,
+  0.0,
+  10.0,
+  3.0,
+  0.0,
+  0.0,
+  3.0,
+  10.0,
+  0.0,
+  3.0,
+  10.0,
+  10.0,
+  3.0;
+
+BuildingSurface:Detailed,
+  South,
+  Wall,
+  Opaque,
+  Box,
+  ,
+  Outdoors,
+  ,
+  SunExposed,
+  WindExposed,
+  ,
+  4,
+  0.0,
+  0.0,
+  3.0,
+  0.0,
+  0.0,
+  0.0,
+  10.0,
+  0.0,
+  0.0,
+  10.0,
+  0.0,
+  3.0;
+
+BuildingSurface:Detailed,
+  West,
+  Wall,
+  Opaque,
+  Box,
+  ,
+  Outdoors,
+  ,
+  SunExposed,
+  WindExposed,
+  ,
+  4,
+  0.0,
+  10.0,
+  3.0,
+  0.0,
+  10.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  0.0,
+  3.0;
+
+Construction,
+  Glazing,
+  Glass;
+
+Construction,
+  Opaque,
+  Insulation,
+  Concrete;
+
+ElectricEquipment,
+  Gains,
+  Box,
+  Always,
+  Watts/Area,
+  ,
+  6,
+  ,
+  0,
+  0.3,
+  0;
+
+FenestrationSurface:Detailed,
+  South window,
+  Window,
+  Glazing,
+  South,
+  ,
+  ,
+  ,
+  ,
+  4,
+  2,
+  0,
+  2.5,
+  2,
+  0,
+  0.5,
+  8,
+  0,
+  0.5,
+  8,
+  0,
+  2.5;
+
+GlobalGeometryRules,
+  UpperLeftCorner,
+  Counterclockwise,
+  World;
+
+Material,
+  Concrete,
+  MediumRough,
+  0.15,
+  1.4,
+  2200,
+  880,
+  0.9,
+  0.5,
+  0.5;
+
+Material:NoMass,
+  Insulation,
+  MediumRough,
+  3.0,
+  0.9,
+  0.5,
+  0.5;
+
+Output:SQLite,
+  Simple;
+
+Output:Variable,
+  *,
+  Site Diffuse Solar Radiation Rate per Area,
+  Hourly;
+
+Output:Variable,
+  *,
+  Site Diffuse Solar Radiation Rate per Area,
+  RunPeriod;
+
+Output:Variable,
+  *,
+  Site Direct Solar Radiation Rate per Area,
+  Hourly;
+
+Output:Variable,
+  *,
+  Site Direct Solar Radiation Rate per Area,
+  RunPeriod;
+
+Output:Variable,
+  *,
+  Site Outdoor Air Drybulb Temperature,
+  Hourly;
+
+Output:Variable,
+  *,
+  Site Outdoor Air Drybulb Temperature,
+  RunPeriod;
+
+Output:Variable,
+  *,
+  Surface Window Transmitted Solar Radiation Energy,
+  Hourly;
+
+Output:Variable,
+  *,
+  Surface Window Transmitted Solar Radiation Energy,
+  RunPeriod;
+
+Output:Variable,
+  *,
+  Zone Ideal Loads Supply Air Sensible Cooling Energy,
+  Hourly;
+
+Output:Variable,
+  *,
+  Zone Ideal Loads Supply Air Sensible Cooling Energy,
+  RunPeriod;
+
+Output:Variable,
+  *,
+  Zone Ideal Loads Supply Air Sensible Heating Energy,
+  Hourly;
+
+Output:Variable,
+  *,
+  Zone Ideal Loads Supply Air Sensible Heating Energy,
+  RunPeriod;
+
+Output:Variable,
+  *,
+  Zone Mean Air Temperature,
+  Hourly;
+
+Output:Variable,
+  *,
+  Zone Mean Air Temperature,
+  RunPeriod;
+
+RunPeriod,
+  Actual year,
+  1,
+  1,
+  @YEAR@,
+  12,
+  31,
+  @YEAR@,
+  ,
+  No,
+  No,
+  ,
+  No,
+  No,
+  Yes;
+
+Schedule:Constant,
+  Always,
+  Fraction,
+  1;
+
+Schedule:Constant,
+  Cooling,
+  Temperature,
+  26;
+
+Schedule:Constant,
+  Dual control,
+  Control,
+  4;
+
+Schedule:Constant,
+  Heating,
+  Temperature,
+  20;
+
+ScheduleTypeLimits,
+  Control,
+  0,
+  4,
+  Discrete;
+
+ScheduleTypeLimits,
+  Fraction,
+  0,
+  1,
+  Continuous;
+
+ScheduleTypeLimits,
+  Temperature,
+  ,
+  ,
+  Continuous,
+  Temperature;
+
+SimulationControl,
+  No,
+  No,
+  No,
+  No,
+  Yes;
+
+ThermostatSetpoint:DualSetpoint,
+  Setpoints,
+  Heating,
+  Cooling;
+
+Timestep,
+  6;
+
+Version,
+  24.2;
+
+WindowMaterial:SimpleGlazingSystem,
+  Glass,
+  1.8,
+  0.55,
+  0.65;
+
+Zone,
+  Box,
+  0,
+  ,
+  ,
+  ,
+  ,
+  1;
+
+ZoneControl:Thermostat,
+  Thermostat,
+  Box,
+  Dual control,
+  ThermostatSetpoint:DualSetpoint,
+  Setpoints;
+
+ZoneHVAC:EquipmentConnections,
+  Box,
+  Equipment,
+  Supply,
+  ,
+  Zone air,
+  Return;
+
+ZoneHVAC:EquipmentList,
+  Equipment,
+  SequentialLoad,
+  ZoneHVAC:IdealLoadsAirSystem,
+  Ideal loads,
+  1.0,
+  1.0;
+
+ZoneHVAC:IdealLoadsAirSystem,
+  Ideal loads,
+  ,
+  Supply,
+  ,
+  ,
+  ,
+  ,
+  ,
+  ,
+  NoLimit,
+  ,
+  ,
+  NoLimit,
+  ,
+  ,
+  ,
+  ,
+  None,
+  ,
+  None,
+  ,
+  ,
+  ,
+  NoEconomizer,
+  None;
+
+ZoneInfiltration:DesignFlowRate,
+  Infiltration,
+  Box,
+  Always,
+  AirChanges/Hour,
+  ,
+  ,
+  ,
+  0.3,
+  1,
+  0,
+  0,
+  0;
+

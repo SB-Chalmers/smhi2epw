@@ -205,18 +205,21 @@ the site does not contact SMHI, Open-Meteo or OneBuilding. The generated
   `117` = global horizontal, `118` = direct *normal*, `121` = direct beam on
   the horizontal plane; diffuse horizontal is derived as `117 − 121`.
   Direct-horizontal parameter 121 starts on 18 April 2017; parameter 118
-  (DNI) is available earlier. The current compiler nevertheless requests only
-  GHI for 2017 and earlier and estimates the partition with Erbs (1982).
-  It uses the full STRÅNG component group from 2018. This is an implementation
-  choice, not evidence that historical DNI is unavailable; see the
+  (DNI) is requested throughout the supported history from 1999. Before
+  parameter 121 is available, horizontal beam is projected from instantaneous
+  DNI before adjacent-sample averaging. Erbs (1982) is used only when usable
+  direct components are absent; see the
   [SMHI extraction guide](https://strang.smhi.se/extraction/index.php).
 - STRÅNG values are instantaneous irradiance at the full hour. The pipeline
   converts them to EPW interval-averaged irradiance (preceding-hour mean) by
-  averaging adjacent samples, reducing hourly RMSD by ~5 pp (Lundström 2012).
+  averaging adjacent samples. Supplied DNI and horizontal beam retain their
+  separate interval means, including below five degrees solar elevation.
+  The five-degree guard applies only when DNI must be inferred by dividing
+  horizontal radiation by solar geometry. Interval closure is `GHI = DHI +
+  horizontal beam`; mean DNI times a midpoint cosine is an approximation.
 - `result.report.solar_source` reports which solar path was used:
-  `"strang"` (2018+, STRÅNG all params),
-  `"measured+strang_partition"` (2018+ with a nearby Sol station; measured GHI
-  with the normalized STRÅNG beam fraction),
+  `"strang"` (supplied STRÅNG DNI and supplied/projected horizontal beam),
+  `"measured+strang_partition"` (nearby Sol station GHI with the STRÅNG partition),
   `"strang_ghi+erbs"` (Erbs on STRÅNG GHI when direct components are absent),
   `"measured+erbs"` (Erbs on measured GHI), `"era5"` (ERA5 solar fallback), or
   `"mixed"` (multiple solar sources).
@@ -255,7 +258,9 @@ than 5% of required meteorological cells; the fraction ranges from 0.0114% to
 grid and excludes solar; exported-hour source shares are reported separately.
 Five percent is a reporting aid, not a validated acceptance threshold. Review
 source fractions and warnings before calibration or extreme-event analysis.
-Successful export establishes usable complete inputs, not local weather accuracy.
+Successful export establishes complete weather inputs, not local weather accuracy.
+The archived outputs predate the solar and actual-year header corrections.
+Regenerate inputs to apply the new EnergyPlus acceptance checks.
 
 The [portable evidence summary](examples/data/completeness_2026-10-05.json)
 includes policies, source identities, artifact hashes, warning counts and
@@ -264,11 +269,31 @@ reads it offline and records reconstruction diagnostics for new batches. The
 [recovery guide](docs/weather_recovery.rst) explains the separate earlier
 52-of-53 failed-job replay and the current run's limitations.
 
+## Run the weather in EnergyPlus
+
+[Notebook 09](examples/09_run_energyplus.ipynb) runs a generated AMY in a small,
+standalone single-zone model and inspects temperatures, solar gains, ideal loads,
+and engine diagnostics. It uses a local EPW and requires **EnergyPlus 24.2.0
+build 94a887817b**; set `ENERGYPLUS_EXE` to its executable if it is outside `PATH`.
+The engine is a separate optional installation, with official platform archives
+at the [24.2.0 bug-fix release](https://github.com/NatLabRockies/EnergyPlus/releases/tag/v24.2.0a).
+The notebook performs no provider requests and needs no EPSM package.
+
+CI requires deterministic provider-to-EnergyPlus tests against the built wheel,
+including common and leap-year calendars and recovery cases. Missing engines,
+severe/fatal errors, unexpected warnings, and incomplete hourly outputs fail the
+gate. Release tags validate the same wheel that is published after all required
+checks succeed. Live provider checks run separately on the weekly schedule.
+See the [EnergyPlus validation guide](docs/energyplus.rst) for the engine pin,
+warning policy, distribution checks, and publication setup. Engine acceptance
+establishes consumer compatibility, not local weather accuracy or calibration.
+
 ## Development
 
 ```bash
 pip install -e ".[dev]"
-pytest -m "not network"  # offline suite (synthetic SMHI client)
+pytest -m "not network and not energyplus"  # offline Python suite
+pytest -m energyplus    # requires the pinned engine; provider requests are offline
 pytest -m network    # live integration tests against weather-source endpoints
 ruff check src tests examples
 ruff format --check src tests examples
@@ -278,8 +303,9 @@ pytest --doctest-modules src/smhi2epw
 python -m sphinx -W --keep-going -b html docs docs/_build/html
 ```
 
-Use `pytest -m "not network"` for the offline suite. Plain `pytest` also
-selects live integration tests; the `network` marker does not skip them by itself.
+Use `pytest -m "not network and not energyplus"` for the Python-only offline
+suite. Plain `pytest` also selects live and engine integration tests; markers
+do not skip them by themselves.
 Provider access and quotas apply to live SMHI and Open-Meteo requests.
 
 ## License
@@ -320,9 +346,14 @@ outside 0–2,000 W/m² are discarded as broadly implausible; this engineering g
 does not clip plausible heatwave temperatures. When ERA5 is used, overlap with
 original observations is reported and substantial disagreement produces warnings
 without rejecting otherwise usable primary extremes. Recovery cannot guarantee
-an event's peak intensity or persistence. A single-year sensitivity experiment
-motivated trying assessed donors before daily profiles; it does not establish a
-universally most accurate method.
+an event's peak intensity or persistence. The sensitivity campaign covered
+17 weather-years, six regions and six building profiles. Short-gap annual-load
+errors were generally small, while long solar gaps and missing event peaks were
+more sensitive. These are conditional comparisons against the campaign's own
+reference weather: shared solar processing can hide a common error, and multiple
+building profiles do not create independent weather samples. They establish
+neither building-site accuracy nor universal donor superiority. See
+[the method limitations](docs/limitations.rst).
 
 Donors are checked against original same-variable overlap near each gap, using
 held-out complete days. A scalar median offset is applied only when it improves

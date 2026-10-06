@@ -23,6 +23,7 @@ jupyter lab examples/
 | `06_data_quality_and_gap_filling` | 3/4/48/49-hour gaps | No |
 | `07_solar_components` | GHI, DNI, DHI and closure | No |
 | `08_batch_generation` | Reproducible batch workflows | SMHI; Open-Meteo if needed |
+| `09_run_energyplus` | Standalone annual simulation and ideal loads | No; local EPW and EnergyPlus required |
 
 Generated EPWs, figures, and tables are written to `examples/output/`, which
 is ignored by Git. Live examples use `.smhi_cache` so reruns avoid unnecessary
@@ -45,6 +46,13 @@ extent, source shares, warnings and receipt path for new runs.
 
 Use 01 and 08 for simulation-input quality checks; 02 and 03 for geographic and
 actual-year comparisons; 04 for event screening; 05 for AMY/TMY interpretation;
-and 06/07 for isolated method demonstrations. These lessons do not independently
-validate building-site accuracy or reconstructed event peaks. They do not run
-EnergyPlus or supply precipitation, snow or illuminance inputs.
+and 06/07 for isolated method demonstrations. Notebook 09 hands a local EPW to
+EnergyPlus 24.2.0 build 94a887817b and plots the shared single-zone fixture's
+temperature and ideal-load response. Set `ENERGYPLUS_EXE` when the engine is not
+on `PATH`, `SMHI2EPW_EPW_PATH` for another local EPW, and
+`SMHI2EPW_EXAMPLES_DIR` when running outside this checkout. Engine installation
+is separate from the tutorial extra. See [the validation guide](../docs/energyplus.rst).
+
+These lessons do not independently validate building-site accuracy or
+reconstructed event peaks. They do not run a calibrated building model or supply
+precipitation, snow or illuminance inputs.

@@ -52,7 +52,8 @@ cancel in a paired comparison. The original campaign is frozen at source commit
 5930c07, before the low-sun and historical-DNI corrections. It supports the
 reported conditional comparisons, not site-weather accuracy or national error
 bounds. Regenerated references and targeted paired runs are needed when the
-solar method changes. The portable campaign context below preserves that scope.
+solar method changes. The archived completeness evidence below is a separate
+generation check, not additional validation of sensitivity results.
 
 Automatic station selection prefers full coverage but can use a partial station.
 Source failures are reported while other requests continue. If station discovery

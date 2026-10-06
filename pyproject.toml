@@ -56,9 +56,9 @@ tutorials = [
 smhi2epw = "smhi2epw.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/snjsomnath/smhi2epw"
-Repository = "https://github.com/snjsomnath/smhi2epw.git"
-Issues = "https://github.com/snjsomnath/smhi2epw/issues"
+Homepage = "https://github.com/SB-Chalmers/smhi2epw"
+Repository = "https://github.com/SB-Chalmers/smhi2epw.git"
+Issues = "https://github.com/SB-Chalmers/smhi2epw/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -70,6 +70,7 @@ smhi2epw = ["py.typed"]
 testpaths = ["tests"]
 markers = [
     "network: tests that require live SMHI or Open-Meteo endpoints",
+    "energyplus: deterministic integration tests requiring the pinned EnergyPlus engine",
 ]
 
 [tool.ruff]
