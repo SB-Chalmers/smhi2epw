@@ -189,6 +189,36 @@ jobs:
         run: |
           sphinx-build -W --keep-going -b html docs docs/_build/html
           sphinx-build -W --keep-going -b doctest docs docs/_build/doctest
+      - name: Preserve the built site for GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-site
+          path: docs/_build/html
+          if-no-files-found: error
+
+  publish-docs:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: documentation
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: documentation-site
+          path: site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - name: Publish documentation
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   release-gate:
     if: always()

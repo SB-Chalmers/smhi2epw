@@ -36,8 +36,19 @@ jupyter lab examples/
 ```
 
 See the [installation guide](docs/installation.rst) for environment setup and
-the [online documentation](https://smhi2epw.readthedocs.io/) for the full API,
-methods, and tutorials. For contributors, install `.[dev,docs,tutorials]`.
+the [online documentation](https://sb-chalmers.github.io/smhi2epw/) for the full
+API, methods, and tutorials. For contributors, install `.[dev,docs,tutorials]`.
+
+## Related SMHI packages
+
+There is a useful Python ecosystem around SMHI data. For example,
+[`smhi-open-data`](https://pypi.org/project/smhi-open-data/) provides access to
+SMHI's open-data API; [`smhi-weather`](https://pypi.org/project/smhi-weather/)
+and [`smhi-pkg`](https://pypi.org/project/smhi-pkg/) offer forecast clients;
+and [`ifk-smhi`](https://pypi.org/project/ifk-smhi/) covers several SMHI APIs,
+including observations and STRÅNG. Thanks to the people who maintain these
+projects. `smhi2epw` builds on this broader ecosystem with a specific focus on
+complete-year weather files for EnergyPlus.
 
 ## Usage
 
@@ -138,8 +149,9 @@ python -m sphinx -W --keep-going -b html docs docs/_build/html
 ```
 
 The generated home page is `docs/_build/html/index.html`. The published site is
-available at [smhi2epw.readthedocs.io](https://smhi2epw.readthedocs.io/). For the most reliable
-navigation and search behavior, serve the directory over a local HTTP server:
+available at [sb-chalmers.github.io/smhi2epw](https://sb-chalmers.github.io/smhi2epw/).
+For the most reliable navigation and search behavior, serve the directory over a
+local HTTP server:
 
 ```bash
 python -m http.server 8000 --directory docs/_build/html

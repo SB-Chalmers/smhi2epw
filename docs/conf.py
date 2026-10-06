@@ -58,6 +58,9 @@ intersphinx_mapping = {
     "requests": ("https://requests.readthedocs.io/en/latest", None),
 }
 
+html_baseurl = "https://sb-chalmers.github.io/smhi2epw/"
+html_extra_path = [".nojekyll"]
+
 html_theme = "sphinx_rtd_theme"
 html_theme_options = {
     "collapse_navigation": False,
