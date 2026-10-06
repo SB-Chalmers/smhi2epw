@@ -75,12 +75,19 @@ A broad warning suppression is not an acceptance rule. Weather-recovery
 warnings remain separately visible in the EPW receipt.
 
 The ``release-gate`` job requires every validation job to succeed; skipped or
-missing engine validation cannot pass it. Publishing runs only for ``v*`` tags
-after this gate and consumes the already tested wheel and source distribution.
-The tag must match the wheel's version. The release job creates a GitHub release
-with the validated wheel and source distribution attached; it does not publish
-to PyPI. Configure branch protection to require ``release-gate`` if passing
-validation must also be enforced before merging.
+missing engine validation cannot pass it. On a ``v*`` tag, the same workflow then
+publishes the validated distributions to GitHub Releases and PyPI and deploys the
+built documentation site. The tag must match the wheel's version. Configure
+branch protection to require ``release-gate`` if passing validation must also be
+enforced before merging.
+
+PyPI needs a one-time trusted-publisher entry for this repository before the
+first upload: project ``smhi2epw``, owner ``SB-Chalmers``, repository
+``smhi2epw``, workflow ``ci.yml``, and no GitHub environment. Add it from the
+PyPI project's Publishing settings using the
+`PyPI trusted-publisher guide <https://docs.pypi.org/trusted-publishers/>`_.
+This lets GitHub Actions publish with short-lived OIDC credentials instead of a
+stored API token.
 
 Live provider tests and the live getting-started notebook run only on schedule
 or manual dispatch. Their purpose is to check current service behavior; they
