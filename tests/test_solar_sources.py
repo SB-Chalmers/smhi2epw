@@ -1,4 +1,4 @@
-"""Independent radiation-source and NOAA calendar regressions."""
+"""Independent radiation-source and interval-processing regressions."""
 
 from urllib.parse import parse_qs, urlparse
 
@@ -103,33 +103,6 @@ def test_wholly_dark_interval_cannot_retain_source_radiation():
     assert frame[["ghi", "dni", "dirh", "dhi", "etrh", "etrn"]].eq(0).all().all()
 
 
-def test_noaa_fractional_year_uses_each_utc_timestamps_calendar():
-    # Fixed scalar reference values transcribed independently from NOAA's
-    # equations, using 366 for leap-year fractional gamma:
-    # https://gml.noaa.gov/grad/solcalc/solareqns.PDF
-    index = pd.DatetimeIndex(
-        [
-            "2023-12-31 23:30",
-            "2024-01-01 00:30",
-            "2024-02-29 12:00",
-            "2024-06-21 12:00",
-            "2024-12-01 11:30",
-        ],
-        tz="UTC",
-    )
-    expected = [
-        137.39305123433698,
-        134.61965756614637,
-        74.00404639128358,
-        43.4579127786719,
-        87.48647806520701,
-    ]
-    zenith, _ = solar.solar_zenith(index, 65.0, 20.0)
-    np.testing.assert_allclose(zenith, expected, atol=1e-11, rtol=0)
-    local_zenith, _ = solar.solar_zenith(index.tz_convert("Europe/Stockholm"), 65, 20)
-    np.testing.assert_allclose(local_zenith, expected, atol=1e-11, rtol=0)
-
-
 def test_historical_dni_is_projected_at_raw_instants_before_averaging(monkeypatch):
     index = pd.date_range("2010-06-21 11:00", periods=3, freq="h", tz="UTC")
     requests = []
@@ -143,13 +116,21 @@ def test_historical_dni_is_projected_at_raw_instants_before_averaging(monkeypatc
     monkeypatch.setattr(
         I, "fetch_metobs_parameter", lambda *a, **k: pd.Series(dtype=float)
     )
+
+    # Control raw-time geometry independently of the production SPA adapter.
+    # Mean(DNI * cosine) must differ from mean(DNI) * a midpoint cosine.
+    def geometry(grid, latitude, longitude):
+        cosine = pd.Series([0.2, 0.8, 0.4], index=index).reindex(grid).fillna(0)
+        return np.zeros(len(grid)), cosine.to_numpy()
+
+    monkeypatch.setattr(solar, "solar_zenith", geometry)
     frame = I.ingest(I.StationMeta(1, "test", 59.3, 18.0), 2010, object())
     assert set(requests) == {117, 118}
     np.testing.assert_allclose(frame.loc[index[1:], "dni"], [141.9, 140.6])
-    # Independent scalar NOAA projections of the raw 11/12/13 UTC DNI samples.
+    # Adjacent means of raw projected beams: (21.58 + 140.72) / 2, etc.
     np.testing.assert_allclose(
         frame.loc[index[1:], "dirh"],
-        [113.04982855665423, 108.12354227235076],
+        [81.15, 91.42],
         atol=1e-10,
         rtol=0,
     )

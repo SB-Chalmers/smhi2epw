@@ -1,15 +1,15 @@
 """Calculate solar geometry and split global irradiance into EPW components.
 
-The vectorized helpers use the NOAA fractional-year approximation and the Erbs
-hourly diffuse-fraction correlation. They depend only on NumPy and pandas,
-keeping the core package lightweight. Timestamps must be timezone-aware; the
-compiler integrates them over the preceding-hour radiation interval.
+Solar position and extraterrestrial irradiance use pvlib. Timestamps must be
+timezone-aware; the compiler integrates geometry over each preceding hour.
+Supplied radiation components retain their own interval means.
 """
 
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from pvlib import irradiance, solarposition
 
 
 def solar_zenith(index: pd.DatetimeIndex, latitude: float, longitude: float):
@@ -35,9 +35,9 @@ def solar_zenith(index: pd.DatetimeIndex, latitude: float, longitude: float):
     Notes
     -----
     Zenith is 0° when the sun is directly overhead and exceeds 90° below the
-    geometric horizon. The NOAA general solar-position approximation computes
-    fractional year, equation of time, declination, and hour angle. Because the
-    timestamps are converted to UTC, the timezone term is zero.
+    geometric horizon. pvlib evaluates the NREL SPA with NumPy and estimates
+    delta-T for each UTC year and month. We use true geometric zenith, without
+    atmospheric refraction, at the default sea-level altitude.
 
     Examples
     --------
@@ -50,54 +50,19 @@ def solar_zenith(index: pd.DatetimeIndex, latitude: float, longitude: float):
 
     References
     ----------
-    NOAA Global Monitoring Laboratory, *Solar Calculation Details*.
+    Reda, I., & Andreas, A. (2004). *Solar position algorithm for solar
+    radiation applications*. Solar Energy, 76(5), 577--589.
     """
     if index.tz is None:
         raise ValueError("solar_zenith requires a timezone-aware (UTC) index")
 
     utc = index.tz_convert("UTC")
-    doy = utc.dayofyear.to_numpy(dtype=float)
-    hour = (
-        utc.hour.to_numpy(dtype=float)
-        + utc.minute.to_numpy(dtype=float) / 60.0
-        + utc.second.to_numpy(dtype=float) / 3600.0
+    position = solarposition.get_solarposition(
+        utc, latitude, longitude, method="nrel_numpy", delta_t=None
     )
-
-    # Fractional year (radians).
-    year_days = np.where(utc.is_leap_year, 366.0, 365.0)
-    gamma = 2.0 * np.pi / year_days * (doy - 1.0 + (hour - 12.0) / 24.0)
-
-    # Equation of time (minutes).
-    eqtime = 229.18 * (
-        0.000075
-        + 0.001868 * np.cos(gamma)
-        - 0.032077 * np.sin(gamma)
-        - 0.014615 * np.cos(2 * gamma)
-        - 0.040849 * np.sin(2 * gamma)
-    )
-
-    # Solar declination (radians).
-    decl = (
-        0.006918
-        - 0.399912 * np.cos(gamma)
-        + 0.070257 * np.sin(gamma)
-        - 0.006758 * np.cos(2 * gamma)
-        + 0.000907 * np.sin(2 * gamma)
-        - 0.002697 * np.cos(3 * gamma)
-        + 0.00148 * np.sin(3 * gamma)
-    )
-
-    # True solar time (minutes). timezone term omitted because input is UTC.
-    time_offset = eqtime + 4.0 * longitude
-    tst = hour * 60.0 + time_offset
-    hour_angle = np.radians(tst / 4.0 - 180.0)
-
-    lat_rad = np.radians(latitude)
-    cos_zenith = np.sin(lat_rad) * np.sin(decl) + np.cos(lat_rad) * np.cos(
-        decl
-    ) * np.cos(hour_angle)
-    cos_zenith = np.clip(cos_zenith, -1.0, 1.0)
-    zenith = np.degrees(np.arccos(cos_zenith))
+    # Apparent zenith includes refraction and would change our horizon rule.
+    zenith = position["zenith"].to_numpy(dtype=float)
+    cos_zenith = np.cos(np.deg2rad(zenith))
     return zenith, cos_zenith
 
 
@@ -117,7 +82,8 @@ def extraterrestrial_radiation(index: pd.DatetimeIndex, cos_zenith):
         Extraterrestrial horizontal and direct-normal irradiance in W/m².
 
     Direct-normal is the solar constant scaled by the Earth-Sun distance
-    correction; horizontal is that projected onto the horizontal plane (>= 0).
+    correction using pvlib's ASCE method and the existing 1367 W/m² constant;
+    horizontal is that projected onto the horizontal plane (>= 0).
     Both quantities are zero when the sun is below the horizon, matching EPW
     convention.
 
@@ -131,8 +97,13 @@ def extraterrestrial_radiation(index: pd.DatetimeIndex, cos_zenith):
     from . import constants as C
 
     doy = index.tz_convert("UTC").dayofyear.to_numpy(dtype=float)
-    eccentricity = 1.0 + 0.033 * np.cos(2.0 * np.pi * doy / 365.0)
-    direct_normal = C.SOLAR_CONSTANT * eccentricity
+    # Integer UTC day-of-year preserves the existing daily ASCE correction.
+    direct_normal = np.asarray(
+        irradiance.get_extra_radiation(
+            doy, solar_constant=C.SOLAR_CONSTANT, method="asce"
+        ),
+        dtype=float,
+    )
     cos_z = np.asarray(cos_zenith)
     horizontal = np.where(cos_z > 0.0, direct_normal * cos_z, 0.0)
     # Convention (matches EnergyPlus TMY): etrn is 0 when sun is below horizon.
