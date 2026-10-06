@@ -60,6 +60,9 @@ def test_optional_provenance_with_custom_client_is_honest(tmp_path):
     assert not saved["raw_response_receipts_complete"]
     assert saved["raw_responses"] == []
     assert saved["source_code_sha256"]["processing.py"]
+    from importlib.metadata import version
+
+    assert saved["pvlib_version"] == version("pvlib")
 
 
 def test_receipts_only_include_payloads_actually_read_from_shared_cache(tmp_path):

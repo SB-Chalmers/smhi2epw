@@ -42,6 +42,7 @@ def write_provenance(config: Any, result: Any, client: Any) -> dict[str, Any]:
         "schema_version": 1,
         "accessed_at_utc": datetime.now(timezone.utc).isoformat(),
         "package_version": package_version,
+        "pvlib_version": version("pvlib"),
         "configuration": asdict(config),
         "result": asdict(result),
         "epw_sha256": hashlib.sha256(Path(result.output_path).read_bytes()).hexdigest(),

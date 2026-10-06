@@ -1,8 +1,8 @@
 """Calculate solar geometry and split global irradiance into EPW components.
 
-Solar position and extraterrestrial irradiance use pvlib. Timestamps must be
-timezone-aware; the compiler integrates geometry over each preceding hour.
-Supplied radiation components retain their own interval means.
+Solar position, extraterrestrial irradiance, and Erbs-Driesse decomposition
+use pvlib. Timestamps must be timezone-aware; the compiler integrates geometry
+over each preceding hour. Supplied components retain their own interval means.
 """
 
 from __future__ import annotations
@@ -148,16 +148,16 @@ def interval_solar_geometry(index: pd.DatetimeIndex, latitude: float, longitude:
 
 
 def erbs_decomposition(ghi, etrh, cos_zenith):
-    """Estimate diffuse-horizontal and direct-normal irradiance from GHI.
+    """Estimate DHI and DNI from hourly GHI using pvlib Erbs-Driesse.
 
     Parameters
     ----------
     ghi
-        Global horizontal irradiance in W/m².
+        Nonnegative global horizontal irradiance in W/m².
     etrh
-        Extraterrestrial horizontal irradiance in W/m².
+        Extraterrestrial horizontal irradiance averaged over the same hour.
     cos_zenith
-        Cosine of solar zenith.
+        Mean positive zenith cosine over the hour. Inputs may broadcast.
 
     Returns
     -------
@@ -172,10 +172,13 @@ def erbs_decomposition(ghi, etrh, cos_zenith):
 
     Notes
     -----
-    The clearness index ``kt = GHI/ETRH`` selects one of three empirical diffuse
-    fractions. DNI follows from ``GHI = DHI + DNI*cos(zenith)``. Near or below
-    the horizon, DNI is set to zero and all GHI is assigned to DHI so closure is
-    retained.
+    The effective normal input ``ETRH/cos_zenith`` keeps pvlib's clearness
+    index equal to ``GHI/ETRH`` for these interval means. Erbs-Driesse smooths
+    the classic Erbs diffuse fraction, changing it by less than 0.0005.
+    DNI follows from horizontal closure. At cosine <= 0.087 or nonpositive
+    ETRH, DNI is zero and all GHI is diffuse. This inversion guard applies to
+    inferred DNI; supplied components are handled separately by processing.
+    The existing helper name and ``+erbs`` source labels denote the family.
 
     Examples
     --------
@@ -188,35 +191,32 @@ def erbs_decomposition(ghi, etrh, cos_zenith):
     Erbs, D. G., Klein, S. A., & Duffie, J. A. (1982). *Estimation of
     the diffuse radiation fraction for hourly, daily and monthly-average
     global radiation*. Solar Energy, 28(4), 293--302.
+    Driesse, A., Jensen, A., & Perez, R. (2024). *A continuous form of the Perez
+    diffuse sky model for forward and reverse transposition*. Solar Energy,
+    267, 112093. doi:10.1016/j.solener.2023.112093.
     """
     from . import constants as C
 
-    ghi = np.asarray(ghi, dtype=float)
-    etrh = np.asarray(etrh, dtype=float)
-    cos_z = np.asarray(cos_zenith, dtype=float)
-
-    # Clearness index kt (0 = overcast, 1 = clear); set 0 when sun below horizon.
-    etrh_safe = np.where(etrh > 0.0, etrh, 1.0)
-    kt = np.clip(ghi / etrh_safe, 0.0, 1.0)
-    kt = np.where(etrh > 0.0, kt, 0.0)
-
-    # Diffuse fraction (Erbs piecewise polynomial).
-    fd = np.where(
-        kt <= 0.22,
-        1.0 - 0.09 * kt,
-        np.where(
-            kt <= 0.80,
-            0.9511 - 0.1604 * kt + 4.388 * kt**2 - 16.638 * kt**3 + 12.336 * kt**4,
-            0.165,
-        ),
+    ghi, etrh, cos_z = np.broadcast_arrays(
+        np.asarray(ghi, dtype=float),
+        np.asarray(etrh, dtype=float),
+        np.asarray(cos_zenith, dtype=float),
     )
-    dhi = np.clip(fd * ghi, 0.0, ghi)
-
-    # DNI from energy balance: GHI = DHI + DNI * cos(zenith).
-    cos_z_safe = np.where(cos_z > C.COS_ZENITH_FLOOR, cos_z, 1.0)
-    dni = np.where(cos_z > C.COS_ZENITH_FLOOR, (ghi - dhi) / cos_z_safe, 0.0)
-    dni = np.clip(dni, 0.0, None)
-    # Once direct normal is suppressed near/below the horizon, assign the full
-    # global horizontal value to diffuse so the energy balance still closes.
-    dhi = np.where(cos_z > C.COS_ZENITH_FLOOR, dhi, ghi)
+    dhi = ghi.copy()
+    dni = np.zeros_like(ghi)
+    usable = (cos_z > C.COS_ZENITH_FLOOR) & (etrh > 0.0)
+    if np.any(usable):
+        cosine = cos_z[usable]
+        zenith = np.rad2deg(np.arccos(np.clip(cosine, -1.0, 1.0)))
+        # ETRH / mean cosine is an effective normal for the clearness index.
+        # It is NOT the exported mean ETRN, which is zero during dark samples.
+        components = irradiance.erbs_driesse(
+            ghi[usable],
+            zenith,
+            dni_extra=etrh[usable] / cosine,
+            min_cos_zenith=C.COS_ZENITH_FLOOR,
+            max_zenith=np.rad2deg(np.arccos(C.COS_ZENITH_FLOOR)),
+        )
+        dhi[usable] = components["dhi"]
+        dni[usable] = components["dni"]
     return dhi, dni
