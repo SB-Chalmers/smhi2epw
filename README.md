@@ -1,6 +1,6 @@
 # smhi2epw
 
-Lightweight Python utility that fetches meteorological data from the Swedish
+Python utility that fetches meteorological data from the Swedish
 Meteorological and Hydrological Institute (SMHI) open-data APIs and compiles it
 into a valid EnergyPlus Weather (`.epw`) file for Actual Meteorological Year
 (AMY) urban energy simulations.
@@ -38,8 +38,10 @@ python -m pip install .
 No release was available on PyPI when checked on 6 October 2026. The version in
 this checkout is 1.1.0; confirm the checkout's commit when reproducing a study.
 
-Dependencies are limited to `numpy`, `pandas`, and `requests`.
-Python 3.11 or newer is required.
+Python 3.11 or newer is required. Core dependencies are `numpy`, `pandas`,
+`requests`, and `pvlib>=0.16.1,<0.17`. Installing the package also installs
+pvlib's dependencies, including SciPy and h5py. Solar calculations work offline
+once these dependencies are installed.
 
 For the executable, student-friendly notebooks:
 
@@ -207,8 +209,9 @@ the site does not contact SMHI, Open-Meteo or OneBuilding. The generated
   Direct-horizontal parameter 121 starts on 18 April 2017; parameter 118
   (DNI) is requested throughout the supported history from 1999. Before
   parameter 121 is available, horizontal beam is projected from instantaneous
-  DNI before adjacent-sample averaging. Erbs (1982) is used only when usable
-  direct components are absent; see the
+  DNI before adjacent-sample averaging. The continuous Erbs-Driesse form of
+  the Erbs (1982) model is used only when usable direct components are absent;
+  see the
   [SMHI extraction guide](https://strang.smhi.se/extraction/index.php).
 - STRÅNG values are instantaneous irradiance at the full hour. The pipeline
   converts them to EPW interval-averaged irradiance (preceding-hour mean) by
@@ -217,12 +220,20 @@ the site does not contact SMHI, Open-Meteo or OneBuilding. The generated
   The five-degree guard applies only when DNI must be inferred by dividing
   horizontal radiation by solar geometry. Interval closure is `GHI = DHI +
   horizontal beam`; mean DNI times a midpoint cosine is an approximation.
+- Solar geometry uses pvlib's NREL SPA `nrel_numpy` method and geometric
+  (unrefracted) zenith. `delta_t=None` lets pvlib calculate the terrestrial-time
+  correction for each UTC year/month. Extraterrestrial irradiance uses pvlib's
+  `asce` method with a 1367 W/m² solar constant. Five-minute integration over
+  the preceding hour supplies interval geometry and caps. Both weather
+  policies use these fixed solar methods.
 - `result.report.solar_source` reports which solar path was used:
   `"strang"` (supplied STRÅNG DNI and supplied/projected horizontal beam),
   `"measured+strang_partition"` (nearby Sol station GHI with the STRÅNG partition),
-  `"strang_ghi+erbs"` (Erbs on STRÅNG GHI when direct components are absent),
-  `"measured+erbs"` (Erbs on measured GHI), `"era5"` (ERA5 solar fallback), or
-  `"mixed"` (multiple solar sources).
+  `"strang_ghi+erbs"` (Erbs-Driesse on STRÅNG GHI when direct components are absent),
+  `"measured+erbs"` (Erbs-Driesse on measured GHI), `"era5"` (ERA5 solar fallback),
+  or `"mixed"` (multiple solar sources). The `+erbs` labels retain their existing
+  spelling as Erbs-family identifiers. New JSON sidecars include top-level
+  `pvlib_version` alongside the package version and source hashes.
 - Automatic pyranometer discovery is limited to 50 km by default. If its data
   cannot satisfy the 48-hour policy, compilation falls back to STRÅNG.
   Explicitly requested radiation stations fail in strict mode; automatic mode
@@ -231,6 +242,37 @@ the site does not contact SMHI, Open-Meteo or OneBuilding. The generated
   Nordic STRÅNG region without silently resampling hourly source data.
 - A warning is logged when the solar query point is outside Sweden (~55–69.5°N,
   10–24.5°E), where STRÅNG accuracy degrades (RMSD up to 30–40% for GHI).
+
+## Validation of the pvlib solar methods
+
+On **6 October 2026**, the rebuilt wheel with pvlib 0.16.1 passed **261 offline
+checks**, including notebook 07, and **7 required EnergyPlus tests**. Notebook 09
+also completed all **8,760 hours with zero engine warnings**. The Python 3.11
+minimum-dependency run passed 257 checks; four optional notebook tests were
+skipped there and executed in the full wheel environment. Static checks and the
+HTML documentation build passed, with 68 documentation doctests and no warnings.
+Explicit timestamp keywords keep the declared pandas 1.5.3 floor working.
+
+Six paired engineering cases used identical provider payloads, building models,
+and the pinned EnergyPlus engine. Five cases had identical annual heating,
+cooling and window-solar totals. For historical 2016 data, SPA changed the
+horizontal beam projected from instantaneous DNI: annual heating changed by
+**−0.1154%**, cooling by **−0.1385%**, and window solar by **−0.1235%**. GHI and DNI
+were unchanged; the largest hourly DHI change was 4 Wh/m². Separate tests compare
+classic Erbs and Erbs-Driesse at identical geometry, confirming a maximum
+**0.000429 diffuse-fraction difference**, below the documented 0.0005 bound.
+
+Warm annual geometry calls on this machine took about **17 ms** for zenith and
+**224–226 ms** for preceding-hour integration, versus about 0.8 ms and 13 ms
+previously. The existing five-minute integration is retained without caching.
+
+The [portable validation summary](examples/data/pvlib_validation_2026-10-06.json)
+records wheel/source/input identities, all six cases, and runtime measurements.
+The rebuilt wheel generated byte-identical weather for the paired comparison;
+its consumer checks were also run separately. These are numerical and consumer
+regressions, not independent evidence of site-weather accuracy. GitHub-hosted CI,
+including its Linux engine and Python matrix, remains required before release.
+
 
 ## Completeness-run results
 
@@ -259,8 +301,10 @@ grid and excludes solar; exported-hour source shares are reported separately.
 Five percent is a reporting aid, not a validated acceptance threshold. Review
 source fractions and warnings before calibration or extreme-event analysis.
 Successful export establishes complete weather inputs, not local weather accuracy.
-The archived outputs predate the solar and actual-year header corrections.
-Regenerate inputs to apply the new EnergyPlus acceptance checks.
+The archived outputs predate the solar and actual-year header corrections and
+the pvlib implementation. Their counts describe the recorded source revisions.
+Regenerate inputs in a new directory to apply the current solar methods and
+EnergyPlus acceptance checks.
 
 The [portable evidence summary](examples/data/completeness_2026-10-05.json)
 includes policies, source identities, artifact hashes, warning counts and
@@ -269,10 +313,11 @@ reads it offline and records reconstruction diagnostics for new batches. The
 [recovery guide](docs/weather_recovery.rst) explains the separate earlier
 52-of-53 failed-job replay and the current run's limitations.
 
-## Corrected-source sensitivity check
+## Recorded pre-pvlib sensitivity check
 
-A fresh check on **6 October 2026**, after the solar fixes (`050d195`), rebuilt
-references and two outage cases for each selected weather-year. All **9 annual
+A recorded check on **6 October 2026**, after the solar fixes (`050d195`) and
+before the pvlib implementation, rebuilt references and two outage cases for
+each selected weather-year. All **9 annual
 EnergyPlus simulations** completed with zero warnings; paired models and
 unmasked EPW rows were identical. One fixed, illustrative 100 m² ideal-load
 building was used. Changes below are signed differences from its corrected
@@ -295,7 +340,9 @@ independently validate DNI/DHI or establish a universal donor accuracy.
 The [portable sensitivity summary](examples/data/solar_validation_2026-10-06.json)
 contains assumptions, recovery decisions, source/model hashes and validation
 checks. Notebook 08 reads its results offline alongside completeness evidence.
-The earlier frozen campaign is retained with its original source identity.
+Both evidence JSON files and all reported numbers retain their recorded source
+identities. They have not been regenerated with pvlib. The earlier frozen
+campaign is also retained with its original source identity.
 
 ## Run the weather in EnergyPlus
 

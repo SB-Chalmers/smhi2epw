@@ -10,6 +10,12 @@ Reading an existing EPW file works offline. A virtual
 environment is strongly recommended so the package and notebook tools do not
 interfere with other projects.
 
+The core installation includes ``numpy``, ``pandas``, ``requests`` and
+``pvlib>=0.16.1,<0.17``. Pip also installs pvlib's dependencies, including
+SciPy and h5py. The selected solar-position implementation uses NumPy and
+requires no optional pvlib acceleration extras. Solar geometry and EPW
+analysis work offline after installation.
+
 Create a virtual environment
 ----------------------------
 
@@ -62,6 +68,7 @@ Verify the environment
 The following commands should report a version and display CLI help::
 
    python -c "import smhi2epw; print(smhi2epw.__version__)"
+   python -c "import pvlib; print(pvlib.__version__)"
    smhi2epw --help
 
 Inside Jupyter, verify that ``import sys; print(sys.executable)`` points to the

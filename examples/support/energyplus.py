@@ -136,7 +136,9 @@ def run_energyplus(
         for _ in range(8):
             next(rows)
         year = int(next(rows)[0])
-    if len(frame) != (8784 if pd.Timestamp(year, 12, 31).is_leap_year else 8760):
+    if len(frame) != (
+        8784 if pd.Timestamp(year=year, month=12, day=31).is_leap_year else 8760
+    ):
         raise ValueError("Expected a complete EPW calendar year")
     output = Path(output_dir).resolve()
     output.mkdir(parents=True, exist_ok=False)

@@ -6,3 +6,4 @@ recursive-include examples/support *.py *.idf
 include scripts/install_energyplus.sh
 include examples/data/solar_validation_2026-10-06.json
 recursive-include tests/fixtures *.py
+include examples/data/pvlib_validation_2026-10-06.json

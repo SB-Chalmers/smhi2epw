@@ -95,8 +95,9 @@ class ReplaySession:
         self.urls = []
         self.unknown_urls = []
         self.index = pd.date_range(
-            pd.Timestamp(year, 1, 1, tz="UTC") - pd.Timedelta(days=2),
-            pd.Timestamp(year + 1, 1, 1, tz="UTC") + pd.Timedelta(days=2),
+            pd.Timestamp(year=year, month=1, day=1, tz="UTC") - pd.Timedelta(days=2),
+            pd.Timestamp(year=year + 1, month=1, day=1, tz="UTC")
+            + pd.Timedelta(days=2),
             freq="h",
         )
         self.weather = _weather(self.index, latitude, longitude)

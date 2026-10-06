@@ -44,9 +44,10 @@ source alignment, safeguards and limitations.
 Reproducibility
 ---------------
 
-Archive the configuration, package version, generated EPW, diagnostics, and
-source-access date with a simulation project. Raw payload caching improves
-repeatability, but upstream corrected archives may legitimately be revised.
+Archive the configuration, package and pvlib versions, generated EPW,
+diagnostics, and source-access date with a simulation project. Raw payload
+caching improves repeatability, but upstream corrected archives may
+legitimately be revised.
 Use ``refresh`` intentionally and record when data was re-fetched.
 
 Automatic policy writes ``OUTPUT.epw.json`` by default. Set ``provenance_path``
@@ -60,6 +61,19 @@ Receipts belong to a single compilation: reused clients and repeated URLs do
 not import unrelated earlier requests. Cached and live responses follow the
 same receipt contract. A custom client without scoped response recording is
 explicitly marked incomplete.
+
+New receipts add the top-level ``pvlib_version`` field while retaining schema
+version 1 and existing fields. Earlier receipts can lack this field; retain
+their original source hashes and study identity. Current solar calculations
+use NREL SPA ``nrel_numpy`` geometric zenith with ``delta_t=None``, ASCE
+extraterrestrial irradiance with a 1367 W/m² solar constant, and the continuous
+Erbs-Driesse fallback. See :doc:`pipeline` for the preceding-hour conventions
+and :doc:`bibliography` for the implementations.
+
+The completeness and sensitivity JSON files bundled with the examples describe
+their recorded pre-pvlib source revisions. Their counts, hashes and load
+differences remain historical evidence. Regenerate EPWs in a new directory
+when adopting pvlib and preserve the new receipt with its consumer results.
 
 EPW export and sidecar export are individually atomic. The sidecar is written
 after the validated EPW. Under automatic policy, a sidecar filesystem error

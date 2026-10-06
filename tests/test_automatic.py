@@ -69,8 +69,9 @@ class ArchiveClient:
 def _primary_frame(year=2020, offset=1):
     buffer = abs(offset) + 1
     index = pd.date_range(
-        pd.Timestamp(year, 1, 1, tz="UTC") - pd.Timedelta(hours=buffer),
-        pd.Timestamp(year + 1, 1, 1, tz="UTC") + pd.Timedelta(hours=buffer - 1),
+        pd.Timestamp(year=year, month=1, day=1, tz="UTC") - pd.Timedelta(hours=buffer),
+        pd.Timestamp(year=year + 1, month=1, day=1, tz="UTC")
+        + pd.Timedelta(hours=buffer - 1),
         freq="h",
     )
     payload = _payload(index)

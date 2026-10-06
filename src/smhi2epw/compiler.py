@@ -503,11 +503,11 @@ def compile_epw(
         import pandas as pd
 
         buffer_hours = int(abs(config.utc_offset)) + 1
-        start = pd.Timestamp(config.year, 1, 1, tz="UTC") - pd.Timedelta(
+        start = pd.Timestamp(year=config.year, month=1, day=1, tz="UTC") - pd.Timedelta(
             hours=buffer_hours
         )
         end = (
-            pd.Timestamp(config.year + 1, 1, 1, tz="UTC")
+            pd.Timestamp(year=config.year + 1, month=1, day=1, tz="UTC")
             - pd.Timedelta(hours=1)
             + pd.Timedelta(hours=buffer_hours)
         )

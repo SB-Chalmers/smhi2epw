@@ -49,8 +49,9 @@ These results compare reconstructions with the campaign's own reference weather;
 4,146 automatic comparisons are not 4,146 independent climate samples. Both
 reference and candidate used the same solar finalizer, so a shared error can
 cancel in a paired comparison. The original campaign is frozen at source commit
-5930c07, before the low-sun and historical-DNI corrections. It supports the
-reported conditional comparisons, not site-weather accuracy or national error
+5930c07, before the low-sun and historical-DNI corrections and the pvlib
+implementation. It supports the reported conditional comparisons, not
+site-weather accuracy or national error
 bounds. Regenerated references and targeted paired runs are needed when the
 solar method changes. The archived completeness evidence below is a separate
 generation check, not additional validation of sensitivity results.
@@ -131,8 +132,9 @@ reduction. See :doc:`provenance` for elevation assumptions.
 
 Reanalysis radiation already represents the preceding-hour mean and is not
 averaged again like instantaneous STRÅNG samples. Solar replacements use complete
-component groups; when only usable GHI is available, the existing Erbs method
-derives DNI/DHI. Missing direct/diffuse solar components alone do not request
+component groups; when only usable GHI is available, the continuous
+Erbs-Driesse fallback derives DNI/DHI using the interval conventions in
+:doc:`pipeline`. Missing direct/diffuse solar components alone do not request
 ERA5 when existing GHI can be decomposed. Dew point and longwave radiation are
 derived from the final meteorological inputs.
 

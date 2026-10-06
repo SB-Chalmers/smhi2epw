@@ -40,7 +40,7 @@ Notebook 08 includes an offline reading of the
 [5 October 2026 completeness summary](data/completeness_2026-10-05.json):
 32/85 historical temporal-only jobs, 124/128 with the earlier opt-in donor
 policy, and 128/128 with assessed donors plus ERA5. The first denominator differs;
-the results are not a paired weather-only comparison. All 128 current outputs
+the results are not a paired weather-only comparison. All 128 recorded outputs
 were rechecked, and all used some reconstruction. The manifest records its
 extent, source shares, warnings and receipt path for new runs.
 
@@ -64,3 +64,14 @@ sensible cooling by +3.04–6.79%; the 48-hour meteorology cases changed it by
 −0.166% to +0.102%. These paired cases used daily solar profiles and assessed
 meteorological donors, not ERA5. Their results are conditional on the chosen
 weather/model/masks and do not establish site accuracy or national error bounds.
+Both JSON summaries retain their recorded pre-pvlib source identities and
+numbers. Notebook 07 demonstrates the current SPA/ASCE/Erbs-Driesse methods;
+regenerate weather in a new directory when adopting them.
+
+The [pvlib validation summary](data/pvlib_validation_2026-10-06.json) records the
+current solar refactor separately: six paired engineering cases, an installed
+wheel with 261 passing offline checks, and successful EnergyPlus execution.
+Notebook 07 uses the current methods; notebook 09 completed 8,760 hours with no
+engine warnings. Five paired cases had identical annual loads; historical 2016
+changed heating/cooling/window solar by less than 0.14%. These fixture results
+check implementation behavior and do not establish weather accuracy.

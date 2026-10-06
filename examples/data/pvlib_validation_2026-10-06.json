@@ -1,0 +1,1183 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-06",
+  "study": "Frozen deterministic provider-to-EnergyPlus comparison: NOAA/Erbs wheel versus initial PVlib SPA/Erbs\u2013Driesse wheel",
+  "status": "complete",
+  "candidate_identity_scope": "Engine and numerical comparisons were captured from the initial PVlib wheel. The rebuilt timestamp-compatible candidate is additionally verified to produce byte-identical EPWs for all six frozen cases, binding those engine/load results to its identical weather/model inputs. Both wheel identities are recorded explicitly.",
+  "denominators": {
+    "cases_per_package": 6,
+    "annual_engine_runs_per_package": 6,
+    "validated_annual_hours_per_package": 52608,
+    "physical_provider_input_fixtures": 6,
+    "fixed_building_models_per_year": 1
+  },
+  "source_identity": {
+    "baseline": {
+      "verified_source_commit": "e9e3808",
+      "wheel_sha256": "087151b85ef8dea44aa2699ae94d2fe62f60e6a7595ab68bca035ed114cba799",
+      "package_version": "1.1.0",
+      "logical_package_payload_sha256": {
+        "smhi2epw/__init__.py": "73e660e36933b666734b6b8fddc9466736b0ebf9c8e7c46f28f69de21f5dfc25",
+        "smhi2epw/automatic.py": "9cd1a13d680ac6d784214f6031f2a180aefeaaf1b40244823950c3f7f5b41427",
+        "smhi2epw/cli.py": "1ac3fe0cb5b00947d7b05b72b4402ec08c7ea45aab6dafd0615507473b080653",
+        "smhi2epw/compiler.py": "b5c356eb5c3428690c1c0fb1e3794400a72d75b66b1f8a7ea0bd0e29f8be31d8",
+        "smhi2epw/constants.py": "9cebfb7bea73f8e34e3776ef6c5ce28d8339e2e9c5b0486ac4b362285e3d6050",
+        "smhi2epw/errors.py": "0ae8e2a115112a70da644578621abdff68901ae36adad50b6147a736c7bed6e4",
+        "smhi2epw/export.py": "cdc8af010683e021b2695493dc44d69a4da966eaedda22aa10f430cfa212c935",
+        "smhi2epw/gap_recovery.py": "e5d8912aa516af1bd4e7f7007dd6afa84a0342318716edc58183b826cfa016ef",
+        "smhi2epw/ingestion.py": "c361415248836ccf6755954e1f6bdfad607d0e1e93140d97f44e965265df4673",
+        "smhi2epw/processing.py": "14e61cf64df889c8a6595fed23caaff6847facf2e2fb0012cef9472f8e8b2108",
+        "smhi2epw/provenance.py": "0e1e7525e90fc4c068ca0b2e8beda5f9c8ca7eb5cc2d28824b157bed3ca9a238",
+        "smhi2epw/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "smhi2epw/reader.py": "f63d2270ff45dfd6be0552289c0eb15f10982bc331249d58aae5fb2967d5cbdf",
+        "smhi2epw/reanalysis.py": "241c4ca962ce209dd711386501775389aa572a2f577ee69113d421723f223440",
+        "smhi2epw/solar.py": "ba65a5c69411a502e65b045253567a00e371c8ce69d1a00be91a374260257dbc"
+      },
+      "dependencies": {
+        "numpy": "2.5.3",
+        "pandas": "3.0.6",
+        "requests": "2.34.2",
+        "pvlib": null,
+        "scipy": null
+      }
+    },
+    "candidate": {
+      "wheel_sha256": "295861a9faa9d6d06663aeb4e0517045ec74b429fdaaa71c8da4128433623de2",
+      "package_version": "1.1.0",
+      "logical_package_payload_sha256": {
+        "smhi2epw/__init__.py": "73e660e36933b666734b6b8fddc9466736b0ebf9c8e7c46f28f69de21f5dfc25",
+        "smhi2epw/automatic.py": "9cd1a13d680ac6d784214f6031f2a180aefeaaf1b40244823950c3f7f5b41427",
+        "smhi2epw/cli.py": "1ac3fe0cb5b00947d7b05b72b4402ec08c7ea45aab6dafd0615507473b080653",
+        "smhi2epw/compiler.py": "b5c356eb5c3428690c1c0fb1e3794400a72d75b66b1f8a7ea0bd0e29f8be31d8",
+        "smhi2epw/constants.py": "9cebfb7bea73f8e34e3776ef6c5ce28d8339e2e9c5b0486ac4b362285e3d6050",
+        "smhi2epw/errors.py": "0ae8e2a115112a70da644578621abdff68901ae36adad50b6147a736c7bed6e4",
+        "smhi2epw/export.py": "cdc8af010683e021b2695493dc44d69a4da966eaedda22aa10f430cfa212c935",
+        "smhi2epw/gap_recovery.py": "e5d8912aa516af1bd4e7f7007dd6afa84a0342318716edc58183b826cfa016ef",
+        "smhi2epw/ingestion.py": "c361415248836ccf6755954e1f6bdfad607d0e1e93140d97f44e965265df4673",
+        "smhi2epw/processing.py": "14e61cf64df889c8a6595fed23caaff6847facf2e2fb0012cef9472f8e8b2108",
+        "smhi2epw/provenance.py": "0ed755c291e52737d1f4cbf01cc9eb5f2411ad23bf37974293d79829575ceaba",
+        "smhi2epw/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "smhi2epw/reader.py": "f63d2270ff45dfd6be0552289c0eb15f10982bc331249d58aae5fb2967d5cbdf",
+        "smhi2epw/reanalysis.py": "241c4ca962ce209dd711386501775389aa572a2f577ee69113d421723f223440",
+        "smhi2epw/solar.py": "9d77f24055558886d7b46ac2de075a6f80e20f41acd878feaf3ebc57b8a10f22"
+      },
+      "dependencies": {
+        "numpy": "2.5.3",
+        "pandas": "3.0.6",
+        "requests": "2.34.2",
+        "pvlib": "0.16.1",
+        "scipy": "1.18.1"
+      }
+    },
+    "frozen_input_sha256": {
+      "frozen/fixtures/__init__.py": "ac15c1302f9f8b043aad25cefcb268adf660cd4f8e6fa316ebbbc924642f9228",
+      "frozen/fixtures/provider_replay.py": "4708ec885614d0a853db92814645812bda21e2b9842d958677d0f61e78defbd9",
+      "frozen/support/energyplus.py": "21c51a00c345e26446eab1efd3d33103d651f77b7b6a3e0fcfc1db1ad1979b9d",
+      "frozen/support/single_zone.idf": "7c2fce3a8554df390cbba070167a8d6501d2960cb597f39152e1d31cb09635c2"
+    },
+    "driver_sha256": "bbcb35b8af1a2364ed77086f6b3e254583eb293b1376c959c479e9c485d53b3f",
+    "engine": {
+      "build": "24.2.0-94a887817b",
+      "executable_sha256": "5e0e8246df3dada575d1597a2448409ce31ffa58778f0218d0e6cfc5e508a30e"
+    },
+    "raw_evidence_sha256": {
+      "baseline_summary": "557956793ebc7aed94aef5625f5d701e692b8009265bc03002282d1a195802e4",
+      "candidate_summary": "d3417f0aefec6a3fceea379b713cd2b7a1e3b60fdad37cee5556f42be8a04abc",
+      "comparison": "c373e27e80fb353b0f00320b8a2dcdacb6596946581b4299a65ee6a2159d8e90"
+    },
+    "rebuilt_timestamp_compatible_candidate": {
+      "wheel_sha256": "fc2c6d41542e6e40996e9e2b27205d92f9a7df33cddf25508ef675f2433e0f60",
+      "logical_package_payload_sha256": {
+        "smhi2epw/__init__.py": "73e660e36933b666734b6b8fddc9466736b0ebf9c8e7c46f28f69de21f5dfc25",
+        "smhi2epw/automatic.py": "9cd1a13d680ac6d784214f6031f2a180aefeaaf1b40244823950c3f7f5b41427",
+        "smhi2epw/cli.py": "1ac3fe0cb5b00947d7b05b72b4402ec08c7ea45aab6dafd0615507473b080653",
+        "smhi2epw/compiler.py": "f0d1cdc45c3c61179ca618bda85e6273691d08fd7fb3ad6e7cf17e096d6e3ff2",
+        "smhi2epw/constants.py": "9cebfb7bea73f8e34e3776ef6c5ce28d8339e2e9c5b0486ac4b362285e3d6050",
+        "smhi2epw/errors.py": "0ae8e2a115112a70da644578621abdff68901ae36adad50b6147a736c7bed6e4",
+        "smhi2epw/export.py": "5e430e6d2aa2257c433f82c7ca6c2c5df6cd2fe017de18d3ccc2036995c7f9be",
+        "smhi2epw/gap_recovery.py": "e5d8912aa516af1bd4e7f7007dd6afa84a0342318716edc58183b826cfa016ef",
+        "smhi2epw/ingestion.py": "c361415248836ccf6755954e1f6bdfad607d0e1e93140d97f44e965265df4673",
+        "smhi2epw/processing.py": "14e61cf64df889c8a6595fed23caaff6847facf2e2fb0012cef9472f8e8b2108",
+        "smhi2epw/provenance.py": "0ed755c291e52737d1f4cbf01cc9eb5f2411ad23bf37974293d79829575ceaba",
+        "smhi2epw/py.typed": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "smhi2epw/reader.py": "f63d2270ff45dfd6be0552289c0eb15f10982bc331249d58aae5fb2967d5cbdf",
+        "smhi2epw/reanalysis.py": "241c4ca962ce209dd711386501775389aa572a2f577ee69113d421723f223440",
+        "smhi2epw/solar.py": "9d77f24055558886d7b46ac2de075a6f80e20f41acd878feaf3ebc57b8a10f22"
+      },
+      "dependencies": {
+        "numpy": "2.5.3",
+        "pandas": "3.0.6",
+        "requests": "2.34.2",
+        "pvlib": "0.16.1",
+        "scipy": "1.18.1"
+      },
+      "equivalence_driver_sha256": "09715636fb7a147df6d218e3afbb03f7a70150c430222ee186c3f25c9f844ffc",
+      "equivalence_receipt_sha256": "0b58d8eb7ebe4c9c85b6e6e3c14b8e9ae9bafe491837d1787a863461c59ad761",
+      "prior_portable_summary_sha256": "5b3a6db7f1662a34ecdd23db4e7e6172c5c5ef912a622ec2413aa920e0fd36db",
+      "changed_package_payload_entries_vs_initial_candidate": [
+        "smhi2epw/compiler.py",
+        "smhi2epw/export.py"
+      ],
+      "unchanged_solar_and_provenance_source_payloads": true
+    }
+  },
+  "validation": {
+    "installed_package_payloads_match_named_wheels": true,
+    "identical_frozen_provider_inputs_engine_and_models": true,
+    "identical_raw_provider_response_hashes": true,
+    "complete_actual_year_hourly_engine_calendars": true,
+    "hourly_annual_energy_totals_reconciled": true,
+    "existing_temperature_interpolation_and_daylight_plateau_checks_pass": true,
+    "strict_engine_diagnostics_pass": true,
+    "total_engine_warnings_both_packages": 0,
+    "required_meteorology_identical": true,
+    "supplied_exported_ghi_and_dni_identical": true,
+    "baseline_engine_runs_reused_after_reporting_only_index_alignment_fix": true,
+    "archived_weather_studies_or_repository_sources_modified_by_this_comparison": false,
+    "rebuilt_candidate_all_six_epws_byte_identical": true,
+    "captured_engine_evidence_bound_to_rebuilt_weather_and_model_bytes": true
+  },
+  "descriptive_summary": {
+    "cases_with_identical_ghi_dni_dhi_and_all_engine_load_totals": 5,
+    "historical_2016_maximum_hourly_dhi_change_wh_m2": 4.0,
+    "historical_2016_annual_signed_change_percent": {
+      "heating_kwh": -0.11538454506383831,
+      "cooling_kwh": -0.13845233408575294,
+      "window_solar_kwh": -0.12348812921129429
+    },
+    "maximum_endpoint_zenith_change_degrees": 0.5273621499234906,
+    "interval_daylight_classification_changes_per_case": [
+      20,
+      27
+    ]
+  },
+  "annual_geometry_runtime": [
+    {
+      "year": 2023,
+      "hours": 8760,
+      "latitude": 57.7,
+      "longitude": 12.0,
+      "measurement": "Three complete annual calls after one warm-up, same machine; descriptive timings without a performance acceptance threshold",
+      "baseline": {
+        "solar_zenith": {
+          "repetitions_seconds": [
+            0.0008028749725781381,
+            0.0007929590065032244,
+            0.000813333026599139
+          ],
+          "median_seconds": 0.0008028749725781381
+        },
+        "interval_solar_geometry": {
+          "repetitions_seconds": [
+            0.01322062499821186,
+            0.013384042016696185,
+            0.013221667031757534
+          ],
+          "median_seconds": 0.013221667031757534
+        }
+      },
+      "candidate": {
+        "solar_zenith": {
+          "repetitions_seconds": [
+            0.017891665978822857,
+            0.017543875030241907,
+            0.017224000010173768
+          ],
+          "median_seconds": 0.017543875030241907
+        },
+        "interval_solar_geometry": {
+          "repetitions_seconds": [
+            0.22333412495208904,
+            0.2248832500190474,
+            0.22366575000341982
+          ],
+          "median_seconds": 0.22366575000341982
+        }
+      },
+      "median_time_ratio_candidate_over_baseline": {
+        "solar_zenith": 21.851316368607424,
+        "interval_solar_geometry": 16.916607373804688
+      }
+    },
+    {
+      "year": 2024,
+      "hours": 8784,
+      "latitude": 57.7,
+      "longitude": 12.0,
+      "measurement": "Three complete annual calls after one warm-up, same machine; descriptive timings without a performance acceptance threshold",
+      "baseline": {
+        "solar_zenith": {
+          "repetitions_seconds": [
+            0.0008081249543465674,
+            0.0008887499570846558,
+            0.0008359999628737569
+          ],
+          "median_seconds": 0.0008359999628737569
+        },
+        "interval_solar_geometry": {
+          "repetitions_seconds": [
+            0.013444167037960142,
+            0.013543874956667423,
+            0.013474999985191971
+          ],
+          "median_seconds": 0.013474999985191971
+        }
+      },
+      "candidate": {
+        "solar_zenith": {
+          "repetitions_seconds": [
+            0.01685975003056228,
+            0.01689512497978285,
+            0.01707454101415351
+          ],
+          "median_seconds": 0.01689512497978285
+        },
+        "interval_solar_geometry": {
+          "repetitions_seconds": [
+            0.2256998749799095,
+            0.2257133750244975,
+            0.22968083299929276
+          ],
+          "median_seconds": 0.2257133750244975
+        }
+      },
+      "median_time_ratio_candidate_over_baseline": {
+        "solar_zenith": 20.20948053837911,
+        "interval_solar_geometry": 16.750528777182918
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "common-primary",
+      "year": 2023,
+      "hours": 8760,
+      "scenario": "primary",
+      "latitude": 57.7,
+      "longitude": 12.0,
+      "weather_classification": {
+        "baseline": "observation_based",
+        "candidate": "observation_based"
+      },
+      "solar_source": {
+        "baseline": "strang",
+        "candidate": "strang"
+      },
+      "baseline_annual_radiation_kwh_m2": {
+        "ghi": 965.238,
+        "dni": 1638.8,
+        "dhi": 321.806,
+        "extraterrestrial_horizontal": 2177.12,
+        "extraterrestrial_direct_normal": 5990.77
+      },
+      "candidate_annual_radiation_kwh_m2": {
+        "ghi": 965.238,
+        "dni": 1638.8,
+        "dhi": 321.806,
+        "extraterrestrial_horizontal": 2176.558,
+        "extraterrestrial_direct_normal": 5989.901
+      },
+      "solar_field_changes": {
+        "ghi": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dni": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dhi": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "extraterrestrial_horizontal": {
+          "changed_values": 4452,
+          "maximum_absolute_change": 9.0,
+          "mean_absolute_change": 2.0815068493150686,
+          "signed_sum_change": -562.0
+        },
+        "extraterrestrial_direct_normal": {
+          "changed_values": 259,
+          "maximum_absolute_change": 118.0,
+          "mean_absolute_change": 3.1062785388127856,
+          "signed_sum_change": -869.0
+        }
+      },
+      "maximum_hourly_zenith_change_degrees": 0.3458992377224632,
+      "interval_daylight_classification": {
+        "changed_hours": 20,
+        "became_sunlit_hours": 10,
+        "became_dark_hours": 10,
+        "baseline_sunlit_hours": 4784,
+        "candidate_sunlit_hours": 4784
+      },
+      "annual_sensible_and_window_energy": {
+        "heating_kwh": {
+          "baseline_kwh": 3519.7050772964203,
+          "candidate_kwh": 3519.7050772964203,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        },
+        "cooling_kwh": {
+          "baseline_kwh": 1451.8105758483734,
+          "candidate_kwh": 1451.8105758483734,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        },
+        "window_solar_kwh": {
+          "baseline_kwh": 5943.374867867116,
+          "candidate_kwh": 5943.374867867116,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        }
+      },
+      "engine_hourly_changes": {
+        "direct_solar": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "diffuse_solar": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "heating_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "cooling_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "window_solar_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        }
+      },
+      "engine_warning_count": {
+        "baseline": 0,
+        "candidate": 0
+      },
+      "evidence_sha256": {
+        "baseline_weather": "26408c13e4bf2d98867080c9f91b1f8f87036c42cbba705cc97c32128f6670bf",
+        "candidate_weather": "247d44bb1718938bfda01540ee9f7c97b9352bcc60dbfc5c3e7a7f04b20c2f3f",
+        "baseline_weather_receipt": "8f288643c7e178ccf9ec71731a62d4ad1227a4918135b03794077a7c92510e35",
+        "candidate_weather_receipt": "ebb2415e1212acc8c76a49af9224e473dcdca3b7c9ef1a66bcd47730c7191fd9",
+        "fixed_model": "929c3c9c578d460da87995c251137b392e440f0c16e8235fba05387dc1a3a18c"
+      }
+    },
+    {
+      "name": "leap-primary",
+      "year": 2024,
+      "hours": 8784,
+      "scenario": "primary",
+      "latitude": 57.7,
+      "longitude": 12.0,
+      "weather_classification": {
+        "baseline": "observation_based",
+        "candidate": "observation_based"
+      },
+      "solar_source": {
+        "baseline": "strang",
+        "candidate": "strang"
+      },
+      "baseline_annual_radiation_kwh_m2": {
+        "ghi": 967.985,
+        "dni": 1644.4,
+        "dhi": 322.689,
+        "extraterrestrial_horizontal": 2183.15,
+        "extraterrestrial_direct_normal": 6007.621
+      },
+      "candidate_annual_radiation_kwh_m2": {
+        "ghi": 967.985,
+        "dni": 1644.4,
+        "dhi": 322.689,
+        "extraterrestrial_horizontal": 2177.527,
+        "extraterrestrial_direct_normal": 5998.24
+      },
+      "solar_field_changes": {
+        "ghi": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dni": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dhi": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "extraterrestrial_horizontal": {
+          "changed_values": 4531,
+          "maximum_absolute_change": 12.0,
+          "mean_absolute_change": 2.6581284153005464,
+          "signed_sum_change": -5623.0
+        },
+        "extraterrestrial_direct_normal": {
+          "changed_values": 321,
+          "maximum_absolute_change": 118.0,
+          "mean_absolute_change": 3.8216074681238617,
+          "signed_sum_change": -9381.0
+        }
+      },
+      "maximum_hourly_zenith_change_degrees": 0.5273621499234906,
+      "interval_daylight_classification": {
+        "changed_hours": 26,
+        "became_sunlit_hours": 10,
+        "became_dark_hours": 16,
+        "baseline_sunlit_hours": 4799,
+        "candidate_sunlit_hours": 4793
+      },
+      "annual_sensible_and_window_energy": {
+        "heating_kwh": {
+          "baseline_kwh": 3544.3976388381516,
+          "candidate_kwh": 3544.3976388381516,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        },
+        "cooling_kwh": {
+          "baseline_kwh": 1452.6341692700269,
+          "candidate_kwh": 1452.6341692700269,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        },
+        "window_solar_kwh": {
+          "baseline_kwh": 5964.885185223848,
+          "candidate_kwh": 5964.885185223848,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        }
+      },
+      "engine_hourly_changes": {
+        "direct_solar": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "diffuse_solar": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "heating_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "cooling_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "window_solar_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        }
+      },
+      "engine_warning_count": {
+        "baseline": 0,
+        "candidate": 0
+      },
+      "evidence_sha256": {
+        "baseline_weather": "ffe7e750d0425d712094dd781e482f8865cbb806da1ec3021639625d234e2325",
+        "candidate_weather": "1ba46ed79b46a561c991f63ea04aec4cc38fb732ce64f5ed6431b6fec9399551",
+        "baseline_weather_receipt": "ac68de195b96e63747ab06bb2b2a48a78e7b5b93e1cd962a5c126693b36eb579",
+        "candidate_weather_receipt": "5e61670f4259182f44c417424a3bccbca0c98b5b81e0bd6ecbff67f8bd0a4420",
+        "fixed_model": "f1412d5ba77f5958197cca5be4f78123bbeae9638e1a024722795288f7a9834d"
+      }
+    },
+    {
+      "name": "historical-primary",
+      "year": 2016,
+      "hours": 8784,
+      "scenario": "primary",
+      "latitude": 57.7,
+      "longitude": 12.0,
+      "weather_classification": {
+        "baseline": "observation_based",
+        "candidate": "observation_based"
+      },
+      "solar_source": {
+        "baseline": "strang",
+        "candidate": "strang"
+      },
+      "baseline_annual_radiation_kwh_m2": {
+        "ghi": 967.985,
+        "dni": 1644.4,
+        "dhi": 322.689,
+        "extraterrestrial_horizontal": 2183.15,
+        "extraterrestrial_direct_normal": 6007.621
+      },
+      "candidate_annual_radiation_kwh_m2": {
+        "ghi": 967.985,
+        "dni": 1644.4,
+        "dhi": 324.225,
+        "extraterrestrial_horizontal": 2177.528,
+        "extraterrestrial_direct_normal": 5998.022
+      },
+      "solar_field_changes": {
+        "ghi": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dni": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dhi": {
+          "changed_values": 3683,
+          "maximum_absolute_change": 4.0,
+          "mean_absolute_change": 0.6853369763205829,
+          "signed_sum_change": 1536.0
+        },
+        "extraterrestrial_horizontal": {
+          "changed_values": 4508,
+          "maximum_absolute_change": 11.0,
+          "mean_absolute_change": 2.491575591985428,
+          "signed_sum_change": -5622.0
+        },
+        "extraterrestrial_direct_normal": {
+          "changed_values": 302,
+          "maximum_absolute_change": 118.0,
+          "mean_absolute_change": 3.5873178506375227,
+          "signed_sum_change": -9599.0
+        }
+      },
+      "maximum_hourly_zenith_change_degrees": 0.5013213732652702,
+      "interval_daylight_classification": {
+        "changed_hours": 25,
+        "became_sunlit_hours": 9,
+        "became_dark_hours": 16,
+        "baseline_sunlit_hours": 4799,
+        "candidate_sunlit_hours": 4792
+      },
+      "annual_sensible_and_window_energy": {
+        "heating_kwh": {
+          "baseline_kwh": 3544.3976388381516,
+          "candidate_kwh": 3540.3079517473248,
+          "signed_change_kwh": -4.089687090826828,
+          "signed_change_percent": -0.11538454506383831
+        },
+        "cooling_kwh": {
+          "baseline_kwh": 1452.6341692700269,
+          "candidate_kwh": 1450.6229633569453,
+          "signed_change_kwh": -2.0112059130815396,
+          "signed_change_percent": -0.13845233408575294
+        },
+        "window_solar_kwh": {
+          "baseline_kwh": 5964.885185223848,
+          "candidate_kwh": 5957.519260099013,
+          "signed_change_kwh": -7.365925124834575,
+          "signed_change_percent": -0.12348812921129429
+        }
+      },
+      "engine_hourly_changes": {
+        "direct_solar": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "diffuse_solar": {
+          "changed_values": 4278,
+          "maximum_absolute_change": 4.0,
+          "mean_absolute_change": 0.6707713519530459,
+          "signed_sum_change": 1495.3333333333335
+        },
+        "heating_kwh": {
+          "changed_values": 3718,
+          "maximum_absolute_change": 0.0166916526277901,
+          "mean_absolute_change": 0.0021419086608240436,
+          "signed_sum_change": -4.0896870908264535
+        },
+        "cooling_kwh": {
+          "changed_values": 3007,
+          "maximum_absolute_change": 0.0246023878878623,
+          "mean_absolute_change": 0.0009649159126472559,
+          "signed_sum_change": -2.011205913081895
+        },
+        "window_solar_kwh": {
+          "changed_values": 4278,
+          "maximum_absolute_change": 0.06749442912650849,
+          "mean_absolute_change": 0.004279107069712463,
+          "signed_sum_change": -7.3659251248351945
+        }
+      },
+      "engine_warning_count": {
+        "baseline": 0,
+        "candidate": 0
+      },
+      "evidence_sha256": {
+        "baseline_weather": "4acdbcd61221957a8dfacb68f458f2ad9e75a5c37736253c702f946def2fcf51",
+        "candidate_weather": "59f9d3c9df434a01aff7b07fab2b35e54bd1b04bb50696fd985cbbb68d977b65",
+        "baseline_weather_receipt": "4ddedbaff05d63fc75333059df66eec04fa99f9197f9978d789fb37db318ecd5",
+        "candidate_weather_receipt": "ba24a71c6d8252078b3ad4e0601894abba86f24039dd15aff104316f5dbec93d",
+        "fixed_model": "ead17676969503538e3717fc55bd89f3fa8fb1bf92ace87f2a53ac08d23b2e26"
+      }
+    },
+    {
+      "name": "north-primary",
+      "year": 2023,
+      "hours": 8760,
+      "scenario": "primary",
+      "latitude": 65.0,
+      "longitude": 20.0,
+      "weather_classification": {
+        "baseline": "observation_based",
+        "candidate": "observation_based"
+      },
+      "solar_source": {
+        "baseline": "strang",
+        "candidate": "strang"
+      },
+      "baseline_annual_radiation_kwh_m2": {
+        "ghi": 833.011,
+        "dni": 1551.2,
+        "dhi": 277.67,
+        "extraterrestrial_horizontal": 1881.364,
+        "extraterrestrial_direct_normal": 5990.442
+      },
+      "candidate_annual_radiation_kwh_m2": {
+        "ghi": 833.011,
+        "dni": 1551.2,
+        "dhi": 277.67,
+        "extraterrestrial_horizontal": 1880.696,
+        "extraterrestrial_direct_normal": 5989.724
+      },
+      "solar_field_changes": {
+        "ghi": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dni": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dhi": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "extraterrestrial_horizontal": {
+          "changed_values": 4488,
+          "maximum_absolute_change": 9.0,
+          "mean_absolute_change": 2.2223744292237444,
+          "signed_sum_change": -668.0
+        },
+        "extraterrestrial_direct_normal": {
+          "changed_values": 391,
+          "maximum_absolute_change": 118.0,
+          "mean_absolute_change": 4.734703196347032,
+          "signed_sum_change": -718.0
+        }
+      },
+      "maximum_hourly_zenith_change_degrees": 0.3449357558010888,
+      "interval_daylight_classification": {
+        "changed_hours": 27,
+        "became_sunlit_hours": 12,
+        "became_dark_hours": 15,
+        "baseline_sunlit_hours": 4801,
+        "candidate_sunlit_hours": 4798
+      },
+      "annual_sensible_and_window_energy": {
+        "heating_kwh": {
+          "baseline_kwh": 4699.965280797725,
+          "candidate_kwh": 4699.965280797725,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        },
+        "cooling_kwh": {
+          "baseline_kwh": 1801.654235037499,
+          "candidate_kwh": 1801.654235037499,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        },
+        "window_solar_kwh": {
+          "baseline_kwh": 5379.162621953828,
+          "candidate_kwh": 5379.162621953828,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        }
+      },
+      "engine_hourly_changes": {
+        "direct_solar": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "diffuse_solar": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "heating_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "cooling_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "window_solar_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        }
+      },
+      "engine_warning_count": {
+        "baseline": 0,
+        "candidate": 0
+      },
+      "evidence_sha256": {
+        "baseline_weather": "7feebf8133df912e437b80b4a0dd2f3897bce303c9b5585bb15897d3d5254e5e",
+        "candidate_weather": "ac28a0e8f72a488e9aeb28455399df4f93b6f22a0913118250b3d0bf229c4b5c",
+        "baseline_weather_receipt": "7b16f85ed581d5ce622a1965072eb07faf74ccd90396f7e55c5bb9e4c18324a1",
+        "candidate_weather_receipt": "d4f8eaa984612c65feeb2c3fe4e0da5d74b0bd38493165cf5c0391b2142f519b",
+        "fixed_model": "929c3c9c578d460da87995c251137b392e440f0c16e8235fba05387dc1a3a18c"
+      }
+    },
+    {
+      "name": "common-reconstructed",
+      "year": 2023,
+      "hours": 8760,
+      "scenario": "reconstructed",
+      "latitude": 57.7,
+      "longitude": 12.0,
+      "weather_classification": {
+        "baseline": "mixed_reconstructed",
+        "candidate": "mixed_reconstructed"
+      },
+      "solar_source": {
+        "baseline": "strang",
+        "candidate": "strang"
+      },
+      "baseline_annual_radiation_kwh_m2": {
+        "ghi": 965.238,
+        "dni": 1638.8,
+        "dhi": 321.806,
+        "extraterrestrial_horizontal": 2177.12,
+        "extraterrestrial_direct_normal": 5990.77
+      },
+      "candidate_annual_radiation_kwh_m2": {
+        "ghi": 965.238,
+        "dni": 1638.8,
+        "dhi": 321.806,
+        "extraterrestrial_horizontal": 2176.558,
+        "extraterrestrial_direct_normal": 5989.901
+      },
+      "solar_field_changes": {
+        "ghi": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dni": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dhi": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "extraterrestrial_horizontal": {
+          "changed_values": 4452,
+          "maximum_absolute_change": 9.0,
+          "mean_absolute_change": 2.0815068493150686,
+          "signed_sum_change": -562.0
+        },
+        "extraterrestrial_direct_normal": {
+          "changed_values": 259,
+          "maximum_absolute_change": 118.0,
+          "mean_absolute_change": 3.1062785388127856,
+          "signed_sum_change": -869.0
+        }
+      },
+      "maximum_hourly_zenith_change_degrees": 0.3458992377224632,
+      "interval_daylight_classification": {
+        "changed_hours": 20,
+        "became_sunlit_hours": 10,
+        "became_dark_hours": 10,
+        "baseline_sunlit_hours": 4784,
+        "candidate_sunlit_hours": 4784
+      },
+      "annual_sensible_and_window_energy": {
+        "heating_kwh": {
+          "baseline_kwh": 3519.7152992819865,
+          "candidate_kwh": 3519.7152992819865,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        },
+        "cooling_kwh": {
+          "baseline_kwh": 1451.8105758484394,
+          "candidate_kwh": 1451.8105758484394,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        },
+        "window_solar_kwh": {
+          "baseline_kwh": 5943.374867867116,
+          "candidate_kwh": 5943.374867867116,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        }
+      },
+      "engine_hourly_changes": {
+        "direct_solar": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "diffuse_solar": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "heating_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "cooling_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "window_solar_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        }
+      },
+      "engine_warning_count": {
+        "baseline": 0,
+        "candidate": 0
+      },
+      "evidence_sha256": {
+        "baseline_weather": "69cfee2be6c31b8d48992d1400b35017f52be611ac9307118dc1cce571c3a71c",
+        "candidate_weather": "07ff79302a48e7e4c0a046e930e0cbf5b2d439f7f6b5643c6eb84a349631ef7d",
+        "baseline_weather_receipt": "a953230e97d1dc9adb08470b4d0accbf67687055b0fc0ac3c21a4f082c3e2d6d",
+        "candidate_weather_receipt": "a68807a2465c3c9003285b8e1953601ba4fa7091a6bbdb173c8375cf052d5ea6",
+        "fixed_model": "929c3c9c578d460da87995c251137b392e440f0c16e8235fba05387dc1a3a18c"
+      }
+    },
+    {
+      "name": "common-reanalysis-only",
+      "year": 2023,
+      "hours": 8760,
+      "scenario": "reanalysis_only",
+      "latitude": 57.7,
+      "longitude": 12.0,
+      "weather_classification": {
+        "baseline": "reanalysis_only",
+        "candidate": "reanalysis_only"
+      },
+      "solar_source": {
+        "baseline": "era5",
+        "candidate": "era5"
+      },
+      "baseline_annual_radiation_kwh_m2": {
+        "ghi": 965.286,
+        "dni": 1640.0,
+        "dhi": 321.727,
+        "extraterrestrial_horizontal": 2177.12,
+        "extraterrestrial_direct_normal": 5990.77
+      },
+      "candidate_annual_radiation_kwh_m2": {
+        "ghi": 965.286,
+        "dni": 1640.0,
+        "dhi": 321.727,
+        "extraterrestrial_horizontal": 2176.558,
+        "extraterrestrial_direct_normal": 5989.901
+      },
+      "solar_field_changes": {
+        "ghi": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dni": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "dhi": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "extraterrestrial_horizontal": {
+          "changed_values": 4452,
+          "maximum_absolute_change": 9.0,
+          "mean_absolute_change": 2.0815068493150686,
+          "signed_sum_change": -562.0
+        },
+        "extraterrestrial_direct_normal": {
+          "changed_values": 259,
+          "maximum_absolute_change": 118.0,
+          "mean_absolute_change": 3.1062785388127856,
+          "signed_sum_change": -869.0
+        }
+      },
+      "maximum_hourly_zenith_change_degrees": 0.3458992377224632,
+      "interval_daylight_classification": {
+        "changed_hours": 20,
+        "became_sunlit_hours": 10,
+        "became_dark_hours": 10,
+        "baseline_sunlit_hours": 4784,
+        "candidate_sunlit_hours": 4784
+      },
+      "annual_sensible_and_window_energy": {
+        "heating_kwh": {
+          "baseline_kwh": 3462.9674249503537,
+          "candidate_kwh": 3462.9674249503537,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        },
+        "cooling_kwh": {
+          "baseline_kwh": 1458.7597347390738,
+          "candidate_kwh": 1458.7597347390738,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        },
+        "window_solar_kwh": {
+          "baseline_kwh": 5997.335115272393,
+          "candidate_kwh": 5997.335115272393,
+          "signed_change_kwh": 0.0,
+          "signed_change_percent": 0.0
+        }
+      },
+      "engine_hourly_changes": {
+        "direct_solar": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "diffuse_solar": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "heating_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "cooling_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        },
+        "window_solar_kwh": {
+          "changed_values": 0,
+          "maximum_absolute_change": 0.0,
+          "mean_absolute_change": 0.0,
+          "signed_sum_change": 0.0
+        }
+      },
+      "engine_warning_count": {
+        "baseline": 0,
+        "candidate": 0
+      },
+      "evidence_sha256": {
+        "baseline_weather": "02b8157e2722d14f9c4495865b8210f488f626bb1ceb1f2873c465589b1b4e70",
+        "candidate_weather": "4a968fe529c8f3c0b82c9b9b3a7d97be6fddafba9913948926e15af068c9a7fd",
+        "baseline_weather_receipt": "1c7380dec43e3e2b4bf6bf475edb8ef40f1772220b5e61d7bd4259ae45bc0a6c",
+        "candidate_weather_receipt": "bed253771162a0db44bbfe2131fad1f677c6ff36ab113617fa35264f09955ba9",
+        "fixed_model": "929c3c9c578d460da87995c251137b392e440f0c16e8235fba05387dc1a3a18c"
+      }
+    }
+  ],
+  "reproduction": {
+    "driver": "compare.py",
+    "capture_command_template": "python compare.py run --label LABEL --wheel WHEEL",
+    "comparison_command": "python compare.py compare",
+    "import_requirement": "Use the matching installed wheel environment with PYTHONPATH unset; source-tree imports are rejected.",
+    "input_files": [
+      "frozen/fixtures/__init__.py",
+      "frozen/fixtures/provider_replay.py",
+      "frozen/support/energyplus.py",
+      "frozen/support/single_zone.idf"
+    ],
+    "engine_requirement": "EnergyPlus 24.2.0-94a887817b",
+    "network": "All provider responses are replayed offline; no weather requests can reach the network."
+  },
+  "interpretation": [
+    "The historical 2016 path derives horizontal beam from supplied STR\u00c5NG DNI before averaging. Changed solar geometry therefore changes DHI and building response there; the later cases retain supplied DNI and horizontal beam means.",
+    "Daylight-classification changes concern geometric interval horizon decisions. Exported GHI/DNI remain identical in these smooth fixtures, whose independent NOAA-style input profile includes a horizon margin.",
+    "These fixtures verify parsing, recovery, interval semantics, preservation of supplied components and clean engine consumption. They are deterministic engineering inputs, not independently observed weather or a climate sample.",
+    "The six cases predominantly supply usable direct components. This comparison does not independently validate inferred Erbs\u2013Driesse DNI/DHI against measured component observations.",
+    "Heating/cooling are delivered sensible thermal energy; window solar is transmitted radiation energy. These quantities are not HVAC electricity/fuel or calibrated real-building performance.",
+    "Runtime medians describe one environment and two years. SPA is slower than the former approximation, with annual interval calls still about 0.224\u20130.226 s in this measurement.",
+    "The actual-weather national completion replay and earlier sensitivity campaigns remain separate frozen evidence. Their results are not recalculated or replaced by this engineering regression.",
+    "The timestamp-compatible rebuilt candidate changes compiler/export constructor spellings while solar/provenance source payloads remain unchanged. All six compiled EPWs and raw provider response hashes match the initial candidate exactly; the recorded engine/load deltas therefore also describe these rebuilt-wheel weather inputs."
+  ],
+  "rebuilt_candidate_equivalence": {
+    "verified_cases": 6,
+    "additional_weather_compilations": 6,
+    "additional_energyplus_runs": 0,
+    "source_transport_fixture_unchanged": true,
+    "cases": [
+      {
+        "name": "common-primary",
+        "year": 2023,
+        "scenario": "primary",
+        "hours": 8760,
+        "epw_byte_identical_to_captured_initial_pvlib_candidate": true,
+        "identical_raw_provider_response_hashes": true,
+        "epw_sha256": "247d44bb1718938bfda01540ee9f7c97b9352bcc60dbfc5c3e7a7f04b20c2f3f",
+        "new_receipt_sha256": "56293dfe3354d30f06f22bbbee5524beaaeb801f9bbf569b10ffb4cf505a4c5b"
+      },
+      {
+        "name": "leap-primary",
+        "year": 2024,
+        "scenario": "primary",
+        "hours": 8784,
+        "epw_byte_identical_to_captured_initial_pvlib_candidate": true,
+        "identical_raw_provider_response_hashes": true,
+        "epw_sha256": "1ba46ed79b46a561c991f63ea04aec4cc38fb732ce64f5ed6431b6fec9399551",
+        "new_receipt_sha256": "e61f8dd5a166c15b570af6a72b783e00a7ec173585f08aa70a7c0314a1ecb63b"
+      },
+      {
+        "name": "historical-primary",
+        "year": 2016,
+        "scenario": "primary",
+        "hours": 8784,
+        "epw_byte_identical_to_captured_initial_pvlib_candidate": true,
+        "identical_raw_provider_response_hashes": true,
+        "epw_sha256": "59f9d3c9df434a01aff7b07fab2b35e54bd1b04bb50696fd985cbbb68d977b65",
+        "new_receipt_sha256": "96ce248a42374ebf12e997e1342029db86a82a0c2fe29fb6318feb39b4aaa0dc"
+      },
+      {
+        "name": "north-primary",
+        "year": 2023,
+        "scenario": "primary",
+        "hours": 8760,
+        "epw_byte_identical_to_captured_initial_pvlib_candidate": true,
+        "identical_raw_provider_response_hashes": true,
+        "epw_sha256": "ac28a0e8f72a488e9aeb28455399df4f93b6f22a0913118250b3d0bf229c4b5c",
+        "new_receipt_sha256": "78d7ca95bc64c6ca9b21ff09daab682c76148dd13fbff2668ebdf9a6aac9bd53"
+      },
+      {
+        "name": "common-reconstructed",
+        "year": 2023,
+        "scenario": "reconstructed",
+        "hours": 8760,
+        "epw_byte_identical_to_captured_initial_pvlib_candidate": true,
+        "identical_raw_provider_response_hashes": true,
+        "epw_sha256": "07ff79302a48e7e4c0a046e930e0cbf5b2d439f7f6b5643c6eb84a349631ef7d",
+        "new_receipt_sha256": "0060010a3e779f2d297bfdb01b7955a674ea6eb46ca7d88f5b20ddc55b575d93"
+      },
+      {
+        "name": "common-reanalysis-only",
+        "year": 2023,
+        "scenario": "reanalysis_only",
+        "hours": 8760,
+        "epw_byte_identical_to_captured_initial_pvlib_candidate": true,
+        "identical_raw_provider_response_hashes": true,
+        "epw_sha256": "4a968fe529c8f3c0b82c9b9b3a7d97be6fddafba9913948926e15af068c9a7fd",
+        "new_receipt_sha256": "6b66fd915ee77199dfc4095902b3da56ebf500b2aefcfcc9e0a2d54b75ea44c2"
+      }
+    ],
+    "engine_evidence_application": "Captured candidate engine and load results apply to the rebuilt candidate because the EPW bytes, frozen model, and pinned engine are identical. Fresh required consumer tests of the rebuilt wheel are run separately; their pass status is not asserted by this equivalence receipt.",
+    "sidecar_scope": "New sidecars record changed compiler/export source identities and different output paths. EPW-byte equivalence does not assert sidecar-byte equality."
+  },
+  "release_checks": {
+    "tested_wheel_sha256": "fc2c6d41542e6e40996e9e2b27205d92f9a7df33cddf25508ef675f2433e0f60",
+    "installed_wheel_python": "3.14.6",
+    "installed_wheel_offline_tests": {
+      "passed": 261,
+      "skipped": 0,
+      "failed": 0
+    },
+    "minimum_dependencies": {
+      "python": "3.11.13",
+      "numpy": "1.24.0",
+      "pandas": "1.5.3",
+      "requests": "2.28.0",
+      "pvlib": "0.16.1",
+      "passed": 257,
+      "skipped": 4,
+      "skip_reason": "optional notebook tools are not installed"
+    },
+    "required_energyplus_tests": {
+      "passed": 7,
+      "failed": 0,
+      "warning_count": 0
+    },
+    "notebook_07": "executed against the installed wheel by the offline suite",
+    "notebook_09": {
+      "hours": 8760,
+      "warning_count": 0,
+      "heating_kwh": 3519.705077,
+      "cooling_kwh": 1451.810576,
+      "window_solar_kwh": 5943.374868
+    },
+    "static_checks": "ruff lint/format and mypy passed",
+    "documentation": {
+      "html_warnings": 0,
+      "doctests_passed": 68,
+      "doctest_failures": 0
+    },
+    "scope": "Local validation; GitHub-hosted Linux/Python matrix remains required before release."
+  }
+}

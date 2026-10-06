@@ -93,10 +93,11 @@ reconstructed extremes, archetype qualification, or building calibration.
 Observed warning case
 ---------------------
 
-Additional live Gothenburg 2016 and 2023 files ran without warnings. The 2020
-file completed with no severe errors but produced two ``PsyPsatFnTemp`` warnings
+Recorded live checks before the pvlib implementation found no warnings for
+Gothenburg 2016 and 2023. The 2020 file completed with no severe errors but
+produced two ``PsyPsatFnTemp`` warnings
 from ``PsyTwbFnTdbWPb``, despite valid weather inputs. They persisted at twelve
-timesteps per hour. The tutorial's strict validator rejects this case.
+timesteps per hour. The tutorial's strict validator rejected that recorded file.
 
 The reported negative temperatures are internal wet-bulb trial values, not EPW
 dry-bulb values; see the `EnergyPlus psychrometric implementation

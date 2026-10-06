@@ -51,7 +51,7 @@ direct-horizontal data is requested from its 18 April 2017 availability date.
 Earlier horizontal beam is projected from instantaneous DNI before averaging.
 ERA5 radiation already describes the preceding-hour mean and is not averaged
 again. Measured GHI, when available, scales the model DNI and horizontal beam
-together; missing usable DNI uses Erbs decomposition.
+together; missing usable DNI uses the continuous Erbs-Driesse decomposition.
 
 The interval balance is
 
@@ -69,8 +69,22 @@ applies only to an inferred horizontal-to-normal division. Geometry and
 extraterrestrial caps are integrated at five-minute spacing, so a partially
 sunlit interval is retained even when its midpoint is dark. Fully dark intervals
 have zero solar radiation. Physical caps scale DNI and horizontal beam together,
-then DHI closes the horizontal balance. NOAA fractional-year geometry uses
-366 days in leap years, including UTC year-boundary buffers.
+then DHI closes the horizontal balance.
+
+Solar position uses pvlib's NREL SPA implementation with
+``method="nrel_numpy"`` and geometric (unrefracted) ``zenith``.
+``delta_t=None`` lets pvlib calculate the terrestrial-time correction from
+each UTC timestamp's year and month, including leap years and year-boundary
+buffers. Extraterrestrial irradiance uses ``get_extra_radiation`` with
+``method="asce"`` and ``solar_constant=1367`` W/m². Both strict and automatic
+weather policies use these fixed methods.
+
+The GHI-only fallback uses ``pvlib.irradiance.erbs_driesse`` with the interval
+geometry and extraterrestrial inputs. It retains the approximately five-degree
+inferred-DNI guard and assigns the remaining horizontal balance to DHI.
+The report's existing ``strang_ghi+erbs`` and ``measured+erbs`` values remain
+Erbs-family labels. Solar consistency establishes a closed component group,
+not an independent validation of the supplied radiation or inferred partition.
 
 Longwave and cloud cover
 ------------------------
@@ -93,4 +107,3 @@ replaced only after eight headers, all 35 fields, physical ranges and all
 8760/8784 rows validate. DATA PERIODS start/end dates include the actual year
 for EnergyPlus actual-weather RunPeriods. Export comments summarize recovery and attribution;
 the sidecar retains the complete warning and reconstruction record.
-

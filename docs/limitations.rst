@@ -34,8 +34,9 @@ reported alongside simulation studies:
   six building profiles. Its 4,146 automatic comparisons reuse weather across
   profiles and compare with references produced by the same solar processing.
   Small differences can therefore coexist with a shared solar error. These are
-  conditional annual-load results, not independent site-weather validation or
-  national confidence bounds. Long solar gaps and missing event peaks require
+  conditional annual-load results at the recorded pre-pvlib source revision,
+  not independent site-weather validation or national confidence bounds.
+  Long solar gaps and missing event peaks require
   separate attention; see :doc:`weather_recovery`.
 * Optional ERA5 clouds fill missing values only at hours where ERA5 replaces
   required meteorology or GHI. Cloud recovery is counted separately and is not

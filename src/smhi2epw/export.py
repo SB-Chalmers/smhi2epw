@@ -110,7 +110,7 @@ def shift_to_lst(frame: pd.DataFrame, year: int, utc_offset: float) -> pd.DataFr
 
     n_hours = expected_rows(year)
     grid = pd.date_range(
-        start=pd.Timestamp(year, 1, 1, 1, 0, 0), periods=n_hours, freq="h"
+        start=pd.Timestamp(year=year, month=1, day=1, hour=1), periods=n_hours, freq="h"
     )
     source_index = (grid - pd.Timedelta(hours=utc_offset)).tz_localize("UTC")
     missing = source_index.difference(frame_index)
@@ -487,7 +487,9 @@ def _validate_frame(frame: pd.DataFrame, year: int) -> None:
             f"row cardinality mismatch: got {len(frame)} rows, expected {expected} for year {year}"
         )
     expected_index = pd.date_range(
-        start=pd.Timestamp(year, 1, 1, 1), periods=expected, freq="h"
+        start=pd.Timestamp(year=year, month=1, day=1, hour=1),
+        periods=expected,
+        freq="h",
     )
     if not frame.index.is_unique or not frame.index.is_monotonic_increasing:
         raise ValidationError("EPW frame index must be unique and increasing")
