@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [dev, main, 'codex/**']
     tags: ["v*"]
   pull_request:
   schedule:
