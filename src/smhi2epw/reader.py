@@ -17,6 +17,8 @@ from typing import Final
 import numpy as np
 import pandas as pd
 
+from smhi2epw._logging import operation as logged_operation
+
 from .errors import ValidationError
 from .export import _validate_header
 
@@ -233,6 +235,7 @@ def _validate_read_frame(frame: pd.DataFrame) -> None:
         raise ValidationError("EPW dew point exceeds dry-bulb temperature")
 
 
+@logged_operation("weather.inspect")
 def read_epw(
     path: str | os.PathLike[str],
     *,

@@ -11,6 +11,8 @@ from __future__ import annotations
 import argparse
 import sys
 
+from smhi2epw._logging import configure_cli
+
 from .compiler import EPWConfig, compile_epw
 from .errors import Smhi2EpwError
 
@@ -34,6 +36,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="smhi2epw",
         description="Compile requested-year SMHI weather with ERA5 recovery into an EnergyPlus .epw file.",
+    )
+    parser.add_argument(
+        "--log-level",
+        choices=("OFF", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"),
+        default="INFO",
+        help="Status output on stderr",
     )
     parser.add_argument("year", type=int, help="completed target year from 1999 (AMY)")
     parser.add_argument("output", help="output .epw file path")
@@ -154,49 +162,50 @@ def main(argv=None) -> int:
     """
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.station is None and (args.latitude is None or args.longitude is None):
-        parser.error(
-            "provide --station, or both --lat and --lon for nearest-station search"
+    with configure_cli(args.log_level, "smhi2epw"):
+        if args.station is None and (args.latitude is None or args.longitude is None):
+            parser.error(
+                "provide --station, or both --lat and --lon for nearest-station search"
+            )
+        config = EPWConfig(
+            station_id=args.station,
+            weather_policy=args.weather_policy,
+            metobs_gap_fallback=args.metobs_gap_fallback,
+            gap_fallback_max_distance_km=args.gap_fallback_max_distance_km,
+            gap_fallback_max_stations=args.gap_fallback_max_stations,
+            year=args.year,
+            provenance_path=args.provenance,
+            output_path=args.output,
+            city=args.city,
+            region=args.region,
+            country=args.country,
+            utc_offset=args.utc_offset,
+            cache_dir=args.cache_dir or None,
+            max_workers=args.max_workers,
+            latitude=args.latitude,
+            longitude=args.longitude,
+            target_elevation_m=args.target_elevation_m,
+            refresh=args.refresh,
+            radiation_station_id=args.radiation_station_id,
+            radiation_station_auto=not args.no_radiation,
+            radiation_station_max_distance_km=args.radiation_station_max_distance,
         )
-    config = EPWConfig(
-        station_id=args.station,
-        weather_policy=args.weather_policy,
-        metobs_gap_fallback=args.metobs_gap_fallback,
-        gap_fallback_max_distance_km=args.gap_fallback_max_distance_km,
-        gap_fallback_max_stations=args.gap_fallback_max_stations,
-        year=args.year,
-        provenance_path=args.provenance,
-        output_path=args.output,
-        city=args.city,
-        region=args.region,
-        country=args.country,
-        utc_offset=args.utc_offset,
-        cache_dir=args.cache_dir or None,
-        max_workers=args.max_workers,
-        latitude=args.latitude,
-        longitude=args.longitude,
-        target_elevation_m=args.target_elevation_m,
-        refresh=args.refresh,
-        radiation_station_id=args.radiation_station_id,
-        radiation_station_auto=not args.no_radiation,
-        radiation_station_max_distance_km=args.radiation_station_max_distance,
-    )
-    try:
-        result = compile_epw(config)
-    except Smhi2EpwError as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-    print(
-        f"OK: {result.rows} rows -> {result.output_path} "
-        f"({result.interpolated_fraction * 100:.2f}% interpolated, "
-        f"solar={result.report.solar_source})"
-    )
-    warnings = getattr(result.report, "warnings", [])
-    classification = getattr(
-        result.report, "weather_classification", "observation_based"
-    )
-    print(f"Weather: {classification}; {len(warnings)} warning(s)")
-    return 0
+        try:
+            result = compile_epw(config)
+        except Smhi2EpwError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 1
+        print(
+            f"OK: {result.rows} rows -> {result.output_path} "
+            f"({result.interpolated_fraction * 100:.2f}% interpolated, "
+            f"solar={result.report.solar_source})"
+        )
+        warnings = getattr(result.report, "warnings", [])
+        classification = getattr(
+            result.report, "weather_classification", "observation_based"
+        )
+        print(f"Weather: {classification}; {len(warnings)} warning(s)")
+        return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
