@@ -20,6 +20,7 @@ Examples
 >>> weather = read_epw(result.output_path)  # doctest: +SKIP
 """
 
+import logging as _stdlib_logging
 from importlib.metadata import PackageNotFoundError, version
 
 from .compiler import EPWConfig, compile_epw
@@ -44,3 +45,7 @@ try:
     __version__ = version("smhi2epw")
 except PackageNotFoundError:  # pragma: no cover - source tree without installation
     __version__ = "0+unknown"
+
+# A library emits no output until its host selects handlers.
+
+_stdlib_logging.getLogger("smhi2epw").addHandler(_stdlib_logging.NullHandler())

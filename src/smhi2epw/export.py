@@ -11,7 +11,6 @@ from __future__ import annotations
 import calendar
 import csv
 import io
-import logging
 import os
 import tempfile
 from datetime import date
@@ -21,10 +20,13 @@ from typing import Any, Iterable, List
 import numpy as np
 import pandas as pd
 
+from smhi2epw._logging import context_logger
+from smhi2epw._logging import operation as logged_operation
+
 from . import constants as C
 from .errors import ValidationError
 
-log = logging.getLogger("smhi2epw")
+log = context_logger(__name__)
 
 
 def is_leap_year(year: int) -> bool:
@@ -335,6 +337,7 @@ def _row_iter(frame: pd.DataFrame) -> Iterable[str]:
         yield ",".join(fields)
 
 
+@logged_operation("weather.export")
 def write_epw(
     path: str,
     header_lines: List[str],

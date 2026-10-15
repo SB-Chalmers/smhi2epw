@@ -13,6 +13,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from smhi2epw._logging import operation as logged_operation
+
 from . import constants as C
 from . import gap_recovery as G
 from . import processing as P
@@ -159,6 +161,7 @@ def _model_overlap(
     report.reanalysis_metadata["overlap"] = comparisons
 
 
+@logged_operation("weather.recover")
 def prepare(
     frame: pd.DataFrame,
     station: StationMeta | None,

@@ -15,7 +15,6 @@ import csv
 import hashlib
 import io
 import json
-import logging
 import math
 import os
 import tempfile
@@ -31,6 +30,9 @@ import pandas as pd
 import requests
 from requests.adapters import HTTPAdapter
 
+from smhi2epw._logging import call_with_context, context_logger, current_context
+from smhi2epw._logging import operation as logged_operation
+
 try:  # urllib3 ships with requests; import defensively.
     from urllib3.util.retry import Retry
 except Exception:  # pragma: no cover
@@ -39,7 +41,7 @@ except Exception:  # pragma: no cover
 from . import constants as C
 from .errors import IngestionError
 
-log = logging.getLogger("smhi2epw")
+log = context_logger(__name__)
 
 
 # --------------------------------------------------------------------------- #
@@ -220,6 +222,7 @@ class CachedClient:
             return True
         return (time.time() - os.path.getmtime(path)) < self.cache_ttl
 
+    @logged_operation("weather.provider.request")
     def get_text(self, url: str, suffix: str = "txt") -> str:
         """Return a text response from cache or HTTP.
 
@@ -369,6 +372,7 @@ def _clean_station_name(title: object, station_id: int) -> str:
     return text or f"Station {station_id}"
 
 
+@logged_operation("weather.station.inspect")
 def get_station_metadata(
     station_id: int,
     client: CachedClient,
@@ -514,6 +518,7 @@ def _covers_year(record: Tuple[float, float, int, int], year: int) -> bool:
     return record[2] <= start_ms and record[3] >= end_ms
 
 
+@logged_operation("weather.station.select")
 def find_nearest_station(
     lat: float,
     lon: float,
@@ -764,6 +769,7 @@ def _parse_metobs_csv(
     return series
 
 
+@logged_operation("weather.provider.metobs.fetch", level=10)
 def fetch_metobs_parameter(
     station_id: int,
     param: int,
@@ -835,6 +841,7 @@ def _normalize_cloud_cover(text: str, series: pd.Series) -> pd.Series:
 # --------------------------------------------------------------------------- #
 # STRÅNG solar parsing
 # --------------------------------------------------------------------------- #
+@logged_operation("weather.provider.strang.fetch", level=10)
 def fetch_strang_parameter(
     lat: float,
     lon: float,
@@ -902,6 +909,7 @@ def fetch_strang_parameter(
 # --------------------------------------------------------------------------- #
 # Multi-threaded dual-endpoint query manager
 # --------------------------------------------------------------------------- #
+@logged_operation("weather.ingest")
 def ingest(
     meta: StationMeta,
     year: int,
@@ -985,6 +993,7 @@ def ingest(
         for param, column in C.METOBS_PARAMETERS.items():
             tasks[
                 pool.submit(
+                    call_with_context,
                     fetch_metobs_parameter,
                     meta.station_id,
                     param,
@@ -992,12 +1001,14 @@ def ingest(
                     window,
                     client,
                     accepted_quality,
+                    log_context=current_context(),
                 )
             ] = (column, param in C.METOBS_REQUIRED_PARAMETERS)
         # Optionally fetch measured GHI from a dedicated Sol (pyranometer) station.
         if radiation_station_id is not None:
             tasks[
                 pool.submit(
+                    call_with_context,
                     fetch_metobs_parameter,
                     radiation_station_id,
                     C.METOBS_RADIATION_PARAMETER,
@@ -1005,11 +1016,13 @@ def ingest(
                     window,
                     client,
                     accepted_quality,
+                    log_context=current_context(),
                 )
             ] = (C.METOBS_RADIATION_COLUMN, radiation_required)
         for param, column in strang_params.items():
             tasks[
                 pool.submit(
+                    call_with_context,
                     fetch_strang_parameter,
                     solar_lat,
                     solar_lon,
@@ -1017,6 +1030,7 @@ def ingest(
                     column,
                     window,
                     client,
+                    log_context=current_context(),
                 )
             ] = (column, True)
 

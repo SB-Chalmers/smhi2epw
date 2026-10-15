@@ -10,12 +10,14 @@ derive the weather fields, and delegates the final atomic write to
 
 from __future__ import annotations
 
-import logging
 import math
 from dataclasses import dataclass, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+
+from smhi2epw._logging import context_logger
+from smhi2epw._logging import operation as logged_operation
 
 from . import automatic, export, processing
 from . import constants as C
@@ -30,7 +32,7 @@ from .ingestion import (
     radiation_station_distance,
 )
 
-log = logging.getLogger("smhi2epw")
+log = context_logger(__name__)
 
 
 @dataclass
@@ -299,20 +301,7 @@ def _validate_config(config: EPWConfig) -> None:
         )
 
 
-def _configure_logging() -> None:
-    """Install a compact default package logger when the caller has not.
-
-    Applications that configure the ``smhi2epw`` logger themselves keep full
-    control: the helper only adds a handler when that logger has none. Calling
-    it repeatedly is consequently idempotent.
-    """
-    if not logging.getLogger("smhi2epw").handlers:
-        handler = logging.StreamHandler()
-        handler.setFormatter(logging.Formatter("[smhi2epw] %(message)s"))
-        log.addHandler(handler)
-        log.setLevel(logging.INFO)
-
-
+@logged_operation("weather.compile")
 def compile_epw(
     config: EPWConfig, client: Optional[CachedClient] = None
 ) -> CompileResult:
@@ -373,7 +362,6 @@ def compile_epw(
     smhi2epw.read_epw
         Load the generated file for analysis.
     """
-    _configure_logging()
     _validate_config(config)
 
     is_automatic = config.weather_policy == "automatic"
