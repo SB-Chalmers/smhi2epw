@@ -296,8 +296,13 @@ class ReplaySession:
 
 
 def compile_weather(
-    output_dir, year=2023, scenario="primary", latitude=57.7, longitude=12.0,
-    *, log_context=None,
+    output_dir,
+    year=2023,
+    scenario="primary",
+    latitude=57.7,
+    longitude=12.0,
+    *,
+    log_context=None,
 ) -> CompileResult:
     """Compile weather.epw and its real receipt via an offline provider session."""
     output_dir = Path(output_dir)
