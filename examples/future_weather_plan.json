@@ -1,0 +1,37 @@
+{
+  "locations": [
+    {
+      "name": "gothenburg",
+      "city": "Gothenburg",
+      "latitude": 57.7089,
+      "longitude": 11.9746
+    },
+    {
+      "name": "stockholm",
+      "city": "Stockholm",
+      "latitude": 59.3293,
+      "longitude": 18.0686
+    }
+  ],
+  "years": [2022, 2023],
+  "output_dir": "output/future-weather",
+  "compiler_options": {
+    "cache_dir": "../.smhi_cache"
+  },
+  "morphing": [
+    {
+      "fwg_jar_path": "../tools/FutureWeatherGenerator-CMIP6-Global-v5.2.0.jar",
+      "family": "ssp",
+      "scenarios": ["ssp245", "ssp585"],
+      "periods": [2050, 2080],
+      "models": ["CanESM5", "MIROC6"]
+    },
+    {
+      "fwg_jar_path": "../tools/FutureWeatherGenerator-CORDEX-CMIP5-Europe-EUR-11-v3.2.0.jar",
+      "family": "rcp",
+      "scenarios": ["rcp45", "rcp85"],
+      "periods": [2050, 2080],
+      "models": ["ICHEC_EC_EARTH_SMHI_RCA4"]
+    }
+  ]
+}

@@ -27,6 +27,7 @@ Launch from the repository root::
    notebooks/07_solar_components
    notebooks/08_batch_generation
    notebooks/09_run_energyplus
+   notebooks/10_future_weather
 
 Notebook outputs belong under ``examples/output`` and are intentionally not
 version-controlled. This keeps examples reproducible and prevents old plots or

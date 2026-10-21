@@ -29,6 +29,7 @@ EXPECTED_NOTEBOOKS = [
     "07_solar_components.ipynb",
     "08_batch_generation.ipynb",
     "09_run_energyplus.ipynb",
+    "10_future_weather.ipynb",
 ]
 
 
@@ -133,6 +134,7 @@ def test_notebook_metadata_content_and_code_syntax(name):
     [
         "06_data_quality_and_gap_filling.ipynb",
         "07_solar_components.ipynb",
+        "10_future_weather.ipynb",
     ],
 )
 def test_self_contained_offline_notebooks_execute(name, tmp_path):

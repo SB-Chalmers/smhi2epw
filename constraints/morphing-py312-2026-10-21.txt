@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 smhi2epw contributors
+# Tested runtime and pytest dependency constraints: Python 3.12.3, macOS arm64.
+# Use with pip install -c THIS_FILE -e ".[morphing,test]" from the feature checkout.
+# This is a dated constraint snapshot, not a cross-platform or build-tool lock.
+certifi==2025.10.5
+charset-normalizer==3.5.2
+colorlog==6.12.0
+et-xmlfile==2.0.0
+h5py==3.16.0
+idna==3.20
+iniconfig==2.3.1
+numpy==2.5.4
+openpyxl==3.1.5
+packaging==26.3
+pandas==3.0.6
+pluggy==1.7.0
+pvlib==0.16.1
+pyfwg==0.4.0
+pygments==2.21.0
+pytest==9.1.1
+python-dateutil==2.9.0.post0
+pytz==2026.5
+requests==2.34.2
+scipy==1.18.1
+six==1.17.0
+tzdata==2026.5
+urllib3==2.8.0

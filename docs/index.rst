@@ -26,6 +26,7 @@ analyses suitable for students and practitioners.
    quickstart
    cli
    python_api
+   morphing
    energyplus
    tutorials
 

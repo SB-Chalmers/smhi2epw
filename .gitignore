@@ -24,3 +24,9 @@ docs/_autosummary/
 *.epw
 examples/output/
 /reference/
+
+# External Future Weather Generator binaries and unfinished downloads
+*.jar
+*.JAR
+*.crdownload
+*.jar.part

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "smhi2epw"
-version = "1.2.0"
+version = "1.3.0"
 description = "Build complete-year EnergyPlus weather files from SMHI observations, with documented gap recovery."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -28,6 +28,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+morphing = ["pyfwg>=0.4.0,<0.5"]
 dev = [
     "build>=1.2",
     "mypy>=1.10",
@@ -71,6 +72,7 @@ smhi2epw = ["py.typed"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
+    "fwg: real climate morphing requiring both explicitly supplied FWG JARs and Java",
     "network: tests that require live SMHI or Open-Meteo endpoints",
     "energyplus: deterministic integration tests requiring the pinned EnergyPlus engine",
 ]

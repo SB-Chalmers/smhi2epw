@@ -1,3 +1,11 @@
+# Release 1.3.0 — batch weather and morphing
+
+Generate AMY batches across locations and years with retained artifact and
+provenance manifests. Optional SSP/RCP morphing uses the existing providers and
+Future Weather Generator integration. Source calendars remain distinct from
+future climate periods; missing tools and damaged outputs fail explicitly.
+See the [morphing guide](docs/morphing.rst) for prerequisites and scientific limits.
+
 # Release 1.2.0 — 15 October 2026
 
 Weather acquisition, station selection, cache/recovery decisions and EPW publication. Library compilation no longer configures an output handler automatically.
