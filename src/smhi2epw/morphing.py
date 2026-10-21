@@ -7,9 +7,10 @@
 # Created/modified: 2026-10-21. Changelog: Add batch climate workflow.
 """Morph existing weather with optional pyfwg and retain source provenance.
 
-FWG generates all supported scenarios and periods in one invocation. This
-adapter stages that output, validates every requested EPW, and publishes only
-the selected scenarios. The source calendar is never relabelled as a forecast.
+This adapter stages FWG output, validates every requested EPW, and publishes
+the selected scenarios. Current engines receive scenario/period selections;
+legacy engines generate their full set before filtering. The source calendar
+is never relabelled as a forecast.
 """
 
 from __future__ import annotations
@@ -48,7 +49,7 @@ class MorphConfig:
     ``family='ssp'`` requires the global JAR; ``family='rcp'`` requires the
     Europe JAR. Empty ``scenarios``, ``periods`` or ``models`` select all
     supported values. Models are combined into an ensemble by FWG. ``version``
-    overrides detection from the JAR filename (global: 3 or 4; Europe: 1 or 2).
+    overrides detection from the JAR filename (global: 3, 4 or 5; Europe: 1, 2 or 3).
     Urban heat island adjustment is disabled; other scientific settings use
     pyfwg defaults. Java must be available on PATH.
 
@@ -159,7 +160,7 @@ def _selection(config: MorphConfig) -> tuple[tuple[str, ...], tuple[int, ...]]:
         raise ValidationError("models must be a sequence of model names")
     if len(set(config.models)) != len(config.models):
         raise ValidationError("duplicate morphing models")
-    versions = ("3", "4") if config.family == "ssp" else ("1", "2")
+    versions = ("3", "4", "5") if config.family == "ssp" else ("1", "2", "3")
     match = re.search(r"v(\d+)\.", Path(config.fwg_jar_path).name)
     version = config.version or (match.group(1) if match else None)
     if version not in versions:
@@ -204,12 +205,31 @@ def _runtime(config: MorphConfig) -> ModuleType:
     except (OSError, subprocess.SubprocessError) as exc:
         raise MorphingError(f"Java is unavailable: {exc}") from exc
     backend = _load_pyfwg()
+    info = backend.get_fwg_distribution_info(config.fwg_jar_path)
     allowed = (
         backend.DEFAULT_GLOBAL_GCMS
         if config.family == "ssp"
         else backend.DEFAULT_EUROPE_RCMS
     )
-    invalid = set(config.models) - set(allowed)
+    if info:
+        expected = "global" if config.family == "ssp" else "europe"
+        if info["tool"] != expected:
+            raise ValidationError(
+                f"{config.family} requires the {expected} FWG distribution"
+            )
+        allowed = info["ensemble_models"]
+        scenarios, periods = _selection(config)
+        if set(scenarios) - set(info["scenarios"]) or set(map(str, periods)) - set(
+            info["timeframes"]
+        ):
+            raise ValidationError(
+                "requested scenarios or periods are unavailable in this FWG JAR"
+            )
+    invalid = {
+        model
+        for model in config.models
+        if model.replace("_", "-") not in {item.replace("_", "-") for item in allowed}
+    }
     if invalid:
         raise ValidationError(f"unsupported {config.family} models: {sorted(invalid)}")
     return backend
@@ -227,8 +247,8 @@ def morph_epw(
     and malformed EPWs raise :class:`MorphingError` or :class:`ValidationError`;
     pyfwg can otherwise silently return an empty or incomplete file list.
 
-    FWG runs once per input and produces all scenarios internally. Filtering
-    selects published files, rather than reducing the external computation.
+    FWG runs once per input. Current engines receive scenario/period selections;
+    legacy versions compute their full scenario set before output filtering.
     All requested outputs are checked before any are published.
 
     Parameters
@@ -289,6 +309,21 @@ def morph_epw(
             if path.exists():
                 raise ValidationError(f"refusing to overwrite morphing output: {path}")
     backend = _runtime(config)
+    version = config.version or backend.detect_fwg_version(config.fwg_jar_path)
+    is_engine = (config.family == "ssp" and version == "5") or (
+        config.family == "rcp" and version == "3"
+    )
+    distribution = backend.get_fwg_distribution_info(config.fwg_jar_path)
+    models = list(config.models) or (
+        distribution["ensemble_models"]
+        if distribution
+        else sorted(
+            backend.DEFAULT_GLOBAL_GCMS
+            if config.family == "ssp"
+            else backend.DEFAULT_EUROPE_RCMS
+        )
+    )
+    ensemble = not (is_engine and len(models) == 1)
     source_hash = file_sha256(source)
     jar_hash = file_sha256(Path(config.fwg_jar_path))
     destination.mkdir(parents=True, exist_ok=True)
@@ -311,6 +346,12 @@ def morph_epw(
                 "fwg_create_ensemble": True,
                 "fwg_version": config.version,
             }
+            if is_engine:
+                options.update(
+                    fwg_scenarios=list(scenarios),
+                    fwg_timeframes=list(periods),
+                    fwg_uncertainty_variant="CENTRAL",
+                )
             options["fwg_gcms" if config.family == "ssp" else "fwg_rcm_pairs"] = (
                 list(config.models) or None
             )
@@ -364,19 +405,14 @@ def morph_epw(
                         "family": config.family,
                         "scenario": scenario,
                         "future_period": period,
-                        "models": list(config.models)
-                        or sorted(
-                            backend.DEFAULT_GLOBAL_GCMS
-                            if config.family == "ssp"
-                            else backend.DEFAULT_EUROPE_RCMS
-                        ),
-                        "ensemble": True,
+                        "models": models,
+                        "fwg_distribution": distribution,
+                        "ensemble": ensemble,
                         "urban_heat_island": False,
                         "pyfwg_version": backend.__version__,
                         "fwg_jar_path": str(Path(config.fwg_jar_path).resolve()),
                         "fwg_jar_sha256": jar_hash,
-                        "fwg_version": config.version
-                        or backend.detect_fwg_version(config.fwg_jar_path),
+                        "fwg_version": version,
                         "note": "Climate scenario applied to source weather; not a forecast of an individual future year. Review the baseline period against FWG's reference climate.",
                     },
                 )

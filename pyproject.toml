@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-morphing = ["pyfwg>=0.3.0,<0.4"]
+morphing = ["pyfwg>=0.4.0,<0.5"]
 dev = [
     "build>=1.2",
     "mypy>=1.10",

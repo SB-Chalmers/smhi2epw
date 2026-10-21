@@ -15,12 +15,26 @@ Install the optional wrapper from a checkout of this feature branch::
 
    python -m pip install -e ".[morphing]"
 
-Morphing uses `pyfwg 0.3 <https://pyfwg.readthedocs.io/en/latest/>`_, Java on PATH,
+Morphing uses `pyfwg 0.4 <https://pyfwg.readthedocs.io/en/latest/>`_, Java on PATH,
 and a separately obtained Future Weather Generator JAR. Download the correct
 JAR using the links in the `pyfwg requirements
 <https://github.com/dsanchez-garcia/pyfwg#requirements>`_. Neither Java nor the
 JAR is bundled or automatically downloaded. Generating AMYs without morphing
 does not require these extras.
+
+The current official downloads are:
+
+* `Global 5.2.0 JAR (SSP)
+  <https://future-weather-generator.adai.pt/app_releases/FutureWeatherGenerator-CMIP6-Global-v5.2.0.jar>`_.
+* `Europe 3.2.0 JAR (RCP)
+  <https://future-weather-generator.adai.pt/app_releases/FutureWeatherGenerator-CORDEX-CMIP5-Europe-EUR-11-v3.2.0.jar>`_.
+
+These links come from the `official download page
+<https://future-weather-generator.adai.pt/download/>`_. The pyfwg GitHub
+releases contain the Python wrapper; they do not distribute the FWG JARs.
+The FWG download page identifies its license as CC BY-NC-SA 4.0. Keep the
+authors' attribution and its noncommercial terms with any downloaded tools;
+they are separate from smhi2epw's MIT software license.
 
 .. list-table:: Supported selections
    :header-rows: 1
@@ -30,19 +44,22 @@ does not require these extras.
      - Scenarios
      - Period labels
    * - ``ssp``
-     - Global FWG 3 or 4
+     - Global FWG 3, 4 or 5
      - ``ssp126``, ``ssp245``, ``ssp370``, ``ssp585``
      - ``2050``, ``2080``
    * - ``rcp``
-     - Europe FWG 1 or 2
+     - Europe FWG 1, 2 or 3
      - ``rcp26``, ``rcp45``, ``rcp85``
      - ``2050``, ``2080``
 
 Empty selections use all supported scenarios, periods or models. Models use
 pyfwg's identifiers and are combined into an ensemble. This interface does not
 produce separate files for individual models within one configuration.
-The JAR filename must contain its version, such as ``v4.0.2``; otherwise supply
-``version="4"`` in Python/JSON or ``--fwg-version 4`` on the CLI.
+With one selected model, current engines return that model's weather and pyfwg
+disables ensemble generation; the receipt records that effective setting.
+The JAR filename must contain its version, such as ``v5.2.0``; otherwise supply
+``version="5"`` in Python/JSON or ``--fwg-version 5`` on the CLI. Current
+engines also validate models and distribution family against the JAR metadata.
 
 Python workflow
 ---------------
@@ -63,13 +80,13 @@ Python workflow
        compiler_options={"cache_dir": ".smhi_cache"},
        morphing=[
            MorphConfig(
-               "tools/FutureWeatherGenerator_v4.0.2.jar",
+               "tools/FutureWeatherGenerator-CMIP6-Global-v5.2.0.jar",
                scenarios=("ssp245", "ssp585"),
                periods=(2050, 2080),
                models=("CanESM5", "MIROC6"),
            ),
            MorphConfig(
-               "tools/FutureWeatherGenerator_Europe_v2.0.2.jar",
+               "tools/FutureWeatherGenerator-CORDEX-CMIP5-Europe-EUR-11-v3.2.0.jar",
                family="rcp", scenarios=("rcp45", "rcp85"),
                periods=(2050, 2080),
                models=("ICHEC_EC_EARTH_SMHI_RCA4",),
@@ -93,7 +110,7 @@ Morph an existing AMY or TMY independently:
 
    files = morph_epw(
        "gothenburg_2023.epw", "future-weather",
-       MorphConfig("tools/FutureWeatherGenerator_v4.0.2.jar",
+       MorphConfig("tools/FutureWeatherGenerator-CMIP6-Global-v5.2.0.jar",
                    scenarios=("ssp245",), periods=(2050,)),
    )
 
@@ -113,7 +130,7 @@ Save a JSON file such as ``study.json``:
      "output_dir": "weather-study",
      "compiler_options": {"cache_dir": ".smhi_cache"},
      "morphing": [{
-       "fwg_jar_path": "tools/FutureWeatherGenerator_v4.0.2.jar",
+       "fwg_jar_path": "tools/FutureWeatherGenerator-CMIP6-Global-v5.2.0.jar",
        "scenarios": ["ssp245", "ssp585"],
        "periods": [2050, 2080],
        "models": ["CanESM5", "MIROC6"]
@@ -139,7 +156,7 @@ Python API paths resolve against the current working directory.
 Existing-file CLI morphing::
 
    smhi2epw morph gothenburg_2023.epw --output-dir future-weather \
-       --jar tools/FutureWeatherGenerator_v4.0.2.jar \
+       --jar tools/FutureWeatherGenerator-CMIP6-Global-v5.2.0.jar \
        --scenarios ssp245 ssp585 --periods 2050 2080 --models CanESM5 MIROC6
 
 For RCP use ``--family rcp`` with the Europe JAR and RCM-pair identifiers.
@@ -166,7 +183,8 @@ years, climate family, scenario, future period, ensemble models, pyfwg version,
 JAR version/hash and source receipt link/hash. FWG STAT companions are retained
 when present. Missing requested outputs and invalid EPWs fail the operation.
 All selected EPWs are validated before publishing any selected file. The
-external FWG computes all scenarios internally; selection filters saved outputs.
+current Global 5/Europe 3 engines receive scenario and period selections
+directly. Legacy engines compute all scenarios before filtering saved outputs.
 
 Morphing applies climate changes to the source year's weather sequence.
 ``2050`` and ``2080`` are climate period labels, not predictions of hourly
@@ -202,6 +220,10 @@ adapter check runs real pyfwg with a simulated Java boundary. It verifies the
 Python integration and timestamp staging; it does not verify FWG calculations.
 The :download:`dated verification record <morphing-verification.json>` records
 the tested environment, artifact identities and outstanding integration check.
+The :download:`current-engine download and verification record
+<morphing-download-verification.json>` adds pyfwg 0.4 checks and four AMYs
+generated using live provider data. The JAR downloads remain incomplete, so
+neither record establishes successful real FWG climate execution.
 
 Run ordinary offline checks with::
 
@@ -209,8 +231,8 @@ Run ordinary offline checks with::
 
 To execute the separate real-FWG gate, supply both real JAR paths::
 
-   export SMHI2EPW_GLOBAL_FWG_JAR=/absolute/path/FutureWeatherGenerator_v4.0.2.jar
-   export SMHI2EPW_EUROPE_FWG_JAR=/absolute/path/FutureWeatherGenerator_Europe_v2.0.2.jar
+   export SMHI2EPW_GLOBAL_FWG_JAR=/absolute/path/FutureWeatherGenerator-CMIP6-Global-v5.2.0.jar
+   export SMHI2EPW_EUROPE_FWG_JAR=/absolute/path/FutureWeatherGenerator-CORDEX-CMIP5-Europe-EUR-11-v3.2.0.jar
    pytest -m fwg tests/test_batch_morphing.py
 
 Selecting this gate without its prerequisites fails explicitly. It establishes

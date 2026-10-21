@@ -1,0 +1,302 @@
+{
+  "recorded_at_utc": "2026-10-21T07:49:58.097799+00:00",
+  "status": "Python integration and live AMY generation passed; real FWG execution pending incomplete JAR downloads",
+  "branch": "codex/amy-scenario-morphing",
+  "base": "origin/dev at fd21431",
+  "supersedes_environment_only": "morphing-verification.json; original dated evidence is retained",
+  "python": "3.12.3",
+  "dependencies": {
+    "pyfwg": "0.4.0",
+    "pvlib": "0.16.1",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "pytest": "9.1.1",
+    "sphinx": "9.1.1",
+    "openpyxl": "3.1.5"
+  },
+  "java": "openjdk version \"21.0.10\" 2026-01-20\nOpenJDK Runtime Environment Homebrew (build 21.0.10)\nOpenJDK 64-Bit Server VM Homebrew (build 21.0.10, mixed mode, sharing)",
+  "wheel_path": "/private/tmp/smhi2epw-current-dist/smhi2epw-1.2.0-py3-none-any.whl",
+  "wheel_sha256": "88f548c71944a8d251928f7169e494d3cc310fe41dda8a2770b78458fa6eadc1",
+  "source_files_sha256": {
+    "src/smhi2epw/__init__.py": "fa832b4708caf636a65880d9d5a7a62376638717c78668ca6881d9dd965a57db",
+    "src/smhi2epw/_logging.py": "7923be4dbc09b7408c800c22b8dad3f323038123113c7bb1ad557a9886b12f5d",
+    "src/smhi2epw/automatic.py": "da29fcbeb3a7dac9186a0c2cfdd5b474cd0580ce44e4c588da8b72572083a3d5",
+    "src/smhi2epw/batch.py": "2bef1eb1658236cb05f05b76cfed38c5907038406ca0fa913b0f99bf420738cf",
+    "src/smhi2epw/cli.py": "ace480828fd4e044d5c712c2e651607e4128dfb955b3ed0cd6cd3ec5d6b9df03",
+    "src/smhi2epw/compiler.py": "e2540c2689a4f4157d4c4b67012e3c7140abfa8caf5755fb3d60a5846ea7d202",
+    "src/smhi2epw/constants.py": "9cebfb7bea73f8e34e3776ef6c5ce28d8339e2e9c5b0486ac4b362285e3d6050",
+    "src/smhi2epw/errors.py": "0ae8e2a115112a70da644578621abdff68901ae36adad50b6147a736c7bed6e4",
+    "src/smhi2epw/export.py": "13198467d377fc1d46ba095e78d6f562e3ea5f335906c560bbcc633c374f2538",
+    "src/smhi2epw/gap_recovery.py": "e5d8912aa516af1bd4e7f7007dd6afa84a0342318716edc58183b826cfa016ef",
+    "src/smhi2epw/ingestion.py": "81c056f17b9314b467de5de40e8d72c2681bcfc0c54f0bc96c4527740a0c8734",
+    "src/smhi2epw/io.py": "97cd5dfe568d17d1e35b1ba391d998059659e49357c319bf3f5298ce85885d73",
+    "src/smhi2epw/morphing.py": "67cc7956f6cd84f1581697c3150e6cf1ea631050575252df98addf05e70873b0",
+    "src/smhi2epw/processing.py": "14e61cf64df889c8a6595fed23caaff6847facf2e2fb0012cef9472f8e8b2108",
+    "src/smhi2epw/provenance.py": "0ed755c291e52737d1f4cbf01cc9eb5f2411ad23bf37974293d79829575ceaba",
+    "src/smhi2epw/reader.py": "f8848c41e82c63c2bb9a49cb94e6fb2f232f7fd9dbbee238a1a90a7968a104de",
+    "src/smhi2epw/reanalysis.py": "241c4ca962ce209dd711386501775389aa572a2f577ee69113d421723f223440",
+    "src/smhi2epw/solar.py": "9d77f24055558886d7b46ac2de075a6f80e20f41acd878feaf3ebc57b8a10f22",
+    "src/smhi2epw/workflow_cli.py": "6f86a643e1c629acba76116ba037181a84f3e17fe57be40c81b2ce081fc6fe07"
+  },
+  "downloads": {
+    "official_page": "https://future-weather-generator.adai.pt/download/",
+    "links": {
+      "ssp": "https://future-weather-generator.adai.pt/app_releases/FutureWeatherGenerator-CMIP6-Global-v5.2.0.jar",
+      "rcp": "https://future-weather-generator.adai.pt/app_releases/FutureWeatherGenerator-CORDEX-CMIP5-Europe-EUR-11-v3.2.0.jar"
+    },
+    "github_repository": "https://github.com/dsanchez-garcia/pyfwg",
+    "github_result": "Official pyfwg repository/release assets do not contain FWG JARs; vendor distributes them separately.",
+    "scripted_download_result": "Official site responds 403 to shell requests; native browser downloads started but remain incomplete. Bitbucket downloads API returns 402 for workspace plan.",
+    "partial_files_at_recording": [
+      {
+        "family": "ssp",
+        "path": "/Users/ssanjay/Downloads/Unconfirmed 820759.crdownload",
+        "bytes": 1888206500,
+        "complete_zip": false
+      },
+      {
+        "family": "rcp",
+        "path": "/Users/ssanjay/Downloads/Unconfirmed 484796.crdownload",
+        "bytes": 134414024,
+        "complete_zip": false
+      }
+    ]
+  },
+  "checks": {
+    "installed_wheel_offline": {
+      "status": "passed",
+      "passed": 311,
+      "deselected": 14,
+      "duration_seconds": 66.16,
+      "command": "pytest tests --import-mode=importlib -q -m \"not network and not energyplus and not fwg\"",
+      "isolation": "outside checkout; installed wheel matches every source module; fresh notebook kernels",
+      "log_path": "/private/tmp/smhi2epw-current-wheel-tests.log"
+    },
+    "targeted_offline": {
+      "status": "passed",
+      "passed": 44,
+      "deselected": 2
+    },
+    "source_doctests": {
+      "status": "passed",
+      "passed": 31
+    },
+    "documentation_doctests": {
+      "status": "passed",
+      "examples": 73,
+      "failures": 0,
+      "resolved_environment_issue": "Retried with network access for remote intersphinx inventories."
+    },
+    "live_amy_batch": {
+      "status": "passed",
+      "manifest_path": "/private/tmp/smhi2epw-real-amy-baselines/manifest.json",
+      "files": [
+        {
+          "path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/gothenburg_2022.epw",
+          "sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+          "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/gothenburg_2022.epw.json",
+          "provenance_sha256": "978f3515b94847b66226caf785c144a34a35bc8316933e698ca0b8d6765e045c",
+          "rows": 8760,
+          "mean_dry_bulb_c": 9.9319,
+          "source_years": [
+            2022
+          ],
+          "warning_count": 4,
+          "weather_classification": "mixed_reconstructed",
+          "required_reconstructed_fraction": 0.0006617982656321314,
+          "source_fractions": {
+            "dry_bulb": {
+              "primary": 0.9994292237442922,
+              "temporal": 0.0005707762557077625
+            },
+            "relative_humidity": {
+              "primary": 0.9993150684931507,
+              "temporal": 0.0006849315068493151
+            },
+            "pressure": {
+              "primary": 0.9993150684931507,
+              "temporal": 0.0006849315068493151
+            },
+            "wind_speed": {
+              "primary": 0.9993150684931507,
+              "temporal": 0.0006849315068493151
+            },
+            "wind_direction": {
+              "primary": 0.9993150684931507,
+              "temporal": 0.0006849315068493151
+            },
+            "ghi": {
+              "primary": 0.9918949771689498,
+              "physical": 0.008105022831050229
+            }
+          }
+        },
+        {
+          "path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/gothenburg_2023.epw",
+          "sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+          "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/gothenburg_2023.epw.json",
+          "provenance_sha256": "0d2eae2735fb6e2270467db12c301c6d5afdc7165ca72149e4a547105336dc93",
+          "rows": 8760,
+          "mean_dry_bulb_c": 9.468,
+          "source_years": [
+            2023
+          ],
+          "warning_count": 4,
+          "weather_classification": "mixed_reconstructed",
+          "required_reconstructed_fraction": 0.00013692377909630305,
+          "source_fractions": {
+            "dry_bulb": {
+              "primary": 0.9998858447488584,
+              "temporal": 0.00011415525114155251
+            },
+            "relative_humidity": {
+              "primary": 1.0
+            },
+            "pressure": {
+              "primary": 0.9998858447488584,
+              "temporal": 0.00011415525114155251
+            },
+            "wind_speed": {
+              "primary": 0.9997716894977169,
+              "temporal": 0.00022831050228310502
+            },
+            "wind_direction": {
+              "primary": 0.9997716894977169,
+              "temporal": 0.00022831050228310502
+            },
+            "ghi": {
+              "primary": 0.992579908675799,
+              "physical": 0.007420091324200913
+            }
+          }
+        },
+        {
+          "path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/stockholm_2022.epw",
+          "sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+          "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/stockholm_2022.epw.json",
+          "provenance_sha256": "4eefc5990df1ed966fcbe2a46b5119245cd90382ceb74a49000f685763998802",
+          "rows": 8760,
+          "mean_dry_bulb_c": 8.1018,
+          "source_years": [
+            2022
+          ],
+          "warning_count": 46,
+          "weather_classification": "mixed_reconstructed",
+          "required_reconstructed_fraction": 0.008352350524874487,
+          "source_fractions": {
+            "dry_bulb": {
+              "primary": 0.9921232876712329,
+              "donor": 0.00502283105022831,
+              "temporal": 0.0028538812785388126
+            },
+            "relative_humidity": {
+              "primary": 0.9914383561643836,
+              "donor": 0.006392694063926941,
+              "temporal": 0.0021689497716894978
+            },
+            "pressure": {
+              "primary": 0.9920091324200914,
+              "donor": 0.00502283105022831,
+              "temporal": 0.0029680365296803654
+            },
+            "wind_speed": {
+              "primary": 0.991324200913242,
+              "donor": 0.006392694063926941,
+              "temporal": 0.00228310502283105
+            },
+            "wind_direction": {
+              "primary": 0.991324200913242,
+              "donor": 0.006392694063926941,
+              "temporal": 0.00228310502283105
+            },
+            "ghi": {
+              "primary": 0.9907534246575342,
+              "physical": 0.009246575342465754
+            }
+          }
+        },
+        {
+          "path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/stockholm_2023.epw",
+          "sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+          "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/stockholm_2023.epw.json",
+          "provenance_sha256": "e9791bf8cc57734b386266617e9d18042442736b674ad599bfe7a34ef43057a2",
+          "rows": 8760,
+          "mean_dry_bulb_c": 7.423,
+          "source_years": [
+            2023
+          ],
+          "warning_count": 56,
+          "weather_classification": "mixed_reconstructed",
+          "required_reconstructed_fraction": 0.01300775901414879,
+          "source_fractions": {
+            "dry_bulb": {
+              "primary": 0.9884703196347032,
+              "temporal": 0.0069634703196347035,
+              "donor": 0.0045662100456621
+            },
+            "relative_humidity": {
+              "primary": 0.9853881278538813,
+              "donor": 0.008447488584474886,
+              "temporal": 0.0061643835616438354
+            },
+            "pressure": {
+              "primary": 0.9884703196347032,
+              "temporal": 0.0069634703196347035,
+              "donor": 0.0045662100456621
+            },
+            "wind_speed": {
+              "primary": 0.9863013698630136,
+              "donor": 0.008105022831050229,
+              "temporal": 0.005593607305936073
+            },
+            "wind_direction": {
+              "primary": 0.9863013698630136,
+              "donor": 0.008105022831050229,
+              "temporal": 0.005593607305936073
+            },
+            "ghi": {
+              "primary": 0.9896118721461187,
+              "physical": 0.010388127853881279
+            }
+          }
+        }
+      ]
+    },
+    "real_fwg": {
+      "status": "not run",
+      "reason": "Neither downloaded JAR has completed; partial .crdownload files are not executable JARs.",
+      "command": "pytest -m fwg tests/test_batch_morphing.py",
+      "required_environment": [
+        "SMHI2EPW_GLOBAL_FWG_JAR",
+        "SMHI2EPW_EUROPE_FWG_JAR"
+      ]
+    },
+    "documentation_html": {
+      "status": "passed",
+      "warnings": 0
+    },
+    "static": {
+      "status": "passed",
+      "checks": [
+        "ruff check",
+        "ruff format --check",
+        "mypy: 19 source files"
+      ]
+    },
+    "packaging": {
+      "status": "passed",
+      "checks": [
+        "wheel and sdist build",
+        "twine check",
+        "pip check"
+      ]
+    }
+  },
+  "limits": [
+    "Adapter tests use real pyfwg with simulated Java, and do not verify FWG climate calculations.",
+    "The four live AMYs include reconstructed weather; consult their provenance receipts.",
+    "No real morphed weather files have been produced in this verification.",
+    "No EnergyPlus or climate accuracy validation was performed.",
+    "FWG is separately licensed CC BY-NC-SA 4.0; no JARs or climate datasets are committed."
+  ]
+}

@@ -17,7 +17,7 @@ from types import SimpleNamespace
 
 import pandas as pd
 import pytest
-from fixtures.provider_replay import ReplaySession
+from fixtures.provider_replay import ReplaySession, compile_weather
 
 from smhi2epw import (
     MorphConfig,
@@ -91,8 +91,9 @@ def _backend(source, family="ssp", missing=None, corrupt=None):
         morph_epw_europe=run,
         DEFAULT_GLOBAL_GCMS={"CanESM5"},
         DEFAULT_EUROPE_RCMS={"ICHEC_EC_EARTH_SMHI_RCA4"},
-        __version__="0.3.0",
+        __version__="0.4.0",
         detect_fwg_version=lambda _: "4",
+        get_fwg_distribution_info=lambda _: None,
     )
 
 
@@ -407,7 +408,12 @@ def test_cli_malformed_config_returns_handled_error(tmp_path, capsys):
 )
 @pytest.mark.parametrize(
     "family,version,model",
-    [("ssp", "4", "CanESM5"), ("rcp", "2", "ICHEC_EC_EARTH_SMHI_RCA4")],
+    [
+        ("ssp", "4", "CanESM5"),
+        ("rcp", "2", "ICHEC_EC_EARTH_SMHI_RCA4"),
+        ("ssp", "5", "CanESM5"),
+        ("rcp", "3", "ICHEC_EC_EARTH_SMHI_RCA4"),
+    ],
 )
 @pytest.mark.parametrize("default_models", [False, True])
 def test_real_pyfwg_api_with_simulated_java(
@@ -429,7 +435,11 @@ def test_real_pyfwg_api_with_simulated_java(
         commands.append(command)
         if command == ["java", "-version"]:
             return subprocess.CompletedProcess(command, 0, "java test", "")
-        assert "-uhi=false" in command
+        engine = (family == "ssp" and version == "5") or (
+            family == "rcp" and version == "3"
+        )
+        assert ("-g" in command) is engine
+        assert ("-uhi=false" in command) is not engine
         assert "-models=None" not in command
         output = Path(
             next(
@@ -441,6 +451,9 @@ def test_real_pyfwg_api_with_simulated_java(
         input_path = Path(
             next(arg.split("=", 1)[1] for arg in command if arg.startswith("-epw="))
         )
+        if engine:
+            output = output / "weather"
+            output.mkdir()
         for scenario in morphing.SCENARIOS[family]:
             for period in morphing.PERIODS:
                 shutil.copyfile(input_path, output / f"{scenario}_{period}.epw")
@@ -461,9 +474,46 @@ def test_real_pyfwg_api_with_simulated_java(
         ),
     )
     assert len(results) == 1 and len(commands) == 2
-    assert backend.__version__ == "0.3.0"
+    assert backend.__version__ == "0.4.0"
     assert read_epw(results[0].output_path).minute.eq(0).all()
     assert read_epw(source).minute.eq(60).all()
+
+
+@pytest.mark.parametrize(
+    "family,version,scenario", [("ssp", "5", "ssp245"), ("rcp", "3", "rcp45")]
+)
+def test_current_engine_receives_selected_scenarios_and_periods(
+    tmp_path, source, monkeypatch, family, version, scenario
+):
+    backend = _backend(source, family)
+    run = backend.morph_epw_global if family == "ssp" else backend.morph_epw_europe
+    calls = []
+
+    def capture(**options):
+        calls.append(options)
+        return run(**options)
+
+    backend.morph_epw_global = capture
+    backend.morph_epw_europe = capture
+    monkeypatch.setattr(morphing, "_runtime", lambda _: backend)
+    result = morph_epw(
+        source,
+        tmp_path / "future",
+        MorphConfig(
+            str(tmp_path / "fwg.jar"),
+            family=family,
+            scenarios=(scenario,),
+            periods=(2050,),
+            version=version,
+        ),
+    )
+    assert len(result) == 1
+    assert calls[0]["fwg_scenarios"] == [scenario]
+    assert calls[0]["fwg_timeframes"] == [2050]
+    assert calls[0]["fwg_uncertainty_variant"] == "CENTRAL"
+    receipt = json.loads(Path(result[0].provenance_path).read_text())
+    # pyfwg disables ensemble generation for a current engine with one model.
+    assert receipt["ensemble"] is False
 
 
 @pytest.mark.fwg
@@ -474,12 +524,13 @@ def test_real_pyfwg_api_with_simulated_java(
         ("rcp", "SMHI2EPW_EUROPE_FWG_JAR", "rcp45", "ICHEC_EC_EARTH_SMHI_RCA4"),
     ],
 )
-def test_real_fwg_generates_valid_weather(
-    tmp_path, source, family, variable, scenario, model
-):
+def test_real_fwg_generates_valid_weather(tmp_path, family, variable, scenario, model):
     """Require real supplied executables when this integration gate is selected."""
     jar = os.environ.get(variable)
     assert jar, f"set {variable} to a real FWG JAR before selecting the fwg gate"
+    source = Path(compile_weather(tmp_path / "baseline").output_path)
+    before = read_epw(source)
+    source_hash = morphing.file_sha256(source)
     outputs = morph_epw(
         source,
         tmp_path / "real-future",
@@ -491,6 +542,8 @@ def test_real_fwg_generates_valid_weather(
     weather = read_epw(outputs[0].output_path)
     assert len(weather) == 8760
     assert weather.dry_bulb.notna().all()
+    assert not weather.dry_bulb.equals(before.dry_bulb)
+    assert morphing.file_sha256(source) == source_hash
     assert json.loads(Path(outputs[0].provenance_path).read_text())[
         "source_calendar_years"
     ] == [2023]
