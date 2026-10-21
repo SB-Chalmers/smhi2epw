@@ -50,6 +50,16 @@ reconstructed weather in calibration or event analysis.
 
 ## Docs and examples
 
+On the development feature branch, batch generation supports multiple locations
+and source years, with optional SSP/RCP morphing through pyfwg. Install with
+`python -m pip install -e ".[morphing]"`, then use
+`smhi2epw batch examples/future_weather_plan.json --dry-run` to inspect a plan. Execution requires Java
+and the appropriate Future Weather Generator JAR. See the
+[batch and morphing guide](docs/morphing.rst) for configuration, prerequisites
+and scientific limits. The guide includes exact tested versions, repeatable
+environment setup, JAR placement, and real integration checks. External JARs
+and incomplete downloads are Git-ignored and excluded from source packages.
+
 The [online documentation](https://sb-chalmers.github.io/smhi2epw/) covers the API,
 methods, and limitations. The [notebook course](examples/README.md) covers EPW
 inspection, comparisons, heat waves, gap filling, solar components, batch runs,
@@ -91,7 +101,7 @@ files for EnergyPlus.
 
 ```bash
 python -m pip install -e ".[dev,docs,tutorials]"
-pytest -m "not network and not energyplus"
+pytest -m "not network and not energyplus and not fwg"
 ruff check src tests examples docs
 python -m sphinx -W --keep-going -b html docs docs/_build/html
 ```

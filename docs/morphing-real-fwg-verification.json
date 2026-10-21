@@ -1,0 +1,1727 @@
+{
+  "recorded_at_utc": "2026-10-21T09:05:05.781995+00:00",
+  "status": "Passed real Global SSP and Europe RCP gates, live combined batch, pinned setup recreation, and offline package checks",
+  "branch": "codex/amy-scenario-morphing",
+  "global_jar": {
+    "path": "/Users/ssanjay/Downloads/FutureWeatherGenerator-CMIP6-Global-v5.2.0 (1).jar",
+    "bytes": 3693110201,
+    "sha256": "95e00f3c2e1b87c0d13c62d5855eedc749c033e3d2e8b3df9ee5d1c0b0ee3730",
+    "source_url": "https://future-weather-generator.adai.pt/app_releases/FutureWeatherGenerator-CMIP6-Global-v5.2.0.jar",
+    "distribution": {
+      "engine_version": "1.1.0",
+      "distribution_id": "fwg-cmip6-global",
+      "name": "FWG CMIP6 Global",
+      "version": "5.2.0",
+      "tool": "global",
+      "scenario_family": "SSP",
+      "framework": "CMIP",
+      "cmip_generation": "CMIP6",
+      "domain": null,
+      "region": "Global",
+      "scenarios": [
+        "ssp126",
+        "ssp245",
+        "ssp370",
+        "ssp585"
+      ],
+      "timeframes": [
+        "2050",
+        "2080"
+      ],
+      "models": [
+        "BCC-CSM2-MR",
+        "CanESM5",
+        "CanESM5-1",
+        "CanESM5-CanOE",
+        "CAS-ESM2-0",
+        "CMCC-ESM2",
+        "CNRM-CM6-1",
+        "CNRM-CM6-1-HR",
+        "CNRM-ESM2-1",
+        "EC-Earth3",
+        "EC-Earth3-Veg",
+        "EC-Earth3-Veg-LR",
+        "FGOALS-g3",
+        "GFDL-ESM4",
+        "GISS-E2-1-G",
+        "GISS-E2-1-H",
+        "GISS-E2-2-G",
+        "IPSL-CM6A-LR",
+        "MIROC-ES2H",
+        "MIROC-ES2L",
+        "MIROC6",
+        "MRI-ESM2-0",
+        "UKESM1-0-LL"
+      ],
+      "ensemble_models": [
+        "BCC-CSM2-MR",
+        "CanESM5",
+        "CanESM5-1",
+        "CanESM5-CanOE",
+        "CAS-ESM2-0",
+        "CMCC-ESM2",
+        "CNRM-CM6-1",
+        "CNRM-CM6-1-HR",
+        "CNRM-ESM2-1",
+        "EC-Earth3",
+        "EC-Earth3-Veg",
+        "EC-Earth3-Veg-LR",
+        "FGOALS-g3",
+        "GFDL-ESM4",
+        "GISS-E2-1-G",
+        "GISS-E2-1-H",
+        "GISS-E2-2-G",
+        "IPSL-CM6A-LR",
+        "MIROC-ES2H",
+        "MIROC-ES2L",
+        "MIROC6",
+        "MRI-ESM2-0",
+        "UKESM1-0-LL"
+      ],
+      "model_details": {
+        "BCC-CSM2-MR": {
+          "display_name": "BCC-CSM2-MR",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "CanESM5": {
+          "display_name": "CanESM5",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "CanESM5-1": {
+          "display_name": "CanESM5-1",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "CanESM5-CanOE": {
+          "display_name": "CanESM5-CanOE",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "CAS-ESM2-0": {
+          "display_name": "CAS-ESM2-0",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "CMCC-ESM2": {
+          "display_name": "CMCC-ESM2",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "CNRM-CM6-1": {
+          "display_name": "CNRM-CM6-1",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "CNRM-CM6-1-HR": {
+          "display_name": "CNRM-CM6-1-HR",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "CNRM-ESM2-1": {
+          "display_name": "CNRM-ESM2-1",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "EC-Earth3": {
+          "display_name": "EC-Earth3",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "EC-Earth3-Veg": {
+          "display_name": "EC-Earth3-Veg",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "EC-Earth3-Veg-LR": {
+          "display_name": "EC-Earth3-Veg-LR",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "FGOALS-g3": {
+          "display_name": "FGOALS-g3",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "GFDL-ESM4": {
+          "display_name": "GFDL-ESM4",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "GISS-E2-1-G": {
+          "display_name": "GISS-E2-1-G",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "GISS-E2-1-H": {
+          "display_name": "GISS-E2-1-H",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "GISS-E2-2-G": {
+          "display_name": "GISS-E2-2-G",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "IPSL-CM6A-LR": {
+          "display_name": "IPSL-CM6A-LR",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "MIROC-ES2H": {
+          "display_name": "MIROC-ES2H",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "MIROC-ES2L": {
+          "display_name": "MIROC-ES2L",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "MIROC6": {
+          "display_name": "MIROC6",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "MRI-ESM2-0": {
+          "display_name": "MRI-ESM2-0",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        },
+        "UKESM1-0-LL": {
+          "display_name": "UKESM1-0-LL",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "ssp126",
+            "ssp245",
+            "ssp370",
+            "ssp585"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {}
+        }
+      }
+    }
+  },
+  "pyfwg_version": "0.4.0",
+  "integration_gate": {
+    "status": "passed",
+    "ssp_passed": 1,
+    "rcp_passed": 1,
+    "total_passed": 2,
+    "deselected": 39,
+    "duration_seconds": 50.97,
+    "log_path": "/private/tmp/smhi2epw-real-both-gates.log",
+    "command": "SMHI2EPW_GLOBAL_FWG_JAR=GLOBAL_JAR SMHI2EPW_EUROPE_FWG_JAR=EUROPE_JAR python -m pytest -m fwg tests/test_batch_morphing.py"
+  },
+  "regressions": {
+    "observed_failure": "FWG Engine 1.1 rejected DATA PERIODS dates containing actual years. It produced prefixed filenames and future-year row labels.",
+    "fix": "Only the staged DATA PERIODS dates lose their years. Match a unique scenario/period suffix and reject ambiguous products. Restore calendar labels only after record count and month/day/hour agreement. Original sources remain unchanged.",
+    "initial_failed_gate_log": "/private/tmp/smhi2epw-real-global-gate.log"
+  },
+  "limits": [
+    "Execution, file structure and calendar/provenance checks do not establish climate projection accuracy.",
+    "AMYs include reconstructed data; see original provider receipts.",
+    "FWG applies default SolarQC preprocessing before climate morphing.",
+    "Source AMY years are not used to rebase climate deltas.",
+    "No EnergyPlus test was performed for the morphed files.",
+    "Legacy FWG major versions were covered at the Python boundary, not executed with real legacy JARs."
+  ],
+  "python": "3.12.3",
+  "wheel_path": "/private/tmp/smhi2epw-fwg-final-dist/smhi2epw-1.2.0-py3-none-any.whl",
+  "wheel_sha256": "1c6a46ed3c62cba8915c9febc07a947bbe981b45ae4c96b8728c492354533d11",
+  "source_files_sha256": {
+    "src/smhi2epw/__init__.py": "fa832b4708caf636a65880d9d5a7a62376638717c78668ca6881d9dd965a57db",
+    "src/smhi2epw/_logging.py": "7923be4dbc09b7408c800c22b8dad3f323038123113c7bb1ad557a9886b12f5d",
+    "src/smhi2epw/automatic.py": "da29fcbeb3a7dac9186a0c2cfdd5b474cd0580ce44e4c588da8b72572083a3d5",
+    "src/smhi2epw/batch.py": "2bef1eb1658236cb05f05b76cfed38c5907038406ca0fa913b0f99bf420738cf",
+    "src/smhi2epw/cli.py": "ace480828fd4e044d5c712c2e651607e4128dfb955b3ed0cd6cd3ec5d6b9df03",
+    "src/smhi2epw/compiler.py": "e2540c2689a4f4157d4c4b67012e3c7140abfa8caf5755fb3d60a5846ea7d202",
+    "src/smhi2epw/constants.py": "9cebfb7bea73f8e34e3776ef6c5ce28d8339e2e9c5b0486ac4b362285e3d6050",
+    "src/smhi2epw/errors.py": "0ae8e2a115112a70da644578621abdff68901ae36adad50b6147a736c7bed6e4",
+    "src/smhi2epw/export.py": "13198467d377fc1d46ba095e78d6f562e3ea5f335906c560bbcc633c374f2538",
+    "src/smhi2epw/gap_recovery.py": "e5d8912aa516af1bd4e7f7007dd6afa84a0342318716edc58183b826cfa016ef",
+    "src/smhi2epw/ingestion.py": "81c056f17b9314b467de5de40e8d72c2681bcfc0c54f0bc96c4527740a0c8734",
+    "src/smhi2epw/io.py": "bd9dd751b9e8810869c0de1b3ea2ddd2d2905b2a2c8d32e886dc03f2a169e23f",
+    "src/smhi2epw/morphing.py": "ce2b5155f81ff0bd258e8e70e84618b346fd2fa86744e1c5f0507447f8403fb4",
+    "src/smhi2epw/processing.py": "14e61cf64df889c8a6595fed23caaff6847facf2e2fb0012cef9472f8e8b2108",
+    "src/smhi2epw/provenance.py": "0ed755c291e52737d1f4cbf01cc9eb5f2411ad23bf37974293d79829575ceaba",
+    "src/smhi2epw/reader.py": "f8848c41e82c63c2bb9a49cb94e6fb2f232f7fd9dbbee238a1a90a7968a104de",
+    "src/smhi2epw/reanalysis.py": "241c4ca962ce209dd711386501775389aa572a2f577ee69113d421723f223440",
+    "src/smhi2epw/solar.py": "9d77f24055558886d7b46ac2de075a6f80e20f41acd878feaf3ebc57b8a10f22",
+    "src/smhi2epw/workflow_cli.py": "6f86a643e1c629acba76116ba037181a84f3e17fe57be40c81b2ce081fc6fe07"
+  },
+  "checks": {
+    "installed_wheel_offline": {
+      "passed": 314,
+      "deselected": 14,
+      "duration_seconds": 68.83,
+      "log_path": "/private/tmp/smhi2epw-fwg-final-wheel-tests.log",
+      "isolation": "Wheel installed in isolated environment; fresh notebook kernels; outside source checkout"
+    },
+    "source_doctests": {
+      "passed": 31
+    },
+    "documentation_doctests": {
+      "examples": 73,
+      "failures": 0
+    },
+    "documentation_html": {
+      "status": "passed",
+      "warnings": 0
+    },
+    "static": {
+      "status": "passed",
+      "checks": [
+        "ruff check",
+        "ruff format --check",
+        "mypy: 19 source files"
+      ]
+    },
+    "packaging": {
+      "status": "passed",
+      "checks": [
+        "wheel and sdist build",
+        "twine check",
+        "pip check"
+      ],
+      "jars_in_wheel": 0,
+      "jars_in_sdist": 0,
+      "constraints_in_sdist": true,
+      "verification_records_in_sdist": true
+    },
+    "git_ignore": {
+      "status": "passed",
+      "patterns": [
+        "*.jar",
+        "*.JAR",
+        "*.crdownload",
+        "*.jar.part"
+      ],
+      "tracked_jars": 0,
+      "local_tools": "Ignored tools/*.jar symlinks reference completed Downloads binaries, without copying them into Git."
+    }
+  },
+  "europe_jar": {
+    "path": "/Users/ssanjay/Downloads/FutureWeatherGenerator-CORDEX-CMIP5-Europe-EUR-11-v3.2.0.jar",
+    "bytes": 3261433895,
+    "sha256": "e4f57adbaec0a389075daa88fbbf3914d0300d6cbef913b4c442e74a477f47c7",
+    "source_url": "https://future-weather-generator.adai.pt/app_releases/FutureWeatherGenerator-CORDEX-CMIP5-Europe-EUR-11-v3.2.0.jar",
+    "distribution": {
+      "engine_version": "1.1.0",
+      "distribution_id": "fwg-cordex-cmip5-europe-eur-11",
+      "name": "FWG CORDEX-CMIP5 Europe (EUR-11)",
+      "version": "3.2.0",
+      "tool": "europe",
+      "scenario_family": "RCP",
+      "framework": "CORDEX",
+      "cmip_generation": "CMIP5",
+      "domain": "EUR-11",
+      "region": "Europe",
+      "scenarios": [
+        "rcp26",
+        "rcp45",
+        "rcp85"
+      ],
+      "timeframes": [
+        "2050",
+        "2080"
+      ],
+      "models": [
+        "CNRM-CERFACS-CNRM-CM5-CNRM-ALADIN63",
+        "ICHEC-EC-EARTH-DMI-HIRHAM5",
+        "ICHEC-EC-EARTH-SMHI-RCA4",
+        "MOHC-HadGEM2-ES-DMI-HIRHAM5",
+        "MOHC-HadGEM2-ES-SMHI-RCA4",
+        "MPI-M-MPI-ESM-LR-SMHI-RCA4",
+        "NCC-NorESM1-M-SMHI-RCA4"
+      ],
+      "ensemble_models": [
+        "CNRM-CERFACS-CNRM-CM5-CNRM-ALADIN63",
+        "ICHEC-EC-EARTH-DMI-HIRHAM5",
+        "ICHEC-EC-EARTH-SMHI-RCA4",
+        "MOHC-HadGEM2-ES-DMI-HIRHAM5",
+        "MOHC-HadGEM2-ES-SMHI-RCA4",
+        "MPI-M-MPI-ESM-LR-SMHI-RCA4",
+        "NCC-NorESM1-M-SMHI-RCA4"
+      ],
+      "model_details": {
+        "CNRM-CERFACS-CNRM-CM5-CNRM-ALADIN63": {
+          "display_name": "CNRM-CERFACS-CNRM-CM5 / CNRM-ALADIN63",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "rcp26",
+            "rcp45",
+            "rcp85"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {
+            "drivingModel": "CNRM-CERFACS-CNRM-CM5",
+            "regionalModel": "CNRM-ALADIN63",
+            "domain": "EUR-11"
+          }
+        },
+        "ICHEC-EC-EARTH-DMI-HIRHAM5": {
+          "display_name": "ICHEC-EC-EARTH / DMI-HIRHAM5",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "rcp26",
+            "rcp45",
+            "rcp85"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {
+            "drivingModel": "ICHEC-EC-EARTH",
+            "regionalModel": "DMI-HIRHAM5",
+            "domain": "EUR-11"
+          }
+        },
+        "ICHEC-EC-EARTH-SMHI-RCA4": {
+          "display_name": "ICHEC-EC-EARTH / SMHI-RCA4",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "rcp26",
+            "rcp45",
+            "rcp85"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {
+            "drivingModel": "ICHEC-EC-EARTH",
+            "regionalModel": "SMHI-RCA4",
+            "domain": "EUR-11"
+          }
+        },
+        "MOHC-HadGEM2-ES-DMI-HIRHAM5": {
+          "display_name": "MOHC-HadGEM2-ES / DMI-HIRHAM5",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "rcp26",
+            "rcp45",
+            "rcp85"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {
+            "drivingModel": "MOHC-HadGEM2-ES",
+            "regionalModel": "DMI-HIRHAM5",
+            "domain": "EUR-11"
+          }
+        },
+        "MOHC-HadGEM2-ES-SMHI-RCA4": {
+          "display_name": "MOHC-HadGEM2-ES / SMHI-RCA4",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "rcp26",
+            "rcp45",
+            "rcp85"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {
+            "drivingModel": "MOHC-HadGEM2-ES",
+            "regionalModel": "SMHI-RCA4",
+            "domain": "EUR-11"
+          }
+        },
+        "MPI-M-MPI-ESM-LR-SMHI-RCA4": {
+          "display_name": "MPI-M-MPI-ESM-LR / SMHI-RCA4",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "rcp26",
+            "rcp45",
+            "rcp85"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {
+            "drivingModel": "MPI-M-MPI-ESM-LR",
+            "regionalModel": "SMHI-RCA4",
+            "domain": "EUR-11"
+          }
+        },
+        "NCC-NorESM1-M-SMHI-RCA4": {
+          "display_name": "NCC-NorESM1-M / SMHI-RCA4",
+          "ensemble_eligible": true,
+          "scenarios": [
+            "rcp26",
+            "rcp45",
+            "rcp85"
+          ],
+          "timeframes": [
+            "2050",
+            "2080"
+          ],
+          "components": {
+            "drivingModel": "NCC-NorESM1-M",
+            "regionalModel": "SMHI-RCA4",
+            "domain": "EUR-11"
+          }
+        }
+      }
+    }
+  },
+  "java": "openjdk version \"21.0.10\" 2026-01-20\nOpenJDK Runtime Environment Homebrew (build 21.0.10)\nOpenJDK 64-Bit Server VM Homebrew (build 21.0.10, mixed mode, sharing)",
+  "dependencies": {
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "requests": "2.34.2",
+    "pvlib": "0.16.1",
+    "pyfwg": "0.4.0",
+    "scipy": "1.18.1",
+    "h5py": "3.16.0",
+    "openpyxl": "3.1.5",
+    "pytest": "9.1.1"
+  },
+  "live_combined_batch": {
+    "amy_count": 4,
+    "future_count": 32,
+    "manifest_path": "/private/tmp/smhi2epw-real-combined-batch/manifest.json",
+    "results": [
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/ssp/gothenburg_2022_ssp245_2050.epw",
+        "scenario": "ssp245",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/ssp/gothenburg_2022_ssp245_2050.epw.json",
+        "family": "ssp",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "output_sha256": "19fb99212a3080e75e5fc65d3fc89ddc0ae424d441e900c1166388a5c736801e",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 11.986461187214612,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/ssp/gothenburg_2022_ssp245_2080.epw",
+        "scenario": "ssp245",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/ssp/gothenburg_2022_ssp245_2080.epw.json",
+        "family": "ssp",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "output_sha256": "263fbdda1a70676e6e86473a3f3728a0fa2deefacd92caf74ce64ebad6912b10",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 12.674075342465752,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/ssp/gothenburg_2022_ssp585_2050.epw",
+        "scenario": "ssp585",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/ssp/gothenburg_2022_ssp585_2050.epw.json",
+        "family": "ssp",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "output_sha256": "381f780f3b108aab25ee7cd084468e3004352d93f7d25fe3e9aca4a92ece1f2b",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 12.501369863013698,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/ssp/gothenburg_2022_ssp585_2080.epw",
+        "scenario": "ssp585",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/ssp/gothenburg_2022_ssp585_2080.epw.json",
+        "family": "ssp",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "output_sha256": "dd5598e8411cd604e40d3248913233c0cb14d3620014e196077fd99c44cd4565",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 14.39964611872146,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/rcp/gothenburg_2022_rcp45_2050.epw",
+        "scenario": "rcp45",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/rcp/gothenburg_2022_rcp45_2050.epw.json",
+        "family": "rcp",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "output_sha256": "e44b97036f57a73c155ed8c04298df33ec7c47edbb3522d737adfd433554528f",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 11.124372146118722,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/rcp/gothenburg_2022_rcp45_2080.epw",
+        "scenario": "rcp45",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/rcp/gothenburg_2022_rcp45_2080.epw.json",
+        "family": "rcp",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "output_sha256": "81f08b5a49fe5a0314fb6b96aaf4fa6cbf86e413d87c97804aa9030ba4435b1b",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 11.561700913242008,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/rcp/gothenburg_2022_rcp85_2050.epw",
+        "scenario": "rcp85",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/rcp/gothenburg_2022_rcp85_2050.epw.json",
+        "family": "rcp",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "output_sha256": "2face1f161852c5ec187069ec394c2551f805f7ddc2b0501cc1c042830699104",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 11.66343607305936,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/rcp/gothenburg_2022_rcp85_2080.epw",
+        "scenario": "rcp85",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/future/rcp/gothenburg_2022_rcp85_2080.epw.json",
+        "family": "rcp",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "output_sha256": "c8fce8c3d155528c2bda43337c80fd2a0ab682d9dfed441efee976bf98600847",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 12.939075342465753,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/ssp/gothenburg_2023_ssp245_2050.epw",
+        "scenario": "ssp245",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/ssp/gothenburg_2023_ssp245_2050.epw.json",
+        "family": "ssp",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "output_sha256": "ff30b03ac7e34e35101df2a3a769808b7be78d37809862ce668342dbbfb5e98d",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 11.522933789954337,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/ssp/gothenburg_2023_ssp245_2080.epw",
+        "scenario": "ssp245",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/ssp/gothenburg_2023_ssp245_2080.epw.json",
+        "family": "ssp",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "output_sha256": "898ba5857f24ad00ccdd243eccdbd36e248ab1572c671aead9148c7d1e444897",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 12.20892694063927,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/ssp/gothenburg_2023_ssp585_2050.epw",
+        "scenario": "ssp585",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/ssp/gothenburg_2023_ssp585_2050.epw.json",
+        "family": "ssp",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "output_sha256": "518a252357f8b2179841f8474227b8269539530d546c296f96eaf432ea7c4404",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 12.037888127853881,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/ssp/gothenburg_2023_ssp585_2080.epw",
+        "scenario": "ssp585",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/ssp/gothenburg_2023_ssp585_2080.epw.json",
+        "family": "ssp",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "output_sha256": "858a32d5b22a2a5b971185ca0236f24dcb55f61b5d405032e2cfdddcee44927f",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 13.936392694063928,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/rcp/gothenburg_2023_rcp45_2050.epw",
+        "scenario": "rcp45",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/rcp/gothenburg_2023_rcp45_2050.epw.json",
+        "family": "rcp",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "output_sha256": "b5602b720b421eb8388b750043e37de79964e0575f066bfc5f082ffe09389eaf",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 10.658287671232877,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/rcp/gothenburg_2023_rcp45_2080.epw",
+        "scenario": "rcp45",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/rcp/gothenburg_2023_rcp45_2080.epw.json",
+        "family": "rcp",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "output_sha256": "29414297fda07ad4264dfa66156b090c1f6da0ab6baa892e6c65ca9318295522",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 11.095844748858449,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/rcp/gothenburg_2023_rcp85_2050.epw",
+        "scenario": "rcp85",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/rcp/gothenburg_2023_rcp85_2050.epw.json",
+        "family": "rcp",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "output_sha256": "ae17fe8134ec241a025122937f789bd36eb3d889b07491583e4a9f3093bf736c",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 11.196495433789956,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/rcp/gothenburg_2023_rcp85_2080.epw",
+        "scenario": "rcp85",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/future/rcp/gothenburg_2023_rcp85_2080.epw.json",
+        "family": "rcp",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "output_sha256": "8657821918262d0f9d5e0e1180291a790e2f1fa894ee0a4a211568914289b185",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 12.471621004566211,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/ssp/stockholm_2022_ssp245_2050.epw",
+        "scenario": "ssp245",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/ssp/stockholm_2022_ssp245_2050.epw.json",
+        "family": "ssp",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "output_sha256": "ae82f457ace988362cb3c2ca07f344e8533c530c7f63a4c9395a6416b2af6b2d",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 10.370787671232877,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/ssp/stockholm_2022_ssp245_2080.epw",
+        "scenario": "ssp245",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/ssp/stockholm_2022_ssp245_2080.epw.json",
+        "family": "ssp",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "output_sha256": "d960910cd15f5c26399eeb332f14a0a210aab3fe90c0a278b56bc6725b961806",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 11.205913242009133,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/ssp/stockholm_2022_ssp585_2050.epw",
+        "scenario": "ssp585",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/ssp/stockholm_2022_ssp585_2050.epw.json",
+        "family": "ssp",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "output_sha256": "45a8adecb34df57cbf87e02e30acb2dbde57fe19496b570c8557043d571f3816",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 10.864360730593608,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/ssp/stockholm_2022_ssp585_2080.epw",
+        "scenario": "ssp585",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/ssp/stockholm_2022_ssp585_2080.epw.json",
+        "family": "ssp",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "output_sha256": "dcd72071ce3d1ea1acfa929e10ef7089c48f4394117595c46b99f64e70d398f2",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 12.881004566210047,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/rcp/stockholm_2022_rcp45_2050.epw",
+        "scenario": "rcp45",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/rcp/stockholm_2022_rcp45_2050.epw.json",
+        "family": "rcp",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "output_sha256": "7568f4ed5d574bfa25dda4c4f9b169a5423f5fc4d58aa24741fff296a5b610d0",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 9.612933789954337,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/rcp/stockholm_2022_rcp45_2080.epw",
+        "scenario": "rcp45",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/rcp/stockholm_2022_rcp45_2080.epw.json",
+        "family": "rcp",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "output_sha256": "a78a4eca634680fa4d1308dbbc738f07d1ed48bc492abb280b15f6c019a49770",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 10.08585616438356,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/rcp/stockholm_2022_rcp85_2050.epw",
+        "scenario": "rcp85",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/rcp/stockholm_2022_rcp85_2050.epw.json",
+        "family": "rcp",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "output_sha256": "15a6859f1b2e00afd969a85717abd7d54c48fbc03e9ecad23ca7b587b6d90bf5",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 10.277488584474886,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/rcp/stockholm_2022_rcp85_2080.epw",
+        "scenario": "rcp85",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/future/rcp/stockholm_2022_rcp85_2080.epw.json",
+        "family": "rcp",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "output_sha256": "442736786ce91e206b0ac81bd3b73703d4109064ec82c09df2bb6f93b38c531c",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 11.614189497716895,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/ssp/stockholm_2023_ssp245_2050.epw",
+        "scenario": "ssp245",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/ssp/stockholm_2023_ssp245_2050.epw.json",
+        "family": "ssp",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "output_sha256": "3966aeb18cc694cd0d6db5a355af84c54d9476ef78cb381e303076341065b2b5",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 9.69095890410959,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/ssp/stockholm_2023_ssp245_2080.epw",
+        "scenario": "ssp245",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/ssp/stockholm_2023_ssp245_2080.epw.json",
+        "family": "ssp",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "output_sha256": "a53f87980dcdb6d78bbe5bb57d0485bd2023d0caed5ac8f9812ebf96aefe4005",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 10.525753424657536,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/ssp/stockholm_2023_ssp585_2050.epw",
+        "scenario": "ssp585",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/ssp/stockholm_2023_ssp585_2050.epw.json",
+        "family": "ssp",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "output_sha256": "8b923606a79107cefe81a19453e0970b1267535fad87f6539034ffdca546e9f0",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 10.185148401826483,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/ssp/stockholm_2023_ssp585_2080.epw",
+        "scenario": "ssp585",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/ssp/stockholm_2023_ssp585_2080.epw.json",
+        "family": "ssp",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "output_sha256": "674098431802f7471e8612fb59ae5136ef2cf9d2bae0a98c15fd07af90b36389",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 12.199965753424657,
+        "calendar_preserved": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/rcp/stockholm_2023_rcp45_2050.epw",
+        "scenario": "rcp45",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/rcp/stockholm_2023_rcp45_2050.epw.json",
+        "family": "rcp",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "output_sha256": "11e809dd7006ec0e0a39eea9cc9e32f1356d0666273f033814085c254fa6e458",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 8.932317351598172,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/rcp/stockholm_2023_rcp45_2080.epw",
+        "scenario": "rcp45",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/rcp/stockholm_2023_rcp45_2080.epw.json",
+        "family": "rcp",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "output_sha256": "e643fc45e98bcf6700b137afed28efb819e3846f45cf403c8402eeb4e56af783",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 9.404543378995433,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/rcp/stockholm_2023_rcp85_2050.epw",
+        "scenario": "rcp85",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/rcp/stockholm_2023_rcp85_2050.epw.json",
+        "family": "rcp",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "output_sha256": "656e8dabed89364552b2e7ee6dae881d610ecef6d710ac80c1502cda3b6b78a7",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 9.595559360730592,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      },
+      {
+        "source_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/rcp/stockholm_2023_rcp85_2080.epw",
+        "scenario": "rcp85",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/future/rcp/stockholm_2023_rcp85_2080.epw.json",
+        "family": "rcp",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "output_sha256": "7ba3b2c1c75bc4db7a5c7509a10f5b12bfa4579202b1135a7f472aa0f8437ba6",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 10.9324200913242,
+        "calendar_preserved": true,
+        "models": [
+          "ICHEC_EC_EARTH_SMHI_RCA4",
+          "MPI_M_MPI_ESM_LR_SMHI_RCA4"
+        ],
+        "ensemble": true
+      }
+    ],
+    "verification_path": "/private/tmp/smhi2epw-real-combined-batch/verification.json",
+    "verification_sha256": "e50b3cd5d491cd7cb19d743feb179d911727357ea83ae5d81a7ef5e471c891ac",
+    "manifest_sha256": "6fad287f67ba2e932ddfc38984bb964e55fe336ed674470f8055001ffe95009f",
+    "log_path": "/private/tmp/smhi2epw-real-combined-batch.log",
+    "source_years": [
+      2022,
+      2023
+    ],
+    "locations": [
+      "gothenburg",
+      "stockholm"
+    ],
+    "ssp_count": 16,
+    "rcp_count": 16,
+    "status": "completed",
+    "baseline_files": [
+      {
+        "path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/gothenburg_2022.epw",
+        "sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2022/gothenburg_2022.epw.json",
+        "provenance_sha256": "071b424c7b822b35a8fdceb9555b7a52c99ef4819cfb5b85ee41ee4a8f970f44",
+        "weather_classification": "mixed_reconstructed",
+        "warning_count": 4
+      },
+      {
+        "path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/gothenburg_2023.epw",
+        "sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/gothenburg/2023/gothenburg_2023.epw.json",
+        "provenance_sha256": "5d97bf97c16aadec26a6be56803575aff136a00e17426b2a3f77e6a3def0265b",
+        "weather_classification": "mixed_reconstructed",
+        "warning_count": 4
+      },
+      {
+        "path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/stockholm_2022.epw",
+        "sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2022/stockholm_2022.epw.json",
+        "provenance_sha256": "6fc8d1e8991c8b59bc84dcda7f047007e7b45e538aa7863fe041940bfb6d2f0d",
+        "weather_classification": "mixed_reconstructed",
+        "warning_count": 46
+      },
+      {
+        "path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/stockholm_2023.epw",
+        "sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "provenance_path": "/private/tmp/smhi2epw-real-combined-batch/stockholm/2023/stockholm_2023.epw.json",
+        "provenance_sha256": "61b8ddfb9c026b6869b0b57c5ff63155a09e7cea43264657b1b356ad833bd425",
+        "weather_classification": "mixed_reconstructed",
+        "warning_count": 56
+      }
+    ]
+  },
+  "setup_recreation": {
+    "status": "passed",
+    "python": "3.12.3",
+    "constraints_path": "constraints/morphing-py312-2026-10-21.txt",
+    "constraints_sha256": "d1a986465bec9b33c12156a2326e7d3432b95a55af51510420fa781c72edeaa5",
+    "pinned_distributions": 23,
+    "command": "python3.12 -m venv .venv; .venv/bin/python -m pip install -c constraints/morphing-py312-2026-10-21.txt -e \".[morphing,test]\"",
+    "checks": [
+      "Fresh empty virtual environment installation",
+      "pip check: no broken requirements",
+      "All 23 installed dependency versions match the dated constraints",
+      "CLI preview: four AMYs and 32 future EPWs"
+    ],
+    "install_log_path": "/private/tmp/smhi2epw-recreate-install.log",
+    "limits": "macOS arm64, Python 3.12.3 runtime/test constraints; not a cross-platform or build-tool lock"
+  },
+  "setup_files_sha256": {
+    ".gitignore": "5d48c0f5bbf143094b7f643e9afb2491e5078d9377ce42e9dd5ab22e6caf1cf0",
+    "MANIFEST.in": "71af4c362733c89f346146bc9a7662f8663966575403081697f753653fe6f3db",
+    "README.md": "950de932ccb67d25e68b31839d72a7f3578819d726db17a23af8d7eb3f2ca858",
+    "docs/morphing.rst": "d6960be6a7387ed51920ce978bee53b3b38ed9eadab6f7bf7dc35289b96a9bda",
+    "constraints/morphing-py312-2026-10-21.txt": "d1a986465bec9b33c12156a2326e7d3432b95a55af51510420fa781c72edeaa5"
+  },
+  "initial_ssp_campaign": {
+    "ssp_results": [
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/gothenburg_2022.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/future/ssp/gothenburg_2022_ssp245_2050.epw",
+        "scenario": "ssp245",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/future/ssp/gothenburg_2022_ssp245_2050.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 11.986461187214612,
+        "calendar_preserved": true,
+        "output_sha256": "19fb99212a3080e75e5fc65d3fc89ddc0ae424d441e900c1166388a5c736801e",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "fwg_output_name": "SWE_SE_Gothenburg_Ensemble_ssp245_2050.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/gothenburg_2022.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/future/ssp/gothenburg_2022_ssp245_2080.epw",
+        "scenario": "ssp245",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/future/ssp/gothenburg_2022_ssp245_2080.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 12.674075342465752,
+        "calendar_preserved": true,
+        "output_sha256": "263fbdda1a70676e6e86473a3f3728a0fa2deefacd92caf74ce64ebad6912b10",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "fwg_output_name": "SWE_SE_Gothenburg_Ensemble_ssp245_2080.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/gothenburg_2022.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/future/ssp/gothenburg_2022_ssp585_2050.epw",
+        "scenario": "ssp585",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/future/ssp/gothenburg_2022_ssp585_2050.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 12.501369863013698,
+        "calendar_preserved": true,
+        "output_sha256": "381f780f3b108aab25ee7cd084468e3004352d93f7d25fe3e9aca4a92ece1f2b",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "fwg_output_name": "SWE_SE_Gothenburg_Ensemble_ssp585_2050.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/gothenburg_2022.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/gothenburg_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/future/ssp/gothenburg_2022_ssp585_2080.epw",
+        "scenario": "ssp585",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2022/future/ssp/gothenburg_2022_ssp585_2080.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.931917808219179,
+        "future_mean_dry_bulb_c": 14.39964611872146,
+        "calendar_preserved": true,
+        "output_sha256": "dd5598e8411cd604e40d3248913233c0cb14d3620014e196077fd99c44cd4565",
+        "source_sha256": "4c32ee48756aa08c8f27087c80b72896a1ba53cd8b252cfc2b6377be644816a1",
+        "fwg_output_name": "SWE_SE_Gothenburg_Ensemble_ssp585_2080.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/gothenburg_2023.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/future/ssp/gothenburg_2023_ssp245_2050.epw",
+        "scenario": "ssp245",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/future/ssp/gothenburg_2023_ssp245_2050.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 11.522933789954337,
+        "calendar_preserved": true,
+        "output_sha256": "ff30b03ac7e34e35101df2a3a769808b7be78d37809862ce668342dbbfb5e98d",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "fwg_output_name": "SWE_SE_Gothenburg_Ensemble_ssp245_2050.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/gothenburg_2023.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/future/ssp/gothenburg_2023_ssp245_2080.epw",
+        "scenario": "ssp245",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/future/ssp/gothenburg_2023_ssp245_2080.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 12.20892694063927,
+        "calendar_preserved": true,
+        "output_sha256": "898ba5857f24ad00ccdd243eccdbd36e248ab1572c671aead9148c7d1e444897",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "fwg_output_name": "SWE_SE_Gothenburg_Ensemble_ssp245_2080.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/gothenburg_2023.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/future/ssp/gothenburg_2023_ssp585_2050.epw",
+        "scenario": "ssp585",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/future/ssp/gothenburg_2023_ssp585_2050.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 12.037888127853881,
+        "calendar_preserved": true,
+        "output_sha256": "518a252357f8b2179841f8474227b8269539530d546c296f96eaf432ea7c4404",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "fwg_output_name": "SWE_SE_Gothenburg_Ensemble_ssp585_2050.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/gothenburg_2023.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/gothenburg_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/future/ssp/gothenburg_2023_ssp585_2080.epw",
+        "scenario": "ssp585",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/gothenburg/2023/future/ssp/gothenburg_2023_ssp585_2080.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 9.46801369863014,
+        "future_mean_dry_bulb_c": 13.936392694063928,
+        "calendar_preserved": true,
+        "output_sha256": "858a32d5b22a2a5b971185ca0236f24dcb55f61b5d405032e2cfdddcee44927f",
+        "source_sha256": "73abdf9a77afb88eaf67e38d13334234d8114836d1a8fc16049eade221c7718b",
+        "fwg_output_name": "SWE_SE_Gothenburg_Ensemble_ssp585_2080.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/stockholm_2022.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/future/ssp/stockholm_2022_ssp245_2050.epw",
+        "scenario": "ssp245",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/future/ssp/stockholm_2022_ssp245_2050.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 10.370787671232877,
+        "calendar_preserved": true,
+        "output_sha256": "ae82f457ace988362cb3c2ca07f344e8533c530c7f63a4c9395a6416b2af6b2d",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "fwg_output_name": "SWE_SE_Stockholm_Ensemble_ssp245_2050.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/stockholm_2022.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/future/ssp/stockholm_2022_ssp245_2080.epw",
+        "scenario": "ssp245",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/future/ssp/stockholm_2022_ssp245_2080.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 11.205913242009133,
+        "calendar_preserved": true,
+        "output_sha256": "d960910cd15f5c26399eeb332f14a0a210aab3fe90c0a278b56bc6725b961806",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "fwg_output_name": "SWE_SE_Stockholm_Ensemble_ssp245_2080.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/stockholm_2022.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/future/ssp/stockholm_2022_ssp585_2050.epw",
+        "scenario": "ssp585",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/future/ssp/stockholm_2022_ssp585_2050.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 10.864360730593608,
+        "calendar_preserved": true,
+        "output_sha256": "45a8adecb34df57cbf87e02e30acb2dbde57fe19496b570c8557043d571f3816",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "fwg_output_name": "SWE_SE_Stockholm_Ensemble_ssp585_2050.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/stockholm_2022.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/stockholm_2022.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/future/ssp/stockholm_2022_ssp585_2080.epw",
+        "scenario": "ssp585",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2022/future/ssp/stockholm_2022_ssp585_2080.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 8.101769406392695,
+        "future_mean_dry_bulb_c": 12.881004566210047,
+        "calendar_preserved": true,
+        "output_sha256": "dcd72071ce3d1ea1acfa929e10ef7089c48f4394117595c46b99f64e70d398f2",
+        "source_sha256": "c7efe60f61bd0fa11a2f9de88817644e665cac4454b8e22ff34d05b68eba9202",
+        "fwg_output_name": "SWE_SE_Stockholm_Ensemble_ssp585_2080.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/stockholm_2023.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/future/ssp/stockholm_2023_ssp245_2050.epw",
+        "scenario": "ssp245",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/future/ssp/stockholm_2023_ssp245_2050.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 9.69095890410959,
+        "calendar_preserved": true,
+        "output_sha256": "3966aeb18cc694cd0d6db5a355af84c54d9476ef78cb381e303076341065b2b5",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "fwg_output_name": "SWE_SE_Stockholm_Ensemble_ssp245_2050.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/stockholm_2023.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/future/ssp/stockholm_2023_ssp245_2080.epw",
+        "scenario": "ssp245",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/future/ssp/stockholm_2023_ssp245_2080.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 10.525753424657536,
+        "calendar_preserved": true,
+        "output_sha256": "a53f87980dcdb6d78bbe5bb57d0485bd2023d0caed5ac8f9812ebf96aefe4005",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "fwg_output_name": "SWE_SE_Stockholm_Ensemble_ssp245_2080.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/stockholm_2023.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/future/ssp/stockholm_2023_ssp585_2050.epw",
+        "scenario": "ssp585",
+        "period": 2050,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/future/ssp/stockholm_2023_ssp585_2050.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 10.185148401826483,
+        "calendar_preserved": true,
+        "output_sha256": "8b923606a79107cefe81a19453e0970b1267535fad87f6539034ffdca546e9f0",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "fwg_output_name": "SWE_SE_Stockholm_Ensemble_ssp585_2050.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      },
+      {
+        "source": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/stockholm_2023.epw",
+        "source_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/stockholm_2023.epw",
+        "output_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/future/ssp/stockholm_2023_ssp585_2080.epw",
+        "scenario": "ssp585",
+        "period": 2080,
+        "provenance_path": "/private/tmp/smhi2epw-real-amy-baselines/stockholm/2023/future/ssp/stockholm_2023_ssp585_2080.epw.json",
+        "rows": 8760,
+        "source_mean_dry_bulb_c": 7.422990867579908,
+        "future_mean_dry_bulb_c": 12.199965753424657,
+        "calendar_preserved": true,
+        "output_sha256": "674098431802f7471e8612fb59ae5136ef2cf9d2bae0a98c15fd07af90b36389",
+        "source_sha256": "caeac249fda88e17ad444feae441e4af92d550391e3df853566444eeceeb9457",
+        "fwg_output_name": "SWE_SE_Stockholm_Ensemble_ssp585_2080.epw",
+        "ensemble": true,
+        "models": [
+          "CanESM5",
+          "MIROC6"
+        ]
+      }
+    ],
+    "ssp_count": 16,
+    "note": "Earlier independent SSP campaign retained here; the combined batch above subsequently verifies both families."
+  }
+}
