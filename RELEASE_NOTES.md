@@ -1,3 +1,7 @@
+# Release 1.3.0 candidate — batch weather and morphing
+
+Reuse the weather owner's batch AMY and optional SSP/RCP integration. Acquisition, tool prerequisites, generated-file integrity and scientific limits remain owned here. See docs/morphing.rst and the dated verification receipts; candidate adoption requires the campaign checks.
+
 # Release 1.2.0 — 15 October 2026
 
 Weather acquisition, station selection, cache/recovery decisions and EPW publication. Library compilation no longer configures an output handler automatically.
