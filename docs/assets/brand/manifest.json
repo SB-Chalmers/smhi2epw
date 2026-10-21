@@ -1,0 +1,27 @@
+{
+  "canonical_directory": "design/pocket-cad/icons",
+  "canonical_manifest_sha256": "0b5d0075108c7740e595dddbfb874cded88572a378d34b5ebbf2850d0fedb5a6",
+  "canonical_repository": "SB-Chalmers/epsm_studio",
+  "files": [
+    {
+      "id": "smhi2epw",
+      "path": "smhi2epw.png",
+      "sha256": "0a3b216710d2dfe9ef874275d69281e478c936206d9e711574d3bf7f929bb695",
+      "source": "png/64/smhi2epw.png",
+      "variant": "light"
+    },
+    {
+      "id": "smhi2epw",
+      "path": "smhi2epw-dark.png",
+      "sha256": "d37c55447a01c66949c6f857ba3965e0e1df5cc2104a4f69a6b7bb39fb8200f0",
+      "source": "png/dark/64/smhi2epw.png",
+      "variant": "dark"
+    }
+  ],
+  "hash_algorithm": "sha256",
+  "license": "MIT",
+  "license_sha256": "bb5aadb75096fac733a2417a0c27c2656b656afba306ff84bdda3f722f453e51",
+  "name": "EPSM Pocket CAD",
+  "repository": "smhi2epw",
+  "version": "1.0.0"
+}

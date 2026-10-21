@@ -1,5 +1,16 @@
 # smhi2epw
 
+<!-- EPSM introduction: Pocket CAD -->
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/smhi2epw-dark.png">
+  <img src="docs/assets/brand/smhi2epw.png" width="64" height="64" alt="smhi2epw — weather observations and sunshine">
+</picture>
+
+Create complete-year EnergyPlus weather files from Swedish observations, with a clear record of data sources and gap filling.
+
+[Explore the EPSM platform](https://github.com/SB-Chalmers/epsm/blob/main/docs/platform.md)
+<!-- /EPSM introduction -->
+
 [![CI](https://github.com/SB-Chalmers/smhi2epw/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/SB-Chalmers/smhi2epw/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/smhi2epw)](https://pypi.org/project/smhi2epw/)
 [![Python versions](https://img.shields.io/pypi/pyversions/smhi2epw)](https://pypi.org/project/smhi2epw/)
