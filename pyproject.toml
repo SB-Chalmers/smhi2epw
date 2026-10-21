@@ -28,6 +28,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+morphing = ["pyfwg>=0.3.0,<0.4"]
 dev = [
     "build>=1.2",
     "mypy>=1.10",
@@ -71,6 +72,7 @@ smhi2epw = ["py.typed"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
+    "fwg: real climate morphing requiring both explicitly supplied FWG JARs and Java",
     "network: tests that require live SMHI or Open-Meteo endpoints",
     "energyplus: deterministic integration tests requiring the pinned EnergyPlus engine",
 ]

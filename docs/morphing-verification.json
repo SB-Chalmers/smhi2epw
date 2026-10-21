@@ -1,0 +1,108 @@
+{
+  "date": "2026-10-21",
+  "status": "development integration; real FWG calculations unverified",
+  "branch": "codex/amy-scenario-morphing",
+  "base": "origin/dev at fd21431",
+  "distribution_status": "development wheel using existing 1.2.0 metadata; not a new release",
+  "python": "3.12.3",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "dependencies": {
+    "pyfwg": "0.3.0",
+    "pvlib": "0.16.1",
+    "numpy": "2.5.4",
+    "pandas": "3.0.6",
+    "pytest": "9.1.1",
+    "sphinx": "9.1.1"
+  },
+  "wheel_sha256": "66392a7d31d44691921b6561b32e057a3851be8579eb3f37c786015dfcd44294",
+  "source_files_sha256": {
+    "src/smhi2epw/__init__.py": "fa832b4708caf636a65880d9d5a7a62376638717c78668ca6881d9dd965a57db",
+    "src/smhi2epw/_logging.py": "7923be4dbc09b7408c800c22b8dad3f323038123113c7bb1ad557a9886b12f5d",
+    "src/smhi2epw/automatic.py": "da29fcbeb3a7dac9186a0c2cfdd5b474cd0580ce44e4c588da8b72572083a3d5",
+    "src/smhi2epw/batch.py": "2bef1eb1658236cb05f05b76cfed38c5907038406ca0fa913b0f99bf420738cf",
+    "src/smhi2epw/cli.py": "ace480828fd4e044d5c712c2e651607e4128dfb955b3ed0cd6cd3ec5d6b9df03",
+    "src/smhi2epw/compiler.py": "e2540c2689a4f4157d4c4b67012e3c7140abfa8caf5755fb3d60a5846ea7d202",
+    "src/smhi2epw/constants.py": "9cebfb7bea73f8e34e3776ef6c5ce28d8339e2e9c5b0486ac4b362285e3d6050",
+    "src/smhi2epw/errors.py": "0ae8e2a115112a70da644578621abdff68901ae36adad50b6147a736c7bed6e4",
+    "src/smhi2epw/export.py": "13198467d377fc1d46ba095e78d6f562e3ea5f335906c560bbcc633c374f2538",
+    "src/smhi2epw/gap_recovery.py": "e5d8912aa516af1bd4e7f7007dd6afa84a0342318716edc58183b826cfa016ef",
+    "src/smhi2epw/ingestion.py": "81c056f17b9314b467de5de40e8d72c2681bcfc0c54f0bc96c4527740a0c8734",
+    "src/smhi2epw/io.py": "97cd5dfe568d17d1e35b1ba391d998059659e49357c319bf3f5298ce85885d73",
+    "src/smhi2epw/morphing.py": "c6f3402e72049a284bac9ea290b1dc9a4842b2b21e01cf11f65b8a8fdfdc7f3c",
+    "src/smhi2epw/processing.py": "14e61cf64df889c8a6595fed23caaff6847facf2e2fb0012cef9472f8e8b2108",
+    "src/smhi2epw/provenance.py": "0ed755c291e52737d1f4cbf01cc9eb5f2411ad23bf37974293d79829575ceaba",
+    "src/smhi2epw/reader.py": "f8848c41e82c63c2bb9a49cb94e6fb2f232f7fd9dbbee238a1a90a7968a104de",
+    "src/smhi2epw/reanalysis.py": "241c4ca962ce209dd711386501775389aa572a2f577ee69113d421723f223440",
+    "src/smhi2epw/solar.py": "9d77f24055558886d7b46ac2de075a6f80e20f41acd878feaf3ebc57b8a10f22",
+    "src/smhi2epw/workflow_cli.py": "6f86a643e1c629acba76116ba037181a84f3e17fe57be40c81b2ce081fc6fe07"
+  },
+  "checks": {
+    "installed_wheel_offline": {
+      "command": "pytest tests --import-mode=importlib -q -m \"not network and not energyplus and not fwg\"",
+      "status": "passed",
+      "isolation": "outside checkout; wheel imported from site-packages; fresh notebook kernels",
+      "passed": 305,
+      "deselected": 14,
+      "duration_seconds": 63.95
+    },
+    "targeted_offline": {
+      "status": "passed",
+      "passed": 38,
+      "deselected": 2
+    },
+    "source_doctests": {
+      "status": "passed",
+      "passed": 31
+    },
+    "documentation_doctests": {
+      "status": "passed",
+      "examples": 73,
+      "failures": 0
+    },
+    "static": {
+      "status": "passed",
+      "commands": [
+        "ruff check src tests examples docs",
+        "ruff format --check src tests examples docs",
+        "mypy src/smhi2epw"
+      ]
+    },
+    "documentation_html": {
+      "status": "passed",
+      "command": "sphinx -W --keep-going -b html docs OUTPUT"
+    },
+    "packaging": {
+      "status": "passed",
+      "checks": [
+        "wheel and sdist build",
+        "twine check",
+        "pip check",
+        "MIT license and morphing extra in wheel metadata"
+      ]
+    },
+    "example_cli_plan": {
+      "status": "passed",
+      "baselines": 4,
+      "future_epws": 32,
+      "command": "smhi2epw batch examples/future_weather_plan.json --dry-run"
+    },
+    "real_fwg": {
+      "status": "unverified",
+      "reason": "No global or Europe FWG JAR was supplied or found in the repository. Java climate execution was not run.",
+      "command": "pytest -m fwg tests/test_batch_morphing.py",
+      "required_environment": [
+        "SMHI2EPW_GLOBAL_FWG_JAR",
+        "SMHI2EPW_EUROPE_FWG_JAR"
+      ],
+      "gate_behavior": "Fails if selected without prerequisites; excluded from ordinary offline checks"
+    }
+  },
+  "limits": [
+    "Real pyfwg adapter tests simulate the Java process; they do not verify climate calculations.",
+    "Live provider acquisition and EnergyPlus were not rerun for this feature.",
+    "Morphing retains a source weather sequence and does not rebase FWG deltas to individual AMY years.",
+    "2050 and 2080 identify future climate periods rather than hourly forecasts of individual years.",
+    "No scientific climate accuracy or new release is established."
+  ],
+  "resolved_environment_issue": "An initial sandboxed source test run could not open Jupyter local sockets. Installed-wheel tests use an isolated kernel with local socket permission."
+}

@@ -36,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="smhi2epw",
         description="Compile requested-year SMHI weather with ERA5 recovery into an EnergyPlus .epw file.",
+        epilog="Also available: smhi2epw batch --help; smhi2epw morph --help.",
     )
     parser.add_argument(
         "--log-level",
@@ -160,6 +161,11 @@ def main(argv=None) -> int:
 
         main(["2023", "out.epw", "--station", "71420"])  # doctest: +SKIP
     """
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if argv and argv[0] in {"batch", "morph"}:
+        from .workflow_cli import main as workflow_main
+
+        return workflow_main(argv)
     parser = build_parser()
     args = parser.parse_args(argv)
     with configure_cli(args.log_level, "smhi2epw"):

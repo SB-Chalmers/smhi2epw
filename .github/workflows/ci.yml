@@ -33,7 +33,7 @@ jobs:
           ruff format --check src tests examples docs
           mypy src/smhi2epw
       - name: Offline tests
-        run: pytest -q -m "not network and not energyplus"
+        run: pytest -q -m "not network and not energyplus and not fwg"
 
   minimum-dependencies:
     runs-on: ubuntu-latest
@@ -46,7 +46,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "numpy==1.24.0" "pandas==1.5.3" "requests==2.28.0" "pvlib==0.16.1" "pytest>=8"
           python -m pip install --no-deps -e .
-          pytest -q -m "not network and not energyplus"
+          pytest -q -m "not network and not energyplus and not fwg"
 
   package:
     runs-on: ubuntu-latest
@@ -82,7 +82,7 @@ jobs:
         run: |
           wheels=(dist/*.whl)
           test "${#wheels[@]}" -eq 1
-          python -m pip install "${wheels[0]}[test,tutorials]"
+          python -m pip install "${wheels[0]}[test,tutorials,morphing]"
       - name: Verify wheel import and run offline tests outside checkout
         working-directory: ${{ runner.temp }}
         run: |
@@ -96,7 +96,7 @@ jobs:
           assert "site-packages" in origin.parts, origin
           print(smhi2epw.__version__, origin)
           PY
-          python -m pytest "$GITHUB_WORKSPACE/tests" --import-mode=importlib -q -m "not network and not energyplus"
+          python -m pytest "$GITHUB_WORKSPACE/tests" --import-mode=importlib -q -m "not network and not energyplus and not fwg"
 
   energyplus:
     needs: package

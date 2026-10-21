@@ -66,3 +66,12 @@ requirements.
 The CLI returns zero on success, one for handled package failures, and two for
 invalid command syntax. Error messages are written to standard error, making
 the command suitable for scripts and CI jobs.
+
+Batch generation and morphing
+-----------------------------
+
+Use ``smhi2epw batch CONFIG.json --dry-run`` to inspect a locations × years
+plan, then remove ``--dry-run`` to generate the files. Use ``smhi2epw morph``
+to apply future scenarios to an existing EPW. Both accept ``--log-level`` after
+the subcommand. See :doc:`morphing` for the JSON format, Java/JAR prerequisites,
+scenario selection and interpretation.

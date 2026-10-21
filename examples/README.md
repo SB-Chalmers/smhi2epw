@@ -24,6 +24,7 @@ jupyter lab examples/
 | `07_solar_components` | GHI, DNI, DHI and closure | No |
 | `08_batch_generation` | Reproducible batch workflows | SMHI; Open-Meteo if needed |
 | `09_run_energyplus` | Standalone annual simulation and ideal loads | No; local EPW and EnergyPlus required |
+| `10_future_weather` | Plan locations × years and SSP/RCP selections | No; planning only |
 
 Generated EPWs, figures, and tables are written to `examples/output/`, which
 is ignored by Git. Live examples use `.smhi_cache` so reruns avoid unnecessary
@@ -56,6 +57,12 @@ is separate from the tutorial extra. See [the validation guide](../docs/energypl
 These lessons do not independently validate building-site accuracy or
 reconstructed event peaks. They do not run a calibrated building model or supply
 precipitation, snow or illuminance inputs.
+
+Notebook 10 targets the development feature branch and runs offline against its
+installed package. It checks planning only. Its separately shown execution call
+requires `.[morphing]`, Java and the appropriate global/Europe FWG JARs, plus
+provider access for baseline generation. See the [morphing guide](../docs/morphing.rst)
+for version support, output directories, overwrite rules and scientific limits.
 
 Notebook 08 also reads the [corrected-source sensitivity check](data/solar_validation_2026-10-06.json):
 9 annual simulations with zero warnings across three weather-years and one

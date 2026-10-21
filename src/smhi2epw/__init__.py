@@ -23,12 +23,22 @@ Examples
 import logging as _stdlib_logging
 from importlib.metadata import PackageNotFoundError, version
 
+from .batch import BatchResult, WeatherLocation, compile_amy_batch, plan_amy_batch
 from .compiler import EPWConfig, compile_epw
 from .errors import DataGapError, IngestionError, Smhi2EpwError, ValidationError
 from .ingestion import StationMeta
+from .morphing import MorphConfig, MorphingError, MorphResult, morph_epw
 from .reader import EPW_COLUMNS, read_epw
 
 __all__ = [
+    "WeatherLocation",
+    "BatchResult",
+    "compile_amy_batch",
+    "plan_amy_batch",
+    "MorphConfig",
+    "MorphResult",
+    "MorphingError",
+    "morph_epw",
     "compile_epw",
     "EPWConfig",
     "StationMeta",

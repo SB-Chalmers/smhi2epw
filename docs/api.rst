@@ -23,6 +23,30 @@ Reader
 
 .. autodata:: smhi2epw.EPW_COLUMNS
 
+Weather batches and morphing
+----------------------------
+
+.. autoclass:: smhi2epw.WeatherLocation
+   :members:
+
+.. autofunction:: smhi2epw.plan_amy_batch
+
+.. autofunction:: smhi2epw.compile_amy_batch
+
+.. autoclass:: smhi2epw.BatchResult
+   :members:
+
+.. autoclass:: smhi2epw.MorphConfig
+   :members:
+
+.. autofunction:: smhi2epw.morph_epw
+
+.. autoclass:: smhi2epw.MorphResult
+   :members:
+
+.. autoclass:: smhi2epw.MorphingError
+   :show-inheritance:
+
 Station and diagnostics
 -----------------------
 
