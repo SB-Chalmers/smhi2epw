@@ -1,6 +1,10 @@
-# Release 1.3.0 candidate — batch weather and morphing
+# Release 1.3.0 — batch weather and morphing
 
-Reuse the weather owner's batch AMY and optional SSP/RCP integration. Acquisition, tool prerequisites, generated-file integrity and scientific limits remain owned here. See docs/morphing.rst and the dated verification receipts; candidate adoption requires the campaign checks.
+Generate AMY batches across locations and years with retained artifact and
+provenance manifests. Optional SSP/RCP morphing uses the existing providers and
+Future Weather Generator integration. Source calendars remain distinct from
+future climate periods; missing tools and damaged outputs fail explicitly.
+See the [morphing guide](docs/morphing.rst) for prerequisites and scientific limits.
 
 # Release 1.2.0 — 15 October 2026
 
