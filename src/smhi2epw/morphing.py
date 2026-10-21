@@ -28,7 +28,13 @@ from types import ModuleType
 
 from ._logging import operation
 from .errors import Smhi2EpwError, ValidationError
-from .io import file_sha256, publish_file, write_json
+from .io import (
+    file_sha256,
+    publish_file,
+    restore_epw_calendar,
+    stage_fwg_epw,
+    write_json,
+)
 from .reader import read_epw
 
 SCENARIOS = {
@@ -336,7 +342,7 @@ def morph_epw(
             # The direct pyfwg API also returns its temporary input EPW.
             # Give it a neutral name so it cannot masquerade as a scenario.
             baseline = stage / "baseline.epw"
-            shutil.copy2(source, baseline)
+            stage_fwg_epw(source, baseline, yearless_period=is_engine)
             options = {
                 "epw_paths": str(baseline),
                 "fwg_jar_path": str(Path(config.fwg_jar_path).resolve()),
@@ -366,21 +372,34 @@ def morph_epw(
             placeholder = logging.NullHandler()
             root.addHandler(placeholder)
             try:
-                generated = {Path(p).name: Path(p) for p in run(**options)}
+                generated = [Path(p) for p in run(**options)]
             finally:
                 root.removeHandler(placeholder)
                 placeholder.close()
+            selected = {}
+            raw_hashes = {}
             for scenario, period, _ in targets:
                 name = f"{scenario}_{period}.epw"
-                if name not in generated or not generated[name].is_file():
+                matches = [
+                    p
+                    for p in generated
+                    if p.name == name or p.name.endswith("_" + name)
+                ]
+                if not matches or not matches[0].is_file():
                     raise MorphingError(f"FWG did not produce requested output: {name}")
-                read_epw(generated[name])
+                if len(matches) != 1:
+                    raise MorphingError(f"FWG produced ambiguous outputs for: {name}")
+                selected[name] = matches[0]
+                raw_hashes[name] = file_sha256(matches[0])
+                restore_epw_calendar(source, matches[0])
+                read_epw(matches[0])
             source_receipt = Path(str(source) + ".json")
             for scenario, period, target in targets:
-                original = generated[f"{scenario}_{period}.epw"]
+                name = f"{scenario}_{period}.epw"
+                original = selected[name]
                 publish_file(original, target)
-                stat = generated.get(f"{scenario}_{period}.stat")
-                if stat is not None:
+                stat = original.with_suffix(".stat")
+                if stat in generated and stat.is_file():
                     publish_file(stat, target.with_suffix(".stat"))
                 receipt = Path(str(target) + ".json")
                 write_json(
@@ -402,6 +421,15 @@ def morph_epw(
                         else None,
                         "output_path": str(target),
                         "output_sha256": file_sha256(target),
+                        "fwg_output_name": original.name,
+                        "fwg_output_sha256_before_calendar_restoration": raw_hashes[
+                            name
+                        ],
+                        "source_calendar_restored": True,
+                        "staged_period_dates_omit_year": is_engine,
+                        "baseline_preprocessing": "FWG SolarQC defaults"
+                        if is_engine
+                        else "legacy FWG defaults",
                         "family": config.family,
                         "scenario": scenario,
                         "future_period": period,

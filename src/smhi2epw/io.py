@@ -15,12 +15,61 @@ operations, not transactions across weather and receipts.
 
 from __future__ import annotations
 
+import csv
 import json
 import math
 import os
 import tempfile
 from hashlib import sha256
 from pathlib import Path
+
+
+def stage_fwg_epw(source: Path, destination: Path, *, yearless_period: bool) -> None:
+    """Copy a validated EPW, adapting only the current engine's period header.
+
+    FWG Engine 1.1 rejects actual-year dates in DATA PERIODS. Its staged input
+    uses month/day dates; every data record and the original file are preserved.
+    """
+    with source.open(encoding="utf-8-sig", newline="") as incoming:
+        header = [incoming.readline() for _ in range(8)]
+        if yearless_period:
+            fields = next(csv.reader([header[7]]))
+            fields[-2:] = ["/".join(value.split("/")[:2]) for value in fields[-2:]]
+            header[7] = ",".join(fields) + "\n"
+        with destination.open("x", encoding="utf-8", newline="") as outgoing:
+            outgoing.writelines(header)
+            for line in incoming:
+                outgoing.write(line)
+
+
+def restore_epw_calendar(source: Path, generated: Path) -> None:
+    """Restore source calendar labels only when generated intervals match.
+
+    FWG labels rows with a future period year. Require identical month/day/hour
+    sequences and record counts before restoring source years, minute convention
+    and calendar headers. Reject missing, shifted or reordered intervals rather
+    than assigning weather to a different hour. Operates only on staged output.
+    """
+    with source.open(encoding="utf-8-sig", newline="") as handle:
+        source_header = [handle.readline() for _ in range(8)]
+        source_rows = list(csv.reader(handle))
+    with generated.open(encoding="utf-8-sig", newline="") as handle:
+        header = [handle.readline() for _ in range(8)]
+        rows = list(csv.reader(handle))
+    if len(rows) != len(source_rows):
+        raise ValueError("FWG output record count differs from the source calendar")
+    for original, row in zip(source_rows, rows):
+        if (
+            len(row) != 35
+            or tuple(map(int, original[1:4])) != tuple(map(int, row[1:4]))
+            or int(row[4]) not in (0, 60)
+        ):
+            raise ValueError("FWG output intervals differ from the source calendar")
+        row[0], row[4] = original[0], original[4]
+    header[4], header[7] = source_header[4], source_header[7]
+    with generated.open("w", encoding="utf-8", newline="") as handle:
+        handle.writelines(header)
+        csv.writer(handle, lineterminator="\n").writerows(rows)
 
 
 def file_sha256(path: Path) -> str:

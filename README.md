@@ -56,7 +56,9 @@ and source years, with optional SSP/RCP morphing through pyfwg. Install with
 `smhi2epw batch examples/future_weather_plan.json --dry-run` to inspect a plan. Execution requires Java
 and the appropriate Future Weather Generator JAR. See the
 [batch and morphing guide](docs/morphing.rst) for configuration, prerequisites
-and scientific limits. Real FWG climate execution requires separate verification.
+and scientific limits. The guide includes exact tested versions, repeatable
+environment setup, JAR placement, and real integration checks. External JARs
+and incomplete downloads are Git-ignored and excluded from source packages.
 
 The [online documentation](https://sb-chalmers.github.io/smhi2epw/) covers the API,
 methods, and limitations. The [notebook course](examples/README.md) covers EPW

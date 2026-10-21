@@ -452,11 +452,22 @@ def test_real_pyfwg_api_with_simulated_java(
             next(arg.split("=", 1)[1] for arg in command if arg.startswith("-epw="))
         )
         if engine:
+            assert input_path.read_text().splitlines()[7].endswith(",1/1,12/31")
             output = output / "weather"
             output.mkdir()
         for scenario in morphing.SCENARIOS[family]:
             for period in morphing.PERIODS:
-                shutil.copyfile(input_path, output / f"{scenario}_{period}.epw")
+                name = (
+                    f"SWE_Gothenburg_ensemble_{scenario}_{period}.epw"
+                    if engine
+                    else f"{scenario}_{period}.epw"
+                )
+                content = input_path.read_text().splitlines()
+                if engine:
+                    content[8:] = [
+                        str(period) + "," + row.split(",", 1)[1] for row in content[8:]
+                    ]
+                (output / name).write_text("\n".join(content) + "\n")
         return subprocess.CompletedProcess(command, 0, "morphed", "")
 
     monkeypatch.setattr(morphing.shutil, "which", lambda _: "/fake/java")
@@ -475,7 +486,8 @@ def test_real_pyfwg_api_with_simulated_java(
     )
     assert len(results) == 1 and len(commands) == 2
     assert backend.__version__ == "0.4.0"
-    assert read_epw(results[0].output_path).minute.eq(0).all()
+    assert read_epw(results[0].output_path).minute.eq(60).all()
+    assert read_epw(results[0].output_path).year.eq(2023).all()
     assert read_epw(source).minute.eq(60).all()
 
 
@@ -516,6 +528,50 @@ def test_current_engine_receives_selected_scenarios_and_periods(
     assert receipt["ensemble"] is False
 
 
+@pytest.mark.parametrize(
+    "failure", ["missing_interval", "shifted_interval", "ambiguous"]
+)
+def test_morph_rejects_unmatched_calendar_or_ambiguous_product(
+    tmp_path, source, monkeypatch, failure
+):
+    backend = _backend(source)
+    run = backend.morph_epw_global
+
+    def invalid(**options):
+        paths = run(**options)
+        target = Path(paths[0])
+        if failure == "ambiguous":
+            duplicate = target.with_name("different_model_" + target.name)
+            shutil.copyfile(target, duplicate)
+            paths.append(str(duplicate))
+        else:
+            lines = target.read_text().splitlines()
+            if failure == "missing_interval":
+                lines.pop()
+            else:
+                fields = lines[8].split(",")
+                fields[3] = "2"
+                lines[8] = ",".join(fields)
+            target.write_text("\n".join(lines) + "\n")
+        return paths
+
+    backend.morph_epw_global = invalid
+    monkeypatch.setattr(morphing, "_runtime", lambda _: backend)
+    destination = tmp_path / "future"
+    with pytest.raises(MorphingError):
+        morph_epw(
+            source,
+            destination,
+            MorphConfig(
+                str(tmp_path / "fwg.jar"),
+                scenarios=("ssp126",),
+                periods=(2050,),
+                version="4",
+            ),
+        )
+    assert not list(destination.glob("*.epw"))
+
+
 @pytest.mark.fwg
 @pytest.mark.parametrize(
     "family,variable,scenario,model",
@@ -543,6 +599,8 @@ def test_real_fwg_generates_valid_weather(tmp_path, family, variable, scenario, 
     assert len(weather) == 8760
     assert weather.dry_bulb.notna().all()
     assert not weather.dry_bulb.equals(before.dry_bulb)
+    for column in ("year", "month", "day", "hour", "minute"):
+        assert weather[column].equals(before[column])
     assert morphing.file_sha256(source) == source_hash
     assert json.loads(Path(outputs[0].provenance_path).read_text())[
         "source_calendar_years"

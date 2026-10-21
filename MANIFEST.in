@@ -1,5 +1,7 @@
 include .readthedocs.yaml
 recursive-include docs *.nblink *.py *.rst
+recursive-include docs *.json
+recursive-include constraints *.txt
 recursive-include examples *.ipynb *.md
 include examples/data/completeness_2026-10-05.json
 recursive-include examples/support *.py *.idf
@@ -7,3 +9,4 @@ include scripts/install_energyplus.sh
 include examples/data/solar_validation_2026-10-06.json
 recursive-include tests/fixtures *.py
 include examples/data/pvlib_validation_2026-10-06.json
+global-exclude *.jar *.JAR *.crdownload *.jar.part
