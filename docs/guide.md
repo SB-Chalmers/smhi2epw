@@ -35,12 +35,14 @@ Or use the Python API:
 ```python
 from smhi2epw import EPWConfig, compile_epw
 
-result = compile_epw(EPWConfig(
-    year=2023,
-    output_path="gothenburg.epw",
-    station_id=71420,
-    city="Gothenburg",
-))
+result = compile_epw(
+    EPWConfig(
+        year=2023,
+        output_path="gothenburg.epw",
+        station_id=71420,
+        city="Gothenburg",
+    )
+)
 print(result.report.warnings)
 ```
 
