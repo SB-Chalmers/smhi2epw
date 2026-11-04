@@ -58,7 +58,7 @@ methods = [
     ("nearby station", "donor", ["tested donor station"]),
     ("ERA5", "era5", ["reanalysis for every hidden hour;", "also the ERA5-only baseline"]),
     ("diyepw-style", "solar", ["straight line up to 6 h; for 7–48 h,", "the same hour averaged over the", "surrounding 4 weeks; longer: ERA5"]),
-    ("smhi2epw", "primary", ["full sequence (Fig. 2)"]),
+    ("smhi2epw", "primary", ["full sequence (Fig. 1)"]),
     ("smhi2epw, older order", "profile", ["daily pattern before nearby station"]),
 ]
 top = lane_cand[1] - 10.0
