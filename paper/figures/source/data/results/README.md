@@ -5,7 +5,7 @@ Kiruna 2018 has no eligible reference), 6 catalogue building profiles, EnergyPlu
 ideal loads. 15,390 unique simulations, 34,236 labelled building rows; no severe or fatal
 errors. Errors are against the same building simulated with the reference weather.
 
-Solar-gap results are not included yet. Solar gaps in this run kept the reference diffuse irradiance (DHI) in hidden hours; they are being rerun with DHI hidden and will be added here. Temperature, humidity, pressure and wind gaps (scope 'meteorology') are unaffected.
+All tables come from the corrected campaign run. Its temperature, humidity, pressure and wind results are identical to the first run. Solar gaps now hide diffuse irradiance (DHI) together with GHI and DNI, as the first run did not. smhi2epw includes the fix that sends solar outages over 48 h to ERA5 (smhi2epw commit 23279a7). The linear-only and diyepw-style solar fills are bounded by extraterrestrial horizontal irradiance.
 
 ## annual-errors.csv
 

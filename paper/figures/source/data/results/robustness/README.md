@@ -1,8 +1,9 @@
 # Robustness of the gap-filling methods (general-weather gaps)
 
-Paired analysis of the campaign's per-case table; no new simulations. Scope:
-temperature, humidity, pressure and wind gaps ("meteorology"). Solar gaps are
-added after their rerun. Every method fills the same gap layouts, so a **case**
+Paired analysis of the corrected campaign's per-case table; no new
+simulations. Both gap types are included, in the `scope` column:
+"meteorology" (temperature, humidity, pressure and wind hidden) and "solar"
+(GHI, DNI and DHI hidden). Every method fills the same gap layouts, so a **case**
 is region-year x building x gap layout (one weather file). Bootstrap ranges use
 1,000 resamples of whole gap layouts (weather files), never single buildings.
 

@@ -7,3 +7,11 @@ meteorology,weather_extremes,3,17,3,14,0,17,7,9,1
 meteorology,weather_extremes,12,17,7,10,0,17,4,12,1
 meteorology,weather_extremes,48,17,10,7,0,17,8,8,1
 meteorology,weather_extremes,168,17,7,10,0,17,8,8,1
+solar,random_seasonal,3,17,9,8,0,17,7,10,0
+solar,random_seasonal,12,17,14,3,0,17,14,3,0
+solar,random_seasonal,48,17,15,2,0,17,11,6,0
+solar,random_seasonal,168,17,0,0,17,17,0,0,17
+solar,weather_extremes,3,17,8,8,1,17,7,9,1
+solar,weather_extremes,12,17,8,9,0,17,7,10,0
+solar,weather_extremes,48,17,11,6,0,17,11,6,0
+solar,weather_extremes,168,17,0,0,17,17,0,0,17
