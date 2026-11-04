@@ -110,3 +110,40 @@ The last row is the mean over region-years.
 - `radiation_station_id`, `radiation_station_name`, `radiation_station_distance_km`: the measuring station and its distance from the sampling point
 - `daytime_hours`, `measured_mean_w_m2`: hours compared and mean measured GHI
 - `strang_*`, `era5_*`: hourly mean absolute error, mean bias (model minus measured) and RMSE in W/m2; daily-total mean absolute error in kWh/m2
+
+## annual-errors-by-anchor.csv
+
+Event placements (`weather_extremes`) only, split by `anchor_name`: the
+warmest or coldest original hour, the hottest hour of a heatwave, or the
+coldest hour of a cold spell. Columns follow `annual-errors.csv`: median and
+95th percentile of |annual heating/cooling error|, in kWh/m2 and as % of the
+reference annual demand (demand below 1 kWh/m2 excluded).
+
+## method-steps-donor-subset.csv
+
+General-weather gaps only, restricted to the cases (region-year x building x
+gap layout) where the assessed donor method exists, so every method is
+compared on the same cases. `*_abs_p95_pct` is the 95th percentile of
+|annual error %|. `*_months_within_5pct` is the share of calendar months
+holding a gap whose monthly error is within +/-5 % (ASHRAE Guideline 14),
+on the same cases; `*_months_evaluated` counts those months. Months with
+less than 5 % of the building's largest monthly demand are excluded.
+
+## gap-window.csv
+
+Per hidden block, by `scope`, `sampling`, `event_type`, `season`,
+`gap_hours`, `method` and `mode` (heating or cooling). `window_*` is
+|load change inside the block plus the following 168 h|. `in_gap_*` is
+|load change inside the block only|. Both are given as median and 95th
+percentile, in kWh/m2 and as % of the reference annual demand (demand below
+1 kWh/m2 excluded). `blocks` counts hidden blocks x buildings. Seasons are
+winter Dec-Feb, spring Mar-May, summer Jun-Aug and autumn Sep-Nov.
+
+## peak-cases.csv
+
+One row per case where the reference annual peak hour is hidden and the
+automatic method filled the gap. Columns: `scope`, `sampling`, `anchor_name`,
+`gap_hours`, `mode`, `method`, `region`, `year`, `building_id`,
+`gap_layout`, `reference_peak_w_m2`, `abs_peak_error_w_m2`, and
+`peak_shift_h` (signed hours from the reference peak to the nearest new peak;
+`abs_peak_shift_h` is its magnitude).
