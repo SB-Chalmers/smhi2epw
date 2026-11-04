@@ -119,3 +119,17 @@ def canvas(width_mm, height_mm):
     ax.set_aspect("equal")
     ax.axis("off")
     return fig, ax
+
+
+# Filling methods in result plots: plain labels and colours tied to the rungs.
+METHOD = {
+    "linear_only": ("straight line only", "#8e8e93"),
+    "temporal": ("filling over time", RUNG["interp"]),
+    "donor_assessed": ("nearby station", RUNG["donor"]),
+    "era5": ("ERA5 only", RUNG["era5"]),
+    "diyepw_style": ("diyepw-style", RUNG["solar"]),
+    "automatic_legacy": ("smhi2epw, older order", RUNG["profile"]),
+    "automatic": ("smhi2epw", INK),
+}
+GAP_LABEL = {3: "3 h", 12: "12 h", 48: "2 days", 168: "1 week"}
+SAMPLING_LABEL = {"random_seasonal": "random gaps", "weather_extremes": "gaps at weather events"}

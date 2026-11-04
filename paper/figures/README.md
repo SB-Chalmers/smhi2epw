@@ -31,3 +31,13 @@ Colours are shared across figures: each recovery rung keeps the same colour
   `campaign_design.generate_panels` on a fully observed Stockholm 2021 calendar
   (`src/make_mask_example.py /path/to/epsm_workflows`). Real positions can
   differ slightly because references may miss up to 1 % of cells.
+
+## Results figures (general-weather gaps)
+
+`src/fig_results.py` reads `source/data/results/*.csv` and writes Figs 6–11:
+`fig06_annual_error`, `fig07_methods`, `fig08_gap_position`, `fig09_peaks`,
+`fig10_events`, `fig11_monthly`. Solar-gap panels will be added after the solar
+rerun with diffuse radiation hidden. ERA5 and ERA5-only give identical files and
+are shown once as "ERA5 only". Fig. 8 stacks two separate 95th percentiles
+(inside the gap, following week), so the stack is a guide rather than the
+95th percentile of the sum.
