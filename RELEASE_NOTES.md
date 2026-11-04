@@ -1,3 +1,9 @@
+# Unreleased
+
+- Solar outages longer than 48 hours now go to ERA5. Their length is measured
+  before fully dark hours are zeroed; previously night split a week-long outage
+  into daytime pieces that were each filled by repeating a nearby day.
+
 # Release 1.3.0 — batch weather and morphing
 
 Generate AMY batches across locations and years with retained artifact and

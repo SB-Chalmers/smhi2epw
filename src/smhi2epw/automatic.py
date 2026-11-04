@@ -49,6 +49,18 @@ def _temporal(series: pd.Series, column: str, report: P.ProcessingReport) -> pd.
     return filled
 
 
+def _long_missing_runs(series: pd.Series, limit: int) -> pd.Series:
+    """Mark missing values in runs longer than ``limit`` consecutive hours.
+
+    Run length is measured on the raw series, before fully dark hours are set
+    to zero, so a long solar outage is not split into short daytime pieces.
+    """
+    missing = series.isna()
+    run_id = missing.ne(missing.shift(fill_value=False)).cumsum()
+    run_length = missing.groupby(run_id).transform("sum")
+    return missing & run_length.gt(limit)
+
+
 def _dark_hours(index: pd.DatetimeIndex, lat: float, lon: float) -> np.ndarray:
     """Identify preceding intervals entirely below the geometric solar horizon."""
     return interval_solar_geometry(index, lat, lon)[3]
@@ -96,10 +108,14 @@ def _solar_inputs(
                 variable=column,
                 hours=int(positive_dark.sum()),
             )
+        # Measure outage length before darkness splits it: daytime pieces of
+        # an outage longer than the temporal ceiling are left for ERA5.
+        long_gap = _long_missing_runs(series, C.MAX_GAP_HOURS)
         # Darkness establishes zero without a donor or an API request. The
         # interval check keeps real radiation near sunrise/sunset intact.
         series.loc[dark] = 0.0
-        frame[column] = _temporal(series, column, report)
+        filled = _temporal(series, column, report)
+        frame[column] = filled.mask(long_gap & ~dark)
     measured = frame[C.METOBS_RADIATION_COLUMN]
     ghi = measured.combine_first(frame["ghi"])
     chosen_original = (measured.notna() & raw_masks[C.METOBS_RADIATION_COLUMN]) | (

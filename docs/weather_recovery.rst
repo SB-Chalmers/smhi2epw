@@ -147,6 +147,9 @@ ranges, dew point consistent with dry bulb, nonnegative solar fields, solar
 closure and the existing extraterrestrial DNI cap. Positive solar data during
 fully dark intervals is treated as inconsistent. Darkness checks use interval
 geometry so sunrise and sunset hours are not mistaken for complete darkness.
+The length of a solar outage is measured before dark hours are set to zero,
+so an outage longer than 48 hours goes to ERA5 rather than being split into
+short daytime pieces that are each filled from a nearby day.
 Reconstructed humidity, wind and cloud estimates obey representable limits;
 valid observations are not clipped merely because they are unusual.
 
