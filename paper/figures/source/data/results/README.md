@@ -141,8 +141,10 @@ winter Dec-Feb, spring Mar-May, summer Jun-Aug and autumn Sep-Nov.
 
 ## peak-cases.csv
 
-One row per case where the reference annual peak hour is hidden and the
-automatic method filled the gap. Columns: `scope`, `sampling`, `anchor_name`,
+One row per case where the reference annual peak hour is hidden, for the
+automatic method (smhi2epw 1.3) and for `gap_type_rule` (smhi2epw with
+gap-type routing: automatic for general-weather gaps up to 48 h and solar
+gaps of 3 h, ERA5 otherwise; its rows are the source method's rows). Columns: `scope`, `sampling`, `anchor_name`,
 `gap_hours`, `mode`, `method`, `region`, `year`, `building_id`,
 `gap_layout`, `reference_peak_w_m2`, `abs_peak_error_w_m2`, and
 `peak_shift_h` (signed hours from the reference peak to the nearest new peak;
