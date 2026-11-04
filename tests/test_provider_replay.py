@@ -53,11 +53,11 @@ def test_reconstructed_replay_uses_temporal_assessed_donor_and_era5(tmp_path):
     primary = compile_weather(tmp_path / "primary")
     result = compile_weather(tmp_path / "reconstructed", scenario="reconstructed")
     assert result.report.weather_classification == "mixed_reconstructed"
-    assert result.report.cross_station_filled_hours["dry_bulb"] == 72
+    assert result.report.cross_station_filled_hours["dry_bulb"] == 48
     assert result.report.linear_filled_hours["relative_humidity"] == 2
     assert result.report.reanalysis_filled_hours["pressure"] == 96
     assert result.report.source_fractions["dry_bulb"]["donor"] == pytest.approx(
-        72 / 8760
+        48 / 8760
     )
     assert result.report.source_fractions["pressure"]["reanalysis"] == pytest.approx(
         96 / 8760

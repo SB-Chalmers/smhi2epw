@@ -96,10 +96,14 @@ def _solar_inputs(
                 variable=column,
                 hours=int(positive_dark.sum()),
             )
+        # Measure outage length before darkness splits it: daytime pieces of
+        # an outage longer than the solar temporal limit are left for ERA5.
+        long_gap = G.long_missing_runs(series, C.SOLAR_TEMPORAL_MAX_GAP_HOURS)
         # Darkness establishes zero without a donor or an API request. The
         # interval check keeps real radiation near sunrise/sunset intact.
         series.loc[dark] = 0.0
-        frame[column] = _temporal(series, column, report)
+        filled = _temporal(series, column, report)
+        frame[column] = filled.mask(long_gap & ~dark)
     measured = frame[C.METOBS_RADIATION_COLUMN]
     ghi = measured.combine_first(frame["ghi"])
     chosen_original = (measured.notna() & raw_masks[C.METOBS_RADIATION_COLUMN]) | (
@@ -201,6 +205,7 @@ def prepare(
                 max_distance_km=max_distance_km,
                 max_stations=max_stations,
                 report=report,
+                max_gap_hours=C.DONOR_MAX_GAP_HOURS,
             )
         except IngestionError as exc:
             warn(

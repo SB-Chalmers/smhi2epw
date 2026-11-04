@@ -464,6 +464,8 @@ def test_compiler_opt_in_recovers_49_hours(tmp_path, monkeypatch):
         station_id=STATION_ID,
         output_path=str(tmp_path / "recovered.epw"),
         metobs_gap_fallback=True,
+        # Strict donors keep no length limit; automatic sends >48 h to ERA5.
+        weather_policy="strict",
     )
     result = compile_epw(config, client=DonorClient(gap_hours=49))
     assert result.rows == 8760
@@ -493,3 +495,15 @@ def test_invalid_config_before_network(tmp_path, settings):
             ),
             client=object(),
         )
+
+
+def test_donor_eligibility_can_exclude_long_outages():
+    index = pd.date_range("2020-01-01", periods=24 * 10, freq="h")
+    series = pd.Series(1.0, index=index)
+    series.iloc[24:96] = np.nan  # 72-hour outage
+    series.iloc[150:160] = np.nan  # 10-hour outage
+    unlimited = G.unresolved(series, "dry_bulb")
+    limited = G.unresolved(series, "dry_bulb", max_gap_hours=48)
+    assert unlimited.iloc[24:96].all() and unlimited.iloc[150:160].all()
+    assert not limited.iloc[24:96].any()
+    assert limited.iloc[150:160].all()
