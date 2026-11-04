@@ -74,6 +74,10 @@ def panel_letter(ax, letter, title):
 
 
 # ------------------------------------------------------------- Fig. 6 annual error
+EVENT_FOR = {"heating": ("cold_spell_coldest_hour", "cold spell"),
+             "cooling": ("heatwave_hottest_hour", "heatwave")}
+
+
 def fig_annual():
     H = 118
     fig, axes = plt.subplots(2, 2, figsize=(S.DOUBLE, H * S.MM))
@@ -82,11 +86,17 @@ def fig_annual():
     letters = iter("abcd")
     for r, (scope, rtitle) in enumerate(SCOPES):
         ann = read("annual-errors", scope)
+        anc = read("annual-errors-by-anchor", scope)
         for ax, mode, title in ((axes[r, 0], "heating", "Yearly heating demand"),
                                 (axes[r, 1], "cooling", "Yearly cooling demand")):
+            anchor, ev_name = EVENT_FOR[mode]
+            series = {
+                "random_seasonal": ann[(ann.method == "automatic") & (ann.sampling == "random_seasonal")],
+                "weather_extremes": anc[(anc.method == "automatic") & (anc.anchor_name == anchor)],
+            }
             top = 0
             for k, (samp, st) in enumerate(SAMP.items()):
-                a = ann[(ann.method == "automatic") & (ann.sampling == samp)].set_index("gap_hours").loc[GAPS]
+                a = series[samp].set_index("gap_hours").loc[GAPS]
                 xs = X + (k - 0.5) * w
                 p95 = a[f"{mode}_abs_p95_pct"].to_numpy()
                 med = a[f"{mode}_abs_median_pct"].to_numpy()
@@ -100,8 +110,11 @@ def fig_annual():
             panel_letter(ax, next(letters), title)
             ax.set_ylabel("error, % of yearly demand" if mode == "heating" else "")
         row_title(fig, axes[r, 0], rtitle, H)
-    handles = [Patch(fc=st["fc"], ec=st["ec"], lw=0.7, label=st["label"]) for st in SAMP.values()]
-    handles.append(Line2D([], [], ls="", marker="_", ms=7, mew=1.5, color=INK, label="median"))
+    handles = [Patch(fc=SAMP["random_seasonal"]["fc"], ec=SAMP["random_seasonal"]["ec"], lw=0.7,
+                     label="random gaps (4 per file)"),
+               Patch(fc=SAMP["weather_extremes"]["fc"], ec=SAMP["weather_extremes"]["ec"], lw=0.7,
+                     label="one gap at a cold spell (heating) or heatwave (cooling)"),
+               Line2D([], [], ls="", marker="_", ms=7, mew=1.5, color=INK, label="median")]
     fig.legend(handles=handles, loc="lower left", bbox_to_anchor=(0.06, 0.0), ncol=3,
                frameon=False, handletextpad=0.4, columnspacing=1.6)
     S.save(fig, "fig06_annual_error")
@@ -113,6 +126,10 @@ METHOD_ORDER = ["linear_only", "temporal", "diyepw_style", "era5", "automatic_le
 # filling over time is never visible: it lies under the older order (general
 # weather) or under smhi2epw (solar) up to 2 days and has no 1-week result.
 LEGEND_ORDER = [m for m in METHOD_ORDER if m != "temporal"]
+LENS = {"3 h": 3, "12 h": 12, "2 days": 48, "1 week": 168}
+ROWS3 = (("full", "meteorology", "General weather hidden: all gaps"),
+         ("subset", "meteorology", "General weather hidden: only gaps where a nearby station passed the test (about 40 %)"),
+         ("full", "solar", "Solar radiation hidden: all gaps (no nearby-station step)"))
 
 
 def method_lines(ax, df, col_of, methods, scale=1.0):
@@ -121,39 +138,60 @@ def method_lines(ax, df, col_of, methods, scale=1.0):
         if d[col_of].isna().all():
             continue
         lab, col = METHOD[m]
-        ax.plot(X, d[col_of] * scale, color=col, lw=1.6 if m == "automatic" else 1.0,
-                ls="--" if m == "donor_assessed" else "-", marker=MARK[m], ms=3.8,
-                mfc=col, mec="white", mew=0.4, zorder=4 if m == "automatic" else 3)
+        donor = m == "donor_assessed"  # drawn dashed on top: it matches smhi2epw on its subset
+        ax.plot(X, d[col_of] * scale, color=col, lw=1.6 if m == "automatic" else 1.1,
+                ls=(0, (3, 2)) if donor else "-", marker=MARK[m], ms=3.4 if donor else 3.8,
+                mfc=col, mec="white", mew=0.4,
+                zorder=5 if donor else 4 if m == "automatic" else 3)
 
 
-def method_legend(fig):
+def method_legend(fig, top):
     handles = [Line2D([], [], color=METHOD[m][1], marker=MARK[m], ms=3.8, mec="white", mew=0.4,
-                      lw=1.6 if m == "automatic" else 1.0, ls="--" if m == "donor_assessed" else "-",
-                      label=METHOD[m][0] + (" *" if m == "donor_assessed" else ""))
+                      lw=1.6 if m == "automatic" else 1.1,
+                      ls=(0, (3, 2)) if m == "donor_assessed" else "-",
+                      label=METHOD[m][0] + (" (c, d only)" if m == "donor_assessed" else ""))
                for m in LEGEND_ORDER[::-1]]
-    fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.785, 0.885), frameon=False,
+    fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.785, top), frameon=False,
                handlelength=2.2, labelspacing=0.8)
 
 
-def fig_methods():
-    H = 122
-    lens = {"3 h": 3, "12 h": 12, "2 days": 48, "1 week": 168}
-    fig, axes = plt.subplots(2, 2, figsize=(S.DOUBLE, H * S.MM))
-    fig.subplots_adjust(left=0.085, right=0.77, top=0.885, bottom=0.085, wspace=0.3, hspace=0.58)
-    letters = iter("abcd")
-    for r, (scope, rtitle) in enumerate(SCOPES):
-        ms = read("method-steps", scope).copy()
-        ms["gap_hours"] = ms["gap_length"].map(lens)
-        for ax, mode, title in ((axes[r, 0], "heating", "Yearly heating demand"),
-                                (axes[r, 1], "cooling", "Yearly cooling demand")):
-            method_lines(ax, ms, f"{mode}_abs_p95_pct", METHOD_ORDER)
-            ax.set_ylim(bottom=0)
+def three_rows(name_full, name_subset, value, ylabel, ylim, fname):
+    H = 172
+    fig, axes = plt.subplots(3, 2, figsize=(S.DOUBLE, H * S.MM))
+    fig.subplots_adjust(left=0.085, right=0.77, top=0.92, bottom=0.06, wspace=0.3, hspace=0.62)
+    letters = iter("abcdef")
+    for r, (kind, scope, rtitle) in enumerate(ROWS3):
+        if kind == "full":
+            d = read(name_full, scope).copy()
+            if "gap_hours" not in d:
+                d["gap_hours"] = d["gap_length"].map(LENS)
+            if "sampling" in d:
+                d = d[d.sampling == "random_seasonal"]
+            methods = [m for m in METHOD_ORDER if m != "donor_assessed"]
+        else:
+            d = read(name_subset, scope)
+            d = d[d.sampling == "random_seasonal"]
+            methods = METHOD_ORDER
+        for ax, mode in ((axes[r, 0], "heating"), (axes[r, 1], "cooling")):
+            method_lines(ax, d, value.format(mode=mode), methods,
+                         scale=100 if "months" in value else 1.0)
             gap_axis(ax)
-            panel_letter(ax, next(letters), title)
-            ax.set_ylabel("95th percentile error,\n% of yearly demand" if mode == "heating" else "")
+            if ylim:
+                ax.set_ylim(*ylim)
+                ax.set_yticks([0, 20, 40, 60, 80, 100])
+            else:
+                ax.set_ylim(bottom=0)
+            panel_letter(ax, next(letters), ylabel[1].format(mode=mode))
+            ax.set_ylabel(ylabel[0] if mode == "heating" else "")
         row_title(fig, axes[r, 0], rtitle, H)
-    method_legend(fig)
-    S.save(fig, "fig07_methods")
+    method_legend(fig, 0.92)
+    S.save(fig, fname)
+
+
+def fig_methods():
+    three_rows("method-steps", "method-steps-donor-subset", "{mode}_abs_p95_pct",
+               ("95th percentile error,\n% of yearly demand", "Yearly {mode} demand"), None,
+               "fig07_methods")
 
 
 # ------------------------------------------------------------- Fig. 8 where the gap falls
@@ -168,44 +206,46 @@ def fig_position():
     fig.subplots_adjust(left=0.085, right=0.99, top=0.885, bottom=0.12, wspace=0.2, hspace=0.6)
     letters = iter("abcd")
     for r, (scope, rtitle) in enumerate(SCOPES):
-        gp = read("gap-position", scope)
-        a = gp[gp.method == "automatic"]
+        gw = read("gap-window", scope)
+        a = gw[gw.method == "automatic"]
 
-        def sel(event, season):
-            return a[(a.event_type == event) & (a.season == season)].set_index("gap_hours").reindex(GAPS)
+        def sel(event, season, mode):
+            return a[(a.event_type == event) & (a.season == season) & (a["mode"] == mode)] \
+                .set_index("gap_hours").reindex(GAPS)
         groups = {
-            "heating": [("winter", sel("random_seasonal", "winter"), SEASON_GREY["winter"], False),
-                        ("spring", sel("random_seasonal", "spring"), SEASON_GREY["spring"], False),
-                        ("autumn", sel("random_seasonal", "autumn"), SEASON_GREY["autumn"], False),
-                        ("cold spell", sel("cold_spell_coldest_hour", "winter"), SEASON_GREY["winter"], True)],
-            "cooling": [("summer", sel("random_seasonal", "summer"), SEASON_GREY["summer"], False),
-                        ("heatwave", sel("heatwave_hottest_hour", "summer"), SEASON_GREY["summer"], True)],
+            "heating": [("winter", "random_seasonal", "winter", False),
+                        ("spring", "random_seasonal", "spring", False),
+                        ("autumn", "random_seasonal", "autumn", False),
+                        ("cold spell", "cold_spell_coldest_hour", "winter", True)],
+            "cooling": [("summer", "random_seasonal", "summer", False),
+                        ("heatwave", "heatwave_hottest_hour", "summer", True)],
         }
         for ax, mode, title in ((axes[r, 0], "heating", "Heating: winter, spring, autumn, cold spells"),
                                 (axes[r, 1], "cooling", "Cooling: summer and heatwaves")):
             g = groups[mode]
             w = 0.8 / len(g)
             top = 0
-            for k, (name, d, col, hatch) in enumerate(g):
+            for k, (name, event, season, hatch) in enumerate(g):
+                d = sel(event, season, mode)
                 xs = X - 0.4 + w * (k + 0.5)
-                gap = d[f"gap_{mode}_delta_kwh_m2_abs_p95"].to_numpy()
-                rec = d[f"recovery_{mode}_delta_kwh_m2_abs_p95"].to_numpy()
-                kw = dict(width=w * 0.88, edgecolor=INK, lw=0.4, zorder=3)
-                ax.bar(xs, gap, color=col, hatch="////" if hatch else None, **kw)
-                ax.bar(xs, rec, bottom=gap, color="white", **kw)
-                top = max(top, np.nanmax(gap + rec))
+                win = d["window_abs_p95_pct"].to_numpy()
+                ing = d["in_gap_abs_p95_pct"].to_numpy()
+                ax.bar(xs, win, width=w * 0.88, color=SEASON_GREY[season], edgecolor=INK, lw=0.4,
+                       hatch="////" if hatch else None, zorder=3)
+                ax.bar(xs, ing, width=w * 0.3, color="white", edgecolor=INK, lw=0.5, zorder=4)
+                top = max(top, np.nanmax(np.maximum(win, ing)))
             ax.set_ylim(0, top * 1.08)
             gap_axis(ax)
             panel_letter(ax, next(letters), title)
-            ax.set_ylabel("95th percentile load\nchange, kWh/m²" if mode == "heating" else "")
+            ax.set_ylabel("95th percentile error,\n% of yearly demand" if mode == "heating" else "")
             if r == 0:
-                handles = [Patch(fc=col, hatch="////" if h else None, ec=INK, lw=0.4, label=name)
-                           for name, _, col, h in g]
+                handles = [Patch(fc=SEASON_GREY[season], hatch="////" if h else None, ec=INK, lw=0.4,
+                                 label=name) for name, _, season, h in g]
                 ax.legend(handles=handles, loc="upper left", frameon=False, ncol=1,
                           handlelength=1.4)
         row_title(fig, axes[r, 0], rtitle, H)
-    fig.legend(handles=[Patch(fc=GREY["mid"], ec=INK, lw=0.4, label="inside the gap"),
-                        Patch(fc="white", ec=INK, lw=0.4, label="in the following week")],
+    fig.legend(handles=[Patch(fc=GREY["light"], ec=INK, lw=0.4, label="the gap plus the following week"),
+                        Patch(fc="white", ec=INK, lw=0.5, label="inside the gap only (thin white bar)")],
                loc="lower left", bbox_to_anchor=(0.06, 0.0), ncol=2, frameon=False)
     S.save(fig, "fig08_gap_position")
 
@@ -218,28 +258,34 @@ TIMING = [("same peak hour", GREY["dark"]), ("moved up to 24 h", GREY["light"]),
 def fig_peaks():
     pk = read("peak-errors")
     a = pk[pk.method == "automatic"]
-    H = 106
+    pc = read("peak-cases")
+    pc = pc[pc.method == "automatic"]
+    rng = np.random.default_rng(7)
+    H = 118
     fig, axes = plt.subplots(2, 2, figsize=(S.DOUBLE, H * S.MM))
-    fig.subplots_adjust(left=0.085, right=0.99, top=0.93, bottom=0.17, wspace=0.2, hspace=0.62)
+    fig.subplots_adjust(left=0.085, right=0.99, top=0.935, bottom=0.215, wspace=0.2, hspace=0.55)
     w = 0.42
     for j, mode in enumerate(("heating", "cooling")):
         ax = axes[0, j]
         for k, (samp, st) in enumerate(SAMP.items()):
-            d = a[a.sampling == samp].set_index("gap_hours").reindex(GAPS)
             xs = X + (k - 0.5) * w
-            med = d[f"{mode}_peak_abs_err_median_w_m2"].to_numpy()
-            p95 = d[f"{mode}_peak_abs_err_p95_w_m2"].to_numpy()
-            n = d[f"{mode}_exposed_rows"].fillna(0).astype(int).to_numpy()
-            ok = n >= N_MIN
-            ax.vlines(xs[ok], med[ok], p95[ok], color=st["ec"], lw=1.0, zorder=3)
-            ax.plot(xs[ok], p95[ok], ls="", marker="o", ms=4.4, mfc=st["fc"], mec=st["ec"],
-                    mew=0.8, zorder=4)
-            ax.plot(xs[ok], med[ok], ls="", marker="_", ms=6.5, color=st["ec"], mew=1.3, zorder=4)
-            for xi, ni, v, good in zip(xs, n, p95, ok):
-                ax.text(xi, (v if good else 0) + 0.6, f"{ni}", fontsize=FS,
-                        color=INK if good else GREY["mid"], ha="center", va="bottom")
+            for xi, g in zip(xs, GAPS):
+                v = pc[(pc.sampling == samp) & (pc["mode"] == mode) & (pc.gap_hours == g)] \
+                    .abs_peak_error_w_m2.to_numpy()
+                n = len(v)
+                jit = rng.uniform(-w * 0.32, w * 0.32, n)
+                ax.scatter(xi + jit, v, s=4, c=st["fc"], edgecolors=st["ec"], linewidths=0.25,
+                           alpha=0.8, zorder=3)
+                if n >= N_MIN:
+                    med, p95 = np.median(v), np.percentile(v, 95)
+                    ax.plot([xi - w * 0.42, xi + w * 0.42], [med, med], color=INK, lw=1.3, zorder=5)
+                    ax.plot([xi - w * 0.42, xi + w * 0.42], [p95, p95], color=INK, lw=0.8,
+                            ls=(0, (2, 1)), zorder=5)
+                ax.text(xi, 29.5, f"{n}", fontsize=FS, color=INK if n >= N_MIN else GREY["mid"],
+                        ha="center", va="center")
         gap_axis(ax, xlabel=False)
-        ax.set_ylim(0, 22)
+        ax.set_ylim(0, 31)
+        ax.set_yticks([0, 5, 10, 15, 20, 25])
         panel_letter(ax, "ab"[j], f"Peak {mode} load, peak hour hidden")
         ax.set_ylabel("absolute error, W/m²" if j == 0 else "")
 
@@ -269,10 +315,10 @@ def fig_peaks():
         ax.set_ylim(0, 100)
         panel_letter(ax, "cd"[j], f"Timing of the peak {mode} hour")
         ax.set_ylabel("% of cases" if j == 0 else "")
-    handles = [Line2D([], [], ls="", marker="o", ms=4.4, mfc=st["fc"], mec=st["ec"], mew=0.8,
-                      label=st["label"].split(" (")[0]) for st in SAMP.values()]
-    handles.append(Line2D([], [], ls="", marker="_", ms=6.5, mew=1.3, color=INK,
-                          label="median (dash) to 95th percentile (dot)"))
+    handles = [Line2D([], [], ls="", marker="o", ms=3.2, mfc=st["fc"], mec=st["ec"], mew=0.4,
+                      label=st["label"].split(" (")[0] + " (one dot per case)") for st in SAMP.values()]
+    handles += [Line2D([], [], color=INK, lw=1.3, label="median"),
+                Line2D([], [], color=INK, lw=0.8, ls=(0, (2, 1)), label="95th percentile")]
     handles += [Patch(fc=col, ec=INK, lw=0.4, label=lab) for lab, col in TIMING]
     fig.legend(handles=handles, loc="lower left", bbox_to_anchor=(0.06, 0.0), ncol=3,
                frameon=False, handletextpad=0.4, columnspacing=1.4)
@@ -320,24 +366,9 @@ def fig_events():
 
 # ------------------------------------------------------------- Fig. 10 monthly error
 def fig_monthly():
-    H = 122
-    fig, axes = plt.subplots(2, 2, figsize=(S.DOUBLE, H * S.MM))
-    fig.subplots_adjust(left=0.085, right=0.77, top=0.885, bottom=0.085, wspace=0.3, hspace=0.58)
-    letters = iter("abcd")
-    for r, (scope, rtitle) in enumerate(SCOPES):
-        mo = read("monthly-error", scope)
-        rnd = mo[mo.sampling == "random_seasonal"]
-        for ax, mode, title in ((axes[r, 0], "heating", "Monthly heating demand"),
-                                (axes[r, 1], "cooling", "Monthly cooling demand")):
-            method_lines(ax, rnd, f"{mode}_months_within_5pct", METHOD_ORDER, scale=100)
-            gap_axis(ax)
-            ax.set_ylim(0, 102)
-            ax.set_yticks([0, 20, 40, 60, 80, 100])
-            panel_letter(ax, next(letters), title)
-            ax.set_ylabel("% of months with a gap\nwithin ±5 % of the reference" if mode == "heating" else "")
-        row_title(fig, axes[r, 0], rtitle, H)
-    method_legend(fig)
-    S.save(fig, "fig11_monthly")
+    three_rows("monthly-error", "method-steps-donor-subset", "{mode}_months_within_5pct",
+               ("% of months with a gap\nwithin ±5 % of the reference", "Monthly {mode} demand"),
+               (0, 102), "fig11_monthly")
 
 
 if __name__ == "__main__":
