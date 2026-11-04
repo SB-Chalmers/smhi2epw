@@ -6,7 +6,7 @@ import style as S
 from style import DIYEPW, INK, MIN_FS, MUTED, RUNG, TINT, arrow, box
 
 S.use()
-W, H = 174, 112
+W, H = 174, 125
 fig, ax = S.canvas(W, H)
 B = MIN_FS
 LS = 2.75  # mm between lines of 6.5 pt text
@@ -28,8 +28,8 @@ def card(x, y, w, h, n, title, body, *, fc="white", ec=INK, lw=0.8):
         t(x + 2, y + h - 7.4, body)
 
 
-lane_ref = (86, 110)   # y range of reference lane
-lane_cand = (2, 80.5)  # y range of test lane
+lane_ref = (99, 123)   # y range of reference lane
+lane_cand = (2, 93.5)  # y range of test lane
 
 # column x positions and widths
 rx, rw = 2, 28
@@ -65,6 +65,7 @@ methods = [
     ("diyepw-style", "diyepw", ["straight line up to 6 h;", "7–48 h: the same hour averaged",
                                 "over the surrounding 4 weeks;", "longer: ERA5"]),
     ("smhi2epw", "primary", ["full sequence (Fig. 1)"]),
+    ("smhi2epw 1.3", "neutral", ["as above, but nearby station for", "gaps of any length, and solar", "daily patterns up to 48 h"]),
     ("smhi2epw, older order", "profile", ["daily pattern before", "nearby station"]),
 ]
 EDGE = dict(RUNG, diyepw=DIYEPW)
@@ -108,7 +109,7 @@ t((rx + rw + ex) / 2, yr + 1.0, "reference weather file, simulated once per buil
   color=MUTED, ha="center", va="bottom", style="italic")
 arrow(ax, (ex + ew, yr), (px, yr), lw=0.9, ms=6)
 # test lane
-yc = lane_cand[0] + 68
+yc = lane_cand[0] + 80
 arrow(ax, (rx + rw, yc), (mx, yc), lw=0.9, ms=6)
 arrow(ax, (mx + mw, yc), (cx, yc), lw=0.9, ms=6)
 arrow(ax, (cx + cw, yc), (ex, yc), lw=0.9, ms=6)

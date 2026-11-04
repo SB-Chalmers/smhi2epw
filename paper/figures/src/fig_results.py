@@ -33,7 +33,7 @@ X = np.arange(len(GAPS))
 FS = MIN_FS          # small labels
 FS_AX = 7.0          # tick labels and axis titles
 MARK = {"linear_only": "s", "temporal": "o", "donor_assessed": "D", "era5": "v",
-        "diyepw_style": "^", "automatic_legacy": "P", "automatic": "o"}
+        "diyepw_style": "^", "automatic_legacy": "P", "automatic": "o", "gap_type_rule": "o"}
 # gap placement: random = dark grey, at weather events = light grey with dark edge
 SAMP = {"random_seasonal": dict(fc=GREY["dark"], ec=GREY["dark"], med="white", label="random gaps (4 per file)"),
         "weather_extremes": dict(fc=GREY["light"], ec=GREY["dark"], med=INK, label="gaps at weather events (1 per file)")}
@@ -46,8 +46,29 @@ plt.rcParams.update({"xtick.labelsize": FS_AX, "ytick.labelsize": FS_AX,
                      "axes.labelsize": FS_AX, "legend.fontsize": FS_AX})
 
 
+# smhi2epw's current order by gap type: general-weather gaps over 48 h and
+# solar gaps over 3 h go to ERA5; shorter gaps follow the 1.3 order
+# ("automatic"). Built from the existing automatic and era5 rows, as in
+# robustness/gap-type-rule.csv.
+ERA5_FROM = {"meteorology": 168, "solar": 12}
+SMHI = "gap_type_rule"
+LENS = {"3 h": 3, "12 h": 12, "2 days": 48, "1 week": 168}
+
+
+def add_gap_type_rule(d):
+    if "method" not in d or "scope" not in d:
+        return d
+    hours = d["gap_hours"] if "gap_hours" in d else d["gap_length"].map(LENS)
+    cut = d["scope"].map(ERA5_FROM)
+    use_era5 = hours >= cut
+    pick = ((d.method == "automatic") & ~use_era5) | ((d.method == "era5") & use_era5)
+    rule = d[pick].copy()
+    rule["method"] = SMHI
+    return pd.concat([d, rule], ignore_index=True)
+
+
 def read(name, scope="meteorology"):
-    d = pd.read_csv(RES / f"{name}.csv")
+    d = add_gap_type_rule(pd.read_csv(RES / f"{name}.csv"))
     return d[d["scope"] == scope] if "scope" in d else d
 
 
@@ -91,8 +112,8 @@ def fig_annual():
                                 (axes[r, 1], "cooling", "Yearly cooling demand")):
             anchor, ev_name = EVENT_FOR[mode]
             series = {
-                "random_seasonal": ann[(ann.method == "automatic") & (ann.sampling == "random_seasonal")],
-                "weather_extremes": anc[(anc.method == "automatic") & (anc.anchor_name == anchor)],
+                "random_seasonal": ann[(ann.method == SMHI) & (ann.sampling == "random_seasonal")],
+                "weather_extremes": anc[(anc.method == SMHI) & (anc.anchor_name == anchor)],
             }
             top = 0
             for k, (samp, st) in enumerate(SAMP.items()):
@@ -121,15 +142,22 @@ def fig_annual():
 
 
 # ------------------------------------------------------------- Fig. 9 methods
-METHOD_ORDER = ["linear_only", "temporal", "diyepw_style", "era5", "automatic_legacy",
-                "donor_assessed", "automatic"]
-# filling over time is never visible: it lies under the older order (general
-# weather) or under smhi2epw (solar) up to 2 days and has no 1-week result.
-LEGEND_ORDER = [m for m in METHOD_ORDER if m != "temporal"]
-LENS = {"3 h": 3, "12 h": 12, "2 days": 48, "1 week": 168}
+# filling over time is not drawn: it stops at 48 h and up to 2 days equals the
+# older order (general weather) or smhi2epw 1.3 (solar); the caption says so.
+METHOD_ORDER = ["linear_only", "diyepw_style", "era5", "automatic_legacy",
+                "donor_assessed", "automatic", SMHI]
+LEGEND_ORDER = METHOD_ORDER
 ROWS3 = (("full", "meteorology", "General weather hidden: all gaps"),
          ("subset", "meteorology", "General weather hidden: only gaps where a nearby station passed the test (about 40 %)"),
          ("full", "solar", "Solar radiation hidden: all gaps (no nearby-station step)"))
+
+
+# smhi2epw is the thick black line. Lines that coincide with it over part of the
+# range are dashed and drawn on top: smhi2epw 1.3 (same up to 2 days for general
+# weather, 3 h for solar) and nearby station (same as 1.3 on its subset).
+LW = {SMHI: 1.7, "automatic": 1.0}
+LSTYLE = {"automatic": (0, (1.2, 1.2)), "donor_assessed": (0, (3, 2))}
+ZO = {SMHI: 4, "automatic": 5, "donor_assessed": 6}
 
 
 def method_lines(ax, df, col_of, methods, scale=1.0):
@@ -138,17 +166,14 @@ def method_lines(ax, df, col_of, methods, scale=1.0):
         if d[col_of].isna().all():
             continue
         lab, col = METHOD[m]
-        donor = m == "donor_assessed"  # drawn dashed on top: it matches smhi2epw on its subset
-        ax.plot(X, d[col_of] * scale, color=col, lw=1.6 if m == "automatic" else 1.1,
-                ls=(0, (3, 2)) if donor else "-", marker=MARK[m], ms=3.4 if donor else 3.8,
-                mfc=col, mec="white", mew=0.4,
-                zorder=5 if donor else 4 if m == "automatic" else 3)
+        ax.plot(X, d[col_of] * scale, color=col, lw=LW.get(m, 1.1), ls=LSTYLE.get(m, "-"),
+                marker=MARK[m], ms=3.4 if m in LSTYLE else 3.8, mfc=col, mec="white", mew=0.4,
+                zorder=ZO.get(m, 3))
 
 
 def method_legend(fig, top):
     handles = [Line2D([], [], color=METHOD[m][1], marker=MARK[m], ms=3.8, mec="white", mew=0.4,
-                      lw=1.6 if m == "automatic" else 1.1,
-                      ls=(0, (3, 2)) if m == "donor_assessed" else "-",
+                      lw=LW.get(m, 1.1), ls=LSTYLE.get(m, "-"),
                       label=METHOD[m][0] + (" (c, d only)" if m == "donor_assessed" else ""))
                for m in LEGEND_ORDER[::-1]]
     fig.legend(handles=handles, loc="upper left", bbox_to_anchor=(0.785, top), frameon=False,
@@ -207,7 +232,7 @@ def fig_position():
     letters = iter("abcd")
     for r, (scope, rtitle) in enumerate(SCOPES):
         gw = read("gap-window", scope)
-        a = gw[gw.method == "automatic"]
+        a = gw[gw.method == SMHI]
 
         def sel(event, season, mode):
             return a[(a.event_type == event) & (a.season == season) & (a["mode"] == mode)] \
@@ -257,9 +282,9 @@ TIMING = [("same peak hour", GREY["dark"]), ("moved up to 24 h", GREY["light"]),
 
 def fig_peaks():
     pk = read("peak-errors")
-    a = pk[pk.method == "automatic"]
+    a = pk[pk.method == SMHI]
     pc = read("peak-cases")
-    pc = pc[pc.method == "automatic"]
+    pc = pc[pc.method == SMHI]
     rng = np.random.default_rng(7)
     H = 118
     fig, axes = plt.subplots(2, 2, figsize=(S.DOUBLE, H * S.MM))
@@ -331,7 +356,7 @@ OUTCOME = {"kept": GREY["dark"], "changed": GREY["light"], "lost": "white"}
 
 def fig_events():
     ev = read("event-preservation-3day")
-    a = ev[(ev.method == "automatic") & (ev.sampling == "weather_extremes")]
+    a = ev[(ev.method == SMHI) & (ev.sampling == "weather_extremes")]
     types = [("heatwave", "Heatwave\n3+ days ≥ 25 °C"), ("warm_spell", "Warm spell\n3+ days above the\nsummer 95th percentile"),
              ("cold_spell", "Cold spell\n3+ days ≤ −10 °C"), ("relative_cold_spell", "Relative cold spell\n3+ days below the\nwinter 5th percentile")]
     fig, axes = plt.subplots(1, 4, figsize=(S.DOUBLE, 62 * S.MM), sharey=True)

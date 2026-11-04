@@ -38,7 +38,7 @@ def rung(x, y, w, h, n, title, body, key, *, note=None):
 
 # ------------------------------------------------------------- column frame
 CS, CSW = 2, 38      # source column
-CM, CMW = 46, 72     # meteorology ladder
+CM, CMW = 46, 70     # meteorology ladder
 CQ, CQW = 124, 48    # solar ladder
 
 for x, w, t in ((CS, CSW, "Data source\nweather station, model or reanalysis"),
@@ -60,7 +60,7 @@ rows = {  # name: (y_bottom, height)
 }
 
 sources = {
-    1: ("SMHI weather station", "quality-approved values;\nfull-year station preferred;\nSTRÅNG model for solar", "primary", "-"),
+    1: ("SMHI weather station", "quality-approved values;\nfull-year station preferred;\nsolar: measured, or STRÅNG", "primary", "-"),
     2: ("Same station", "its own record", "neutral", "--"),
     3: ("Nearby SMHI stations", "up to 3 within 75 km;\nsame-hour approved values", "donor", "-"),
     4: ("Same station", "its own record", "neutral", "--"),
@@ -83,12 +83,12 @@ y, h = rows[2]
 rung(CM, y, CMW, h, 2, "Straight-line fill, gaps ≤ 3 h",
      "straight line between the values either side;\nwith a value on one side only, it is held", "interp")
 y, h = rows[3]
-rung(CM, y, CMW, h, 3, "Nearby station, if it passes a test",
-     "the stations are compared within 30 days of the gap\n"
-     "and tested on 3 days left out of the comparison;\n"
-     "a fixed correction is kept only if it cuts the\n"
-     "error by 10 %; rejected if the average error\n"
-     "exceeds 3 °C, 15 % RH, 3 m/s, 45° or 5 hPa", "donor")
+rung(CM, y, CMW, h, 3, "Nearby station, gaps ≤ 48 h",
+     "used only if it passes a test: the stations are\n"
+     "compared within 30 days of the gap and tested\n"
+     "on 3 days left out; a fixed correction is kept only\n"
+     "if it cuts the error by 10 %; rejected if the average\n"
+     "error exceeds 3 °C, 15 % RH, 3 m/s, 45° or 5 hPa", "donor")
 y, h = rows[4]
 rung(CM, y, CMW, h, 4, "Daily pattern, gaps ≤ 48 h",
      "typical 24 h pattern from up to 7 days either\nside, adjusted to meet the values at both ends", "profile")
@@ -96,20 +96,28 @@ y, h = rows[5]
 rung(CM, y, CMW, h, 5, "ERA5 reanalysis",
      "only for hours still missing;\nwhich data were used is recorded", "era5")
 
-# solar ladder: rung 2 spans the temporal/donor rows
+# solar ladder: measured, STRÅNG, straight line <= 3 h, ERA5
 y1, h1 = rows[1]
-rung(CQ, y1, CQW, h1, 1, "Modelled radiation",
-     "STRÅNG model, scaled to a\nsolar station within 50 km;\naveraged to hourly values", "solar")
-ytop = rows[2][0] + rows[2][1]
-ybot = ytop - 27.5
-rung(CQ, ybot, CQW, ytop - ybot, 2, "Short solar gaps",
-     "daily patterns, or global\nradiation split into direct\nand diffuse parts\n(Erbs–Driesse model, pvlib);\n"
-     "sun position every 5 min;\nzero when the sun is down", "solar")
-text(CQ + 13, ybot - 2.5, "never taken from a nearby\nstation: solar stays tied\nto the chosen location",
+rung(CQ, y1, CQW, h1, 1, "Measured, then modelled",
+     "solar station within 50 km;\nhours it lacks: STRÅNG model,\nscaled to that station", "solar")
+y2, h2 = rows[2]
+rung(CQ, y2, CQW, h2, 2, "Straight line, gaps ≤ 3 h",
+     "sun position every 5 min;\nzero when the sun is down", "interp")
+ytop, ybot = y2 + h2, y2
+text(CQ + 13, ybot - 4, "gaps over 3 h go to ERA5\n\nnever taken from a nearby\nstation: solar stays tied\nto the chosen location",
      ha="left", va="top", fontsize=6.5, color=MUTED, style="italic")
 y5, h5 = rows[5]
 rung(CQ, y5, CQW, h5, 3, "ERA5 radiation",
      "all three parts together;\nalready hourly averages", "era5")
+
+# general weather: gaps over 48 h skip the nearby station and daily pattern
+xb = CM + CMW + 3.2
+yb2 = rows[2][0] + rows[2][1] / 2
+yb5 = rows[5][0] + rows[5][1] / 2
+ax.plot([CM + CMW, xb, xb], [yb2, yb2, yb5 + 1.5], color=INK, lw=0.7)
+arrow(ax, (xb, yb5 + 1.5), (CM + CMW, yb5 + 1.5), lw=0.7, ms=5)
+text(xb + 0.7, (rows[3][0] + rows[3][1] + rows[4][0]) / 2, "gaps over 48 h", rotation=90,
+     ha="left", va="center", fontsize=6.5, color=MUTED, style="italic")
 
 # "remaining gaps" connectors
 def down(x, y0, y1, label=True):
