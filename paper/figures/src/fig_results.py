@@ -56,7 +56,7 @@ LENS = {"3 h": 3, "12 h": 12, "2 days": 48, "1 week": 168}
 
 
 def add_gap_type_rule(d):
-    if "method" not in d or "scope" not in d:
+    if "method" not in d or "scope" not in d or (d.method == SMHI).any():
         return d
     hours = d["gap_hours"] if "gap_hours" in d else d["gap_length"].map(LENS)
     cut = d["scope"].map(ERA5_FROM)
