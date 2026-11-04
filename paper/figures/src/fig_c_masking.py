@@ -27,11 +27,11 @@ DAYS = 365
 MIN_W = 1.6  # days; minimum drawn width so 3 h and 12 h blocks stay visible
 
 DUR = (3, 12, 48, 168)
-SHADE = {3: "#7fb8de", 12: "#3f94c9", 48: "#0072B2", 168: "#00456b"}
+SHADE = {3: "#8e8e93", 12: "#636366", 48: "#3a3a3c", 168: "#1d1d1f"}
 
-fig = plt.figure(figsize=(S.DOUBLE, 74 * S.MM))
-ax = fig.add_axes([0.105, 0.17, 0.585, 0.64])
-bx = fig.add_axes([0.765, 0.17, 0.225, 0.64])
+fig = plt.figure(figsize=(S.DOUBLE, 68 * S.MM))
+ax = fig.add_axes([0.12, 0.1, 0.56, 0.68])
+bx = fig.add_axes([0.765, 0.17, 0.215, 0.61])
 
 # ----------------------------------------------------------- (a) seasonal
 season_spans = [("DJF", 0, 59), ("MAM", 59, 151), ("JJA", 151, 243), ("SON", 243, 334),
@@ -55,7 +55,7 @@ ymax = y
 for name, a, b in season_spans:
     ax.add_patch(Rectangle((a, -0.6), b - a, ymax + 0.2, fc=SEASON[name], ec="none", zorder=0))
 for name, a, b in season_spans[:4]:
-    ax.text((a + b) / 2, ymax + 0.15, SEASON_NAME[name], ha="center", va="top", fontsize=6.3, color=MUTED)
+    ax.text((a + b) / 2, ymax + 0.15, SEASON_NAME[name], ha="center", va="top", fontsize=6.5, color=MUTED)
 
 for p in panels:
     key = (p["hours"], p["seed"])
@@ -67,15 +67,15 @@ for p in panels:
         drawn = max(w, MIN_W)
         ax.add_patch(Rectangle((s + w / 2 - drawn / 2, yy + 0.14), drawn, 0.72,
                                fc=SHADE[p["hours"]], ec="none", zorder=3))
-    ax.text(DAYS + 2, yy + 0.5, f"{DRAW[p['seed']]}", fontsize=5.6, color=MUTED,
+    ax.text(DAYS + 2, yy + 0.5, f"{DRAW[p['seed']]}", fontsize=6.5, color=MUTED,
             va="center", ha="left")
 
 for d in DUR:
     ys = [ypos[(d, s)] for s in (11, 29, 47)]
     mid = (min(ys) + max(ys) + 1) / 2
     ax.text(-5, mid - 0.45, f"{d} h gaps", ha="right", va="center", fontsize=6.8,
-            weight="bold", color=SHADE[d] if d != 3 else "#3f94c9")
-    ax.text(-5, mid + 0.6, f"{4 * d} h in total", ha="right", va="center", fontsize=6,
+            weight="bold", color=INK)
+    ax.text(-5, mid + 0.6, f"{4 * d} h in total", ha="right", va="center", fontsize=6.5,
             color=MUTED)
 
 month_starts = pd.date_range(f"{YEAR}-01-01", periods=12, freq="MS")
@@ -93,12 +93,9 @@ ax.spines["bottom"].set_visible(False)
 ax.spines["top"].set_visible(True)
 ax.text(0, 1.21, "a  Random gaps, one per season", transform=ax.transAxes, fontsize=8,
         weight="bold", va="bottom")
-ax.text(0, 1.14, "three random draws per gap length; example year 2021 (winter = Dec–Feb)",
-        transform=ax.transAxes, fontsize=6.3, color=MUTED, va="bottom")
-ax.text(DAYS + 2, -0.35, "draw", fontsize=5.6, color=MUTED, ha="left", va="bottom")
-ax.text(0, -0.16, "Gaps of 3 h and 12 h are drawn wider than to scale so they stay visible. General-weather and solar gaps are drawn separately.\n"
-        "Event hours (b): the warmest and coldest measured hour, and the hottest hour of a heatwave and coldest hour of a cold spell, where these occur.",
-        transform=ax.transAxes, fontsize=5.8, color=MUTED, va="top")
+ax.text(0, 1.13, "three random draws per gap length; example year 2021",
+        transform=ax.transAxes, fontsize=6.5, color=MUTED, va="bottom")
+ax.text(DAYS + 2, -0.35, "draw", fontsize=6.5, color=MUTED, ha="left", va="bottom")
 
 # ----------------------------------------------------------- (b) event-centred
 for i, d in enumerate(DUR[::-1]):
@@ -107,8 +104,8 @@ for i, d in enumerate(DUR[::-1]):
     bx.add_patch(Rectangle((s, yy + 0.18), d, 0.64, fc=SHADE[d], ec="none", zorder=3))
     bx.text(s - 3, yy + 0.5, f"{d} h", ha="right", va="center", fontsize=6.5,
             color=INK)
-bx.axvline(0, color=RUNG["donor"], lw=0.9, zorder=4)
-bx.text(3, -0.35, "event hour", color=RUNG["donor"], fontsize=6.2, ha="left",
+bx.axvline(0, color=INK, lw=0.9, ls=(0, (2, 1.5)), zorder=4)
+bx.text(3, -0.35, "event hour", color=INK, fontsize=6.5, ha="left",
         va="bottom")
 bx.set_xlim(-108, 92)
 bx.set_ylim(4.0, -0.9)
@@ -116,8 +113,8 @@ bx.set_xticks([-84, -48, 0, 48, 84])
 bx.set_xlabel("hours from event hour", fontsize=6.5, labelpad=1.5)
 bx.set_yticks([])
 bx.spines["left"].set_visible(False)
-bx.text(0, 1.21, "b  Gaps around weather events", transform=bx.transAxes, fontsize=8,
+bx.text(0, 1.235, "b  Gaps at weather events", transform=bx.transAxes, fontsize=8,
         weight="bold", va="bottom")
-bx.text(0, 1.14, "one gap per weather file", transform=bx.transAxes,
-        fontsize=6.3, color=MUTED, va="bottom")
+bx.text(0, 1.145, "one gap per weather file", transform=bx.transAxes,
+        fontsize=6.5, color=MUTED, va="bottom")
 S.save(fig, "fig_c_masking")

@@ -133,14 +133,14 @@ for sp in main.spines.values():
 main.text(0.02, 0.99, "a", transform=main.transAxes, fontsize=9, weight="bold", va="top")
 # scale bar
 main.plot([700, 900], [6170, 6170], color=INK, lw=1.2, solid_capstyle="butt", zorder=8)
-main.text(800, 6185, "200 km", ha="center", va="bottom", fontsize=6)
+main.text(800, 6185, "200 km", ha="center", va="bottom", fontsize=6.5)
 main.legend(handles=[
     Line2D([], [], ls="", marker="*", ms=6.5, mfc=INK, mec="white", label="study region (city)"),
     Line2D([], [], ls="", marker="o", ms=2, mfc=MUTED, mec="none",
            label="SMHI air-temperature station"),
     Line2D([], [], ls="", marker="^", ms=4, mfc=RUNG["solar"], mec=INK, mew=0.3,
            label="SMHI radiation station"),
-], loc="upper left", bbox_to_anchor=(0.0, 0.955), frameon=True, fontsize=5.8,
+], loc="upper left", bbox_to_anchor=(0.0, 0.955), frameon=True, fontsize=6.5,
     facecolor="white", edgecolor="none", framealpha=0.85,
     handletextpad=0.3, borderaxespad=0.2, labelspacing=0.5)
 
@@ -212,7 +212,7 @@ for i, s in enumerate(STRATA):
         name = p["name"].replace(" Flygplats", "").replace("Göteborg-", "").replace("Stockholm-", "")
         lab = f"{name}\n{yrs}" if len(rs) < 3 else name
         dx, dy, ha, va = LABEL.get(pid, (6, 5, "left", "bottom"))
-        ax.text(px + dx, py + dy, lab, fontsize=5.6, ha=ha, va=va, zorder=7, linespacing=1.15,
+        ax.text(px + dx, py + dy, lab, fontsize=6.5, ha=ha, va=va, zorder=7, linespacing=1.15,
                 bbox=dict(fc="white", ec="none", alpha=0.75, pad=0.4))
     ax.plot(cx, cy, marker="*", ms=7.0, mfc=INK, mec="white", mew=0.5, zorder=5.5)
     ax.set_xlim(mx - HALF, mx + HALF)
@@ -231,7 +231,7 @@ for i, s in enumerate(STRATA):
     ax.plot([mx + HALF - 62, mx + HALF - 12], [my - HALF + 10] * 2, color=INK, lw=1.0,
             solid_capstyle="butt", zorder=8)
     ax.text(mx + HALF - 37, my - HALF + 13, "50 km", ha="center", va="bottom",
-            fontsize=5.4, zorder=8)
+            fontsize=6.5, zorder=8)
 
 handles = [
     Line2D([], [], ls="", marker="o", ms=5, mfc=RUNG["primary"], mec=INK, mew=0.6,
@@ -246,7 +246,7 @@ handles = [
            label="† Kiruna 2018: no station met the data requirements"),
 ]
 fig.legend(handles=handles, loc="lower left", bbox_to_anchor=(0.0, 0.0), ncol=3,
-           frameon=False, fontsize=5.8, handletextpad=0.4, columnspacing=1.2,
+           frameon=False, fontsize=6.5, handletextpad=0.4, columnspacing=1.2,
            labelspacing=0.4)
 
 S.save(fig, "fig_b_map")

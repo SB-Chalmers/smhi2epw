@@ -43,6 +43,15 @@ TINT = {
     "solar": "#fcefd6",
     "neutral": "#f4f4f6",
 }
+# diyepw-style gets its own Okabe-Ito sky blue, so orange keeps one meaning
+# (the solar branch) across every figure.
+DIYEPW = "#56B4E9"
+TINT["diyepw"] = "#e1f1fb"
+# Categories that are not filling methods (gap placement, seasons, event
+# outcomes, peak timing) are drawn in greys, so colour always means a method.
+GREY = {"dark": "#3a3a3c", "mid": "#8e8e93", "light": "#c7c7cc", "pale": "#e5e5ea"}
+MIN_FS = 6.5  # smallest text size at final print size, pt
+
 SEASON = {"DJF": "#e8eef7", "MAM": "#eaf4ea", "JJA": "#fbf1df", "SON": "#f5e9e1"}
 
 
@@ -123,11 +132,11 @@ def canvas(width_mm, height_mm):
 
 # Filling methods in result plots: plain labels and colours tied to the rungs.
 METHOD = {
-    "linear_only": ("straight line only", "#8e8e93"),
+    "linear_only": ("straight line only", "#a1a1a6"),
     "temporal": ("filling over time", RUNG["interp"]),
     "donor_assessed": ("nearby station", RUNG["donor"]),
     "era5": ("ERA5 only", RUNG["era5"]),
-    "diyepw_style": ("diyepw-style", RUNG["solar"]),
+    "diyepw_style": ("diyepw-style", DIYEPW),
     "automatic_legacy": ("smhi2epw, older order", RUNG["profile"]),
     "automatic": ("smhi2epw", INK),
 }
