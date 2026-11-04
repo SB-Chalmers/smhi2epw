@@ -1,0 +1,9 @@
+scope,sampling,gap_hours,rows,heating_peak_hidden_fraction,cooling_peak_hidden_fraction
+meteorology,random_seasonal,3,306,0,0.00980392
+meteorology,random_seasonal,12,306,0.00980392,0.00326797
+meteorology,random_seasonal,48,306,0.0359477,0.0392157
+meteorology,random_seasonal,168,306,0.0457516,0.0686275
+meteorology,weather_extremes,3,348,0.109195,0.0862069
+meteorology,weather_extremes,12,348,0.192529,0.186782
+meteorology,weather_extremes,48,348,0.247126,0.261494
+meteorology,weather_extremes,168,336,0.255952,0.395833
