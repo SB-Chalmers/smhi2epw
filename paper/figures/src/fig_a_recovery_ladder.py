@@ -99,7 +99,7 @@ rung(CM, y, CMW, h, 5, "ERA5 reanalysis",
 # solar ladder: measured, STRÅNG, straight line <= 3 h, ERA5
 y1, h1 = rows[1]
 rung(CQ, y1, CQW, h1, 1, "Measured, then modelled",
-     "solar station within 50 km;\nhours it lacks: STRÅNG model,\nscaled to that station", "solar")
+     "measured total from a station\n≤ 50 km, STRÅNG split scaled to it;\nother hours: STRÅNG as it is", "solar")
 y2, h2 = rows[2]
 rung(CQ, y2, CQW, h2, 2, "Straight line, gaps ≤ 3 h",
      "sun position every 5 min;\nzero when the sun is down", "interp")

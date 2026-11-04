@@ -6,7 +6,7 @@ Colour rule for all figures: a colour always means a filling method or recovery 
 
 "smhi2epw" in every results figure is the current order. General-weather gaps over 48 h and solar gaps over 3 h go to ERA5, and shorter gaps follow the version 1.3 order. "smhi2epw 1.3" is the earlier automatic order. It used a nearby station for general-weather gaps of any length and solar daily patterns up to 48 h. The two give identical results for general-weather gaps up to 2 days and solar gaps of 3 h.
 
-**Figure 1 (fig_a_recovery_ladder).** How smhi2epw lines up the measured inputs hour by hour and then fills the gaps step by step. For general weather, a nearby station is tried only for gaps of up to 48 h, and longer gaps go straight to ERA5. Solar radiation uses the measured station, then the STRÅNG model, then a straight line for gaps up to 3 h, then ERA5. It never uses a nearby station.
+**Figure 1 (fig_a_recovery_ladder).** How smhi2epw lines up the measured inputs hour by hour and then fills the gaps step by step. For general weather, a nearby station is tried only for gaps of up to 48 h, and longer gaps go straight to ERA5. Where a solar station lies within 50 km, its measured total radiation is used, and STRÅNG's direct and diffuse split is scaled to match it. In hours the station lacks, STRÅNG is used as it is. Gaps that remain are filled with a straight line up to 3 h and then with ERA5. Solar is never taken from a nearby station.
 
 **Figure 2 (fig_d_workflow).** The campaign workflow. Every filling method fills the same gap patterns in the same reference years.
 
