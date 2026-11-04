@@ -1,4 +1,4 @@
-# Robustness of the gap-filling methods (general-weather gaps)
+# Robustness of the gap-filling methods
 
 Paired analysis of the corrected campaign's per-case table; no new
 simulations. Both gap types are included, in the `scope` column:
@@ -19,7 +19,11 @@ annual peak is at least 5 W/m2. No reference peak in the campaign is below
 
 Methods: temporal, donor_assessed, era5, automatic, automatic_legacy,
 linear_only, diyepw_style, and the combined rule `automatic_le48h_era5_168h`
-(automatic rows for gaps up to 48 h, era5 rows for 1-week gaps).
+(automatic rows for gaps up to 48 h, era5 rows for 1-week gaps), and
+`gap_type_rule`, which depends on the gap type: general-weather gaps use
+automatic at 3, 12 and 48 h and era5 at 1 week; solar gaps use automatic at
+3 h and era5 at 12 h, 2 days and 1 week. Both rules are built from existing
+rows; no new simulations.
 
 ## Files
 
@@ -42,6 +46,13 @@ linear_only, diyepw_style, and the combined rule `automatic_le48h_era5_168h`
   timing, whose shifts can span seasons), and `rank_regret` (rank of the
   method within the case minus 0, ties averaged; 0 = best).
 
+- `gap-type-rule.csv`: the gap-type rule per gap type, placement and length,
+  with its source method: 95th-percentile annual heating/cooling error (% and
+  kWh/m2); share of months holding a gap within ASHRAE Guideline 14's +/-5 %
+  and the monthly p95; for event placements, heatwave and cold-spell shares
+  kept exactly, changed (moved, shortened or split) and lost under the 3-day
+  study rules, and the share of heatwave days identical under the SMHI 5-day
+  rule (general weather only; solar gaps never change air temperature).
 - `worst-cases.csv`: the three largest scaled regrets per method and gap
   length, with absolute values: the method's |error|, ERA5's and automatic's
   |error|, the best |error| and best method on that case, and the reference
