@@ -1,6 +1,6 @@
 """Fig. A: AMY assembly in smhi2epw and the missing-weather recovery ladder.
 
-Content follows docs/weather_recovery.rst and docs/pipeline.rst (smhi2epw 1.3).
+Content follows docs/weather_recovery.rst and docs/pipeline.rst (smhi2epw).
 Coordinates are millimetres on a 174 mm double-column canvas.
 """
 
@@ -11,7 +11,7 @@ from matplotlib.patches import Rectangle
 from style import INK, MUTED, RUNG, TINT, arrow, box
 
 S.use()
-W, H = 174, 144
+W, H = 174, 152
 fig, ax = S.canvas(W, H)
 BODY = 6.5
 LINE = 1.32
@@ -41,14 +41,16 @@ CS, CSW = 2, 38      # source column
 CM, CMW = 46, 70     # meteorology ladder
 CQ, CQW = 124, 48    # solar ladder
 
+text(CS, H - 2.0, "The stepwise method", fontsize=8.5, weight="bold", va="top")
+H0 = H - 8.0  # top of the column headings
 for x, w, t in ((CS, CSW, "Data source\nweather station, model or reanalysis"),
                 (CM, CMW, "General weather\nair temperature, humidity, wind, air pressure"),
                 (CQ, CQW, "Solar radiation\nglobal, direct and diffuse")):
     first, *rest = t.split("\n")
-    text(x, H - 2.5, first, fontsize=7.2, weight="bold", va="top")
+    text(x, H0 - 2.5, first, fontsize=7.2, weight="bold", va="top")
     if rest:
-        text(x, H - 6.3, rest[0], fontsize=6.5, color=MUTED, va="top")
-    ax.plot([x, x + w], [H - 10.8] * 2, color=INK, lw=0.6)
+        text(x, H0 - 6.3, rest[0], fontsize=6.5, color=MUTED, va="top")
+    ax.plot([x, x + w], [H0 - 10.8] * 2, color=INK, lw=0.6)
 
 # ------------------------------------------------------------- rows
 rows = {  # name: (y_bottom, height)

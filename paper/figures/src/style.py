@@ -137,9 +137,9 @@ METHOD = {
     "donor_assessed": ("nearby station", RUNG["donor"]),
     "era5": ("ERA5 only", RUNG["era5"]),
     "diyepw_style": ("diyepw-style", DIYEPW),
-    "automatic_legacy": ("smhi2epw, older order", RUNG["profile"]),
-    "automatic": ("smhi2epw 1.3", "#636366"),
-    "gap_type_rule": ("smhi2epw", INK),
+    "automatic_legacy": ("Stepwise, patterns first", RUNG["profile"]),
+    "automatic": ("Stepwise, no length limit", "#636366"),
+    "gap_type_rule": ("Stepwise", INK),
 }
 GAP_LABEL = {3: "3 h", 12: "12 h", 48: "2 days", 168: "1 week"}
 SAMPLING_LABEL = {"random_seasonal": "random gaps", "weather_extremes": "gaps at weather events"}

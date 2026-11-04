@@ -64,9 +64,9 @@ methods = [
     ("ERA5", "era5", ["reanalysis for each hidden hour;", "also the ERA5-only baseline"]),
     ("diyepw-style", "diyepw", ["straight line up to 6 h;", "7–48 h: the same hour averaged",
                                 "over the surrounding 4 weeks;", "longer: ERA5"]),
-    ("smhi2epw", "primary", ["full sequence (Fig. 1)"]),
-    ("smhi2epw 1.3", "neutral", ["as above, but nearby station for", "gaps of any length, and solar", "daily patterns up to 48 h"]),
-    ("smhi2epw, older order", "profile", ["daily pattern before", "nearby station"]),
+    ("Stepwise", "primary", ["full sequence (Fig. 1)"]),
+    ("Stepwise, no length limit", "neutral", ["nearby station for gaps of any", "length; solar daily patterns", "up to 48 h"]),
+    ("Stepwise, patterns first", "profile", ["daily pattern before", "nearby station"]),
 ]
 EDGE = dict(RUNG, diyepw=DIYEPW)
 top = lane_cand[1] - 10.2
