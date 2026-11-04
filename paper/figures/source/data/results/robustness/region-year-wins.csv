@@ -1,0 +1,9 @@
+scope,sampling,gap_hours,annual_heating_pct_region_years,annual_heating_pct_era5_lower,annual_heating_pct_automatic_lower,annual_heating_pct_ties,annual_cooling_pct_region_years,annual_cooling_pct_era5_lower,annual_cooling_pct_automatic_lower,annual_cooling_pct_ties
+meteorology,random_seasonal,3,17,1,16,0,17,4,13,0
+meteorology,random_seasonal,12,17,9,8,0,17,10,7,0
+meteorology,random_seasonal,48,17,7,10,0,17,8,9,0
+meteorology,random_seasonal,168,17,8,9,0,17,9,8,0
+meteorology,weather_extremes,3,17,3,14,0,17,7,9,1
+meteorology,weather_extremes,12,17,7,10,0,17,4,12,1
+meteorology,weather_extremes,48,17,10,7,0,17,8,8,1
+meteorology,weather_extremes,168,17,7,10,0,17,8,8,1
