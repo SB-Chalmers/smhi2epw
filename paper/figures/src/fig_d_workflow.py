@@ -1,4 +1,4 @@
-"""Fig. D: paired sensitivity-campaign workflow (epsm_workflows archive/2026-10-14)."""
+"""Fig. D: paired sensitivity-campaign workflow (rerun on current smhi2epw)."""
 
 from __future__ import annotations
 
@@ -27,83 +27,82 @@ def card(x, y, w, h, n, title, body, *, fc="white", ec=INK, lw=0.8):
         t(x + 2, y + h - 7.2, body)
 
 
-lane_ref = (66, 90)   # y range of reference lane
-lane_cand = (10, 58)   # y range of candidate lane
+lane_ref = (68, 90)   # y range of reference lane
+lane_cand = (2, 60)   # y range of test lane
 
-# lane labels
-t(40, lane_cand[1] + 4.2, "Candidate lane, repeated for every mask and method",
+t(36, lane_cand[1] + 4.2, "Test files: repeated for every gap pattern and filling method",
   fontsize=6.3, color=MUTED, style="italic")
 
 # 1 reference weather (feeds both lanes)
-rx, rw = 2, 33
-card(rx, lane_cand[0], rw, lane_ref[1] - lane_cand[0], "1", "Reference AMY",
-     "6 strata × 2018, 2021, 2023\n17 eligible site-years\n(Kiruna 2018 unsupported)\n\n"
-     "≤ 1 % missing required\ncells, no native gap > 48 h\n\nnative gaps filled once\nand frozen as background\n\n"
-     "hybrid solar reference:\nmeasured GHI ≤ 50 km or\nSTRÅNG; STRÅNG split")
+rx, rw = 2, 29
+card(rx, lane_cand[0], rw, lane_ref[1] - lane_cand[0], "1", "Reference year",
+     "6 regions × 2018,\n2021 and 2023\n(Kiruna 2018 had no\nsuitable station)\n\n"
+     "at most 1 % of hours\nmissing and no gap\nlonger than 48 h\n\n"
+     "those few gaps are\nfilled once and then\nkept fixed\n\n"
+     "solar reference:\nmeasured within 50 km,\notherwise STRÅNG")
 
-# 2 masks
-mx, mw = 41, 30
-card(mx, lane_cand[0], mw, lane_cand[1] - lane_cand[0], "2", "Withhold",
-     "scopes: meteorology\n(5 variables) or solar\n(GHI + direct)\n\n"
-     "blocks of 3, 12, 48, 168 h\nrandom seasonal × 3 seeds\nor event-centred\n\n"
-     "only original G/Y values\nare withheld and scored;\nall other cells identical\nto the reference")
+# 2 withhold
+mx, mw = 36, 28
+card(mx, lane_cand[0], mw, lane_cand[1] - lane_cand[0], "2", "Hide data",
+     "general weather (all\nfive variables) or\nsolar radiation\n\n"
+     "gaps of 3, 12, 48\nor 168 h: one per\nseason in 3 random\ndraws, or one around\na weather event\n\n"
+     "only measured values\nare hidden and scored;\nthe rest of the file is\nleft unchanged")
 
 # 3 reconstruct
-cx, cw = 77, 33
-card(cx, lane_cand[0], cw, lane_cand[1] - lane_cand[0], "3", "Reconstruct",
-     "context excludes hidden cells")
-methods = [("temporal", "interp", "≤ 3 h interp. + ≤ 48 h profiles"),
-           ("donor (assessed)", "donor", "fixed donor, overlap test"),
-           ("ERA5", "era5", "hidden cells only"),
-           ("automatic", "primary", "full ladder (Fig. A)"),
-           ("automatic, legacy", "profile", "profiles before donors")]
-yy = lane_cand[1] - 18.0
+cx, cw = 69, 36
+card(cx, lane_cand[0], cw, lane_cand[1] - lane_cand[0], "3", "Fill the gaps",
+     "no method can see the\nhidden values")
+methods = [
+    ("linear only", "neutral", "straight line across any gap"),
+    ("own record", "interp", "straight line ≤ 3 h, daily pattern ≤ 48 h"),
+    ("nearby station", "donor", "tested donor station"),
+    ("ERA5 only", "era5", "reanalysis for every hidden hour"),
+    ("diyepw-style", "solar", "approach used by the diyepw tool"),
+    ("smhi2epw", "primary", "full sequence (Fig. 2)"),
+    ("smhi2epw, older order", "profile", "daily pattern before nearby station"),
+]
+yy = lane_cand[1] - 18.6
 for name, key, desc in methods:
-    box(ax, cx + 2, yy, cw - 4, 6.0, fc=TINT[key], ec=RUNG[key], lw=0.6, r=0.7)
-    ax.text(cx + 3.6, yy + 4.2, name, fontsize=5.9, weight="bold", va="center")
-    ax.text(cx + 3.6, yy + 1.7, desc, fontsize=5.2, va="center", color=INK)
-    yy -= 6.9
+    ec = RUNG.get(key, MUTED)
+    box(ax, cx + 1.8, yy, cw - 3.6, 5.5, fc=TINT[key], ec=ec, lw=0.6, r=0.7)
+    ax.text(cx + 3.2, yy + 3.85, name, fontsize=5.7, weight="bold", va="center")
+    ax.text(cx + 3.2, yy + 1.55, desc, fontsize=5.0, va="center", color=INK)
+    yy -= 6.2
 
 # 4 EnergyPlus (spans both lanes)
-ex, ew = 116, 25
+ex, ew = 110, 33
 card(ex, lane_cand[0], ew, lane_ref[1] - lane_cand[0], "4", "Simulate",
-     "EnergyPlus 24.2\nideal loads, no\nhumidity control\n\nsame models,\nengine and\nground boundary\nin both lanes")
-profiles = ["detached, old, light", "detached, new, heavy", "multi-family, old",
-            "multi-family, new", "office, glazed", "school, daytime"]
+     "EnergyPlus 24.2 with\nideal heating and cooling\n\n"
+     "same buildings, software\nand ground temperature\nfor both files")
+profiles = ["single-family house, 1961–75", "single-family house, 2006–21",
+            "multi-family block, 1961–75", "multi-family block, 2006–21",
+            "office, 2006–21, 60 % glazed", "school, 1976–85"]
 yy = lane_cand[0] + 2.0
 for p in profiles[::-1]:
-    box(ax, ex + 1.8, yy, ew - 3.6, 4.4, p, fc=TINT["neutral"], ec=MUTED, lw=0.4,
-        fs=5.2, r=0.6)
-    yy += 5.2
-t(ex + ew / 2, yy + 3.3, "6 building profiles", fontsize=5.7, color=MUTED, ha="center")
+    box(ax, ex + 1.8, yy, ew - 3.6, 4.6, p, fc=TINT["neutral"], ec=MUTED, lw=0.4,
+        fs=5.3, r=0.6)
+    yy += 5.4
+t(ex + ew / 2, yy + 3.3, "6 Swedish building types", fontsize=5.8, color=MUTED, ha="center")
 
 # 5 paired metrics
-px, pw = 147, 25
+px, pw = 148, 24
 card(px, lane_cand[0], pw, lane_ref[1] - lane_cand[0], "5", "Compare",
-     "candidate − reference\nper building and mask\n\n"
-     "annual heating and\ncooling demand\n\npeak load magnitude\n(exposed peaks)\n\n"
-     "peak timing shift\n\nhourly load MAE,\nmask + 168 h\n\nweather errors on\nhidden hours\n\n"
-     "heatwave and cold-\nspell preservation", fc=TINT["neutral"])
+     "test minus reference,\nfor each building\nand gap pattern\n\n"
+     "yearly heating and\ncooling demand\n\npeak heating and\ncooling load\n\n"
+     "when the peak occurs\n\nhour-by-hour load\nerror\n\nweather error in\nthe hidden hours\n\n"
+     "heatwaves and cold\nspells kept or lost", fc=TINT["neutral"])
 
 # arrows: reference lane
 yr = (lane_ref[0] + lane_ref[1]) / 2
 arrow(ax, (rx + rw, yr), (ex, yr), lw=0.9, ms=6)
-t((rx + rw + ex) / 2, yr + 1.0, "reference EPW, simulated once per profile",
+t((rx + rw + ex) / 2, yr + 1.0, "reference weather file, simulated once per building",
   fontsize=5.8, color=MUTED, ha="center", va="bottom", style="italic")
 arrow(ax, (ex + ew, yr), (px, yr), lw=0.9, ms=6)
-# candidate lane
-yc = lane_cand[0] + 30
+# test lane
+yc = lane_cand[0] + 50
 arrow(ax, (rx + rw, yc), (mx, yc), lw=0.9, ms=6)
 arrow(ax, (mx + mw, yc), (cx, yc), lw=0.9, ms=6)
 arrow(ax, (cx + cw, yc), (ex, yc), lw=0.9, ms=6)
-t((cx + cw + ex) / 2, yc + 1.0, "EPW", fontsize=5.8, color=MUTED, ha="center",
-  va="bottom", style="italic")
 arrow(ax, (ex + ew, yc), (px, yc), lw=0.9, ms=6)
-
-# scale footer
-t(2, 7.4, "Scale: 9,450 unique annual runs (18,366 labelled outcomes); "
-  "automatic vs reference: 4,146 building comparisons over 691 masks "
-  "(2,058 meteorological, 2,088 solar).\nQuantiles describe these scenarios, not population intervals.",
-  fontsize=5.6, color=MUTED, va="top")
 
 S.save(fig, "fig_d_workflow")

@@ -41,11 +41,11 @@ CS, CSW = 2, 38      # source column
 CM, CMW = 46, 72     # meteorology ladder
 CQ, CQW = 124, 48    # solar ladder
 
-text(W / 2, H - 2.5, "Inputs aligned on a buffered hourly UTC grid, then filled rung by rung",
+text(W / 2, H - 2.5, "Measured inputs are lined up hour by hour, then gaps are filled step by step",
      ha="center", va="top", fontsize=7.5, weight="bold")
-for x, w, t in ((CS, CSW, "Source"),
-                (CM, CMW, "Required meteorology\nT, RH, wind speed, wind direction, QFF"),
-                (CQ, CQW, "Solar\nGHI, DNI, DHI")):
+for x, w, t in ((CS, CSW, "Data source\nweather station, model or reanalysis"),
+                (CM, CMW, "General weather\nair temperature, humidity, wind speed and direction, air pressure"),
+                (CQ, CQW, "Solar radiation\nglobal, direct and diffuse")):
     first, *rest = t.split("\n")
     text(x, H - 10.5, first, fontsize=7, weight="bold", va="top")
     if rest:
@@ -56,17 +56,17 @@ for x, w, t in ((CS, CSW, "Source"),
 rows = {  # name: (y_bottom, height)
     1: (112, 16),
     2: (94, 12.5),
-    3: (68, 20),
-    4: (49.5, 12.5),
-    5: (24, 12.5),
+    3: (65, 23),
+    4: (46.5, 12.5),
+    5: (25.5, 12.5),
 }
 
 sources = {
-    1: ("SMHI MetObs primary station", "accepted grades G/Y; nearest\nfull-coverage station first\n+ STRÅNG solar model", "primary", "-"),
-    2: ("Primary series", "temporal recovery", "neutral", "--"),
-    3: ("Nearby SMHI stations", "≤ 75 km, ≤ 3 candidates,\nsame-hour G/Y values", "donor", "-"),
-    4: ("Primary series", "temporal recovery", "neutral", "--"),
-    5: ("ERA5 via Open-Meteo", "same year, requested\ncoordinates, UTC", "era5", "-"),
+    1: ("SMHI weather station", "quality-approved values;\nfull-year station preferred;\nSTRÅNG model for solar", "primary", "-"),
+    2: ("Same station", "its own record", "neutral", "--"),
+    3: ("Nearby SMHI stations", "up to 3 within 75 km;\nsame-hour approved values", "donor", "-"),
+    4: ("Same station", "its own record", "neutral", "--"),
+    5: ("ERA5 via Open-Meteo", "modelled weather for the\nsame year and location", "era5", "-"),
 }
 for n, (title, body, key, ls) in sources.items():
     y, h = rows[n]
@@ -79,44 +79,45 @@ for n, (title, body, key, ls) in sources.items():
     arrow(ax, (CS + CSW, y + h / 2), (CM, y + h / 2), color=ec, lw=0.7, ms=5)
 
 y, h = rows[1]
-rung(CM, y, CMW, h, 1, "Primary observations",
-     "valid observations are kept unchanged;\ninvalid or nonfinite values become gaps", "primary")
+rung(CM, y, CMW, h, 1, "Measured values",
+     "valid measurements are never changed;\ninvalid values are treated as gaps", "primary")
 y, h = rows[2]
-rung(CM, y, CMW, h, 2, "Interpolation, gaps ≤ 3 h",
-     "endpoint linear; sine/cosine for wind direction;\none endpoint only: constant boundary value", "interp")
+rung(CM, y, CMW, h, 2, "Straight-line fill, gaps ≤ 3 h",
+     "straight line between the values either side;\nwith a value on one side only, it is held", "interp")
 y, h = rows[3]
-rung(CM, y, CMW, h, 3, "Assessed donor station",
-     "per gap and variable, paired overlap within ±30 days;\n"
-     "3 held-out days, ≥ 168 training hours over 7 dates;\n"
-     "median offset kept only if held-out MAE ≥ 10 % lower;\n"
-     "reject if MAE > 3 °C, 15 pp RH, 3 m/s, 45°, 5 hPa", "donor")
+rung(CM, y, CMW, h, 3, "Nearby station, if it passes a test",
+     "the two stations are compared within 30 days of the gap\n"
+     "and tested on 3 days left out of the comparison;\n"
+     "a fixed correction is kept only if it cuts the error by 10 %;\n"
+     "rejected if the average error exceeds 3 °C, 15 % RH,\n"
+     "3 m/s, 45° or 5 hPa", "donor")
 y, h = rows[4]
-rung(CM, y, CMW, h, 4, "Daily profiles, gaps ≤ 48 h",
-     "nearest 24 h profiles ≤ 7 days on each side,\nadjusted to meet both endpoints", "profile")
+rung(CM, y, CMW, h, 4, "Daily pattern, gaps ≤ 48 h",
+     "typical 24 h pattern from up to 7 days either side,\nadjusted to meet the values at both ends", "profile")
 y, h = rows[5]
 rung(CM, y, CMW, h, 5, "ERA5 reanalysis",
-     "unresolved cells only; grid, model and\nresponse hashes recorded", "era5")
+     "only for hours still missing;\nwhich data were used is recorded", "era5")
 
 # solar ladder: rung 2 spans the temporal/donor rows
 y1, h1 = rows[1]
-rung(CQ, y1, CQW, h1, 1, "Primary radiation",
-     "STRÅNG; GHI scaled by measured\nGHI ≤ 50 km; sample pairs averaged", "solar")
+rung(CQ, y1, CQW, h1, 1, "Modelled radiation",
+     "STRÅNG model, scaled to a\nsolar station within 50 km;\naveraged to hourly values", "solar")
 ytop = rows[2][0] + rows[2][1]
 ybot = rows[4][0]
-rung(CQ, ybot, CQW, ytop - ybot, 2, "Bounded solar filling",
-     "day-aware profiles, or GHI\ndecomposed to DNI and DHI\n(Erbs–Driesse, pvlib);\n"
-     "geometry integrated at 5 min;\nzero in fully dark intervals", "solar")
-text(CQ + CQW / 2, ytop - 33, "no donor transfer:\nsolar stays tied to the\nrequested coordinates",
+rung(CQ, ybot, CQW, ytop - ybot, 2, "Short solar gaps",
+     "daily patterns, or global\nradiation split into direct\nand diffuse parts\n(Erbs–Driesse model, pvlib);\n"
+     "sun position every 5 min;\nzero when the sun is down", "solar")
+text(CQ + CQW / 2, ytop - 33, "never taken from a\nnearby station: solar stays\ntied to the chosen location",
      ha="center", va="top", fontsize=5.8, color=RUNG["donor"], style="italic")
 y5, h5 = rows[5]
-rung(CQ, y5, CQW, h5, 3, "ERA5 GHI",
-     "complete component groups;\nalready preceding-hour means", "era5")
+rung(CQ, y5, CQW, h5, 3, "ERA5 radiation",
+     "all three parts together;\nalready hourly averages", "era5")
 
 # "remaining gaps" connectors
 def down(x, y0, y1, label=True):
     arrow(ax, (x, y0), (x, y1), lw=0.7, ms=5)
     if label:
-        text(x + 1.2, (y0 + y1) / 2, "remaining gaps", fontsize=5.6, color=MUTED,
+        text(x + 1.2, (y0 + y1) / 2, "gaps left", fontsize=5.6, color=MUTED,
              style="italic", va="center")
 
 for a, b in ((1, 2), (2, 3), (3, 4), (4, 5)):
@@ -127,25 +128,25 @@ down(CQ + 10, ybot, y5 + h5, label=False)
 # strict-policy boundary
 ys = (rows[4][0] + rows[5][0] + rows[5][1]) / 2
 ax.plot([CM - 2, W - 1], [ys, ys], color=INK, lw=0.6, ls=(0, (3, 2)), zorder=0)
-text(CM + 12, ys + 0.8, "strict policy stops here and reports remaining gaps",
+text(CM + 12, ys + 0.8, "strict setting stops here and reports the gaps left",
      ha="left", va="bottom", fontsize=5.8, color=MUTED, style="italic")
-text(CM + 12, ys - 0.8, "automatic policy (default) continues to ERA5",
+text(CM + 12, ys - 0.8, "default setting continues to ERA5",
      ha="left", va="top", fontsize=5.8, color=MUTED, style="italic")
 
 # ------------------------------------------------------------- finalise row
 yb = 2.0
-hb = 17.6
-ytie = 22.2
+hb = 19.6
+ytie = 23.4
 ax.plot([CM + CMW / 2, CM + CMW / 2], [rows[5][0], ytie], color=INK, lw=0.7)
 ax.plot([CQ + CQW / 2, CQ + CQW / 2], [rows[5][0], ytie], color=INK, lw=0.7)
 ax.plot([CS + 8, CQ + CQW / 2], [ytie, ytie], color=INK, lw=0.7)
 arrow(ax, (CS + 8, ytie), (CS + 8, yb + hb), lw=0.7, ms=5)
 
 steps = [
-    ("Derive", "dew point, longwave;\ncloud as IR proxy", 28),
-    ("Check", "ordered complete hours,\nranges, Td ≤ T, solar\nclosure, dark = 0", 30),
-    ("Warn", "source-boundary jumps\n>10 °C, 40 pp, 15 m/s,\n1,000 Pa (review)", 30),
-    ("Shift", "fixed whole-hour\nLST, no DST", 22),
+    ("Derive", "dew point and sky\nradiation; cloud cover\nused only for sky\nradiation", 28),
+    ("Check", "every hour present,\nvalues in range, dew\npoint ≤ air temperature,\nsolar parts add up", 30),
+    ("Flag", "jumps where sources\nmeet: > 10 °C, 40 %\nRH, 15 m/s, 10 hPa;\nfor review only", 30),
+    ("Shift", "to local standard\ntime (UTC+1),\nno summer time", 22),
 ]
 x = CS
 for t, b, w in steps:
@@ -157,13 +158,13 @@ for t, b, w in steps:
     x = x2
 wf = W - 1 - x
 box(ax, x, yb, wf, hb, fc="white", ec=INK, lw=1.0)
-text(x + 2, yb + hb - 2.2, "AMY EPW + JSON sidecar", fontsize=6.8, weight="bold", va="top")
-text(x + 2, yb + hb - 6.0, "config, hashes, donors and held-out\nerrors, ERA5 overlap; source share:",
+text(x + 2, yb + hb - 2.2, "Weather file + record file", fontsize=6.8, weight="bold", va="top")
+text(x + 2, yb + hb - 6.0, "EPW for one actual year; a JSON\nrecord of settings, stations used,\ntest errors and share by source:",
      va="top", fontsize=5.9)
 cx = x + 2
-for key, t, cw in (("primary", "primary", 9.8), ("interp", "temporal", 11), ("donor", "donor", 8.2),
-                   ("era5", "reanalysis", 12.6)):
-    box(ax, cx, yb + 1.6, cw, 3.6, t, fc=TINT[key], ec=RUNG[key], lw=0.5, fs=5.6, r=0.6)
+for key, t, cw in (("primary", "measured", 10.6), ("interp", "own record", 12.0), ("donor", "nearby", 9.2),
+                   ("era5", "ERA5", 8.4)):
+    box(ax, cx, yb + 1.6, cw, 3.6, t, fc=TINT[key], ec=RUNG[key], lw=0.5, fs=5.3, r=0.6)
     cx += cw + 0.8
 
 S.save(fig, "fig_a_recovery_ladder")

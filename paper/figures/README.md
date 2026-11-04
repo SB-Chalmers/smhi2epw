@@ -11,7 +11,7 @@ previews in `out/`. Scripts in `src/` regenerate them:
 | A | `fig_a_recovery_ladder.py` | AMY assembly and missing-weather recovery ladder (docs/weather_recovery.rst) |
 | B | `fig_b_map.py` | Strata, primary stations, fixed donors and measured-GHI stations per year |
 | C | `fig_c_masking.py` | Synthetic outage design: seasonal random blocks and event-centred blocks |
-| D | `fig_d_workflow.py` | Paired campaign workflow from reference AMY to compared metrics |
+| D | `fig_d_workflow.py` | Paired campaign workflow for the rerun (epsm_data building types, seven filling methods) |
 
 Colours are shared across figures: each recovery rung keeps the same colour
 (`src/style.py`), so result plots can reuse `RUNG`.

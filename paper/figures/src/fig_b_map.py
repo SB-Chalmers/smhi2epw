@@ -135,7 +135,7 @@ main.text(0.02, 0.99, "a", transform=main.transAxes, fontsize=9, weight="bold", 
 main.plot([700, 900], [6170, 6170], color=INK, lw=1.2, solid_capstyle="butt", zorder=8)
 main.text(800, 6185, "200 km", ha="center", va="bottom", fontsize=6)
 main.legend(handles=[
-    Line2D([], [], ls="", marker="*", ms=6.5, mfc=INK, mec="white", label="stratum city"),
+    Line2D([], [], ls="", marker="*", ms=6.5, mfc=INK, mec="white", label="study region (city)"),
     Line2D([], [], ls="", marker="o", ms=2, mfc=MUTED, mec="none",
            label="SMHI air-temperature station"),
     Line2D([], [], ls="", marker="^", ms=4, mfc=RUNG["solar"], mec=INK, mew=0.3,
@@ -235,15 +235,15 @@ for i, s in enumerate(STRATA):
 
 handles = [
     Line2D([], [], ls="", marker="o", ms=5, mfc=RUNG["primary"], mec=INK, mew=0.6,
-           label="primary station (reference years)"),
+           label="main station (years used)"),
     Line2D([], [], color=RUNG["donor"], marker="D", ms=3.4, mfc=RUNG["donor"], mec=INK,
-           mew=0.35, lw=0.7, label="fixed donor"),
+           mew=0.35, lw=0.7, label="nearby (donor) station"),
     Line2D([], [], color=RUNG["solar"], marker="^", ms=4.2, mfc=RUNG["solar"], mec=INK,
-           mew=0.35, lw=0.7, label="measured-GHI station (≤ 50 km)"),
+           mew=0.35, lw=0.7, label="solar radiation station (≤ 50 km)"),
     Line2D([], [], color=RUNG["donor"], lw=0.5, ls=(0, (2.5, 2)),
            label="75 km donor search radius"),
     Line2D([], [], ls="", marker="o", ms=5, mfc="white", mec=INK, mew=0.6,
-           label="† Kiruna 2018: no eligible reference"),
+           label="† Kiruna 2018: no station met the data requirements"),
 ]
 fig.legend(handles=handles, loc="lower left", bbox_to_anchor=(0.0, 0.0), ncol=3,
            frameon=False, fontsize=5.8, handletextpad=0.4, columnspacing=1.2,
