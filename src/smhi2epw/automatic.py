@@ -49,18 +49,6 @@ def _temporal(series: pd.Series, column: str, report: P.ProcessingReport) -> pd.
     return filled
 
 
-def _long_missing_runs(series: pd.Series, limit: int) -> pd.Series:
-    """Mark missing values in runs longer than ``limit`` consecutive hours.
-
-    Run length is measured on the raw series, before fully dark hours are set
-    to zero, so a long solar outage is not split into short daytime pieces.
-    """
-    missing = series.isna()
-    run_id = missing.ne(missing.shift(fill_value=False)).cumsum()
-    run_length = missing.groupby(run_id).transform("sum")
-    return missing & run_length.gt(limit)
-
-
 def _dark_hours(index: pd.DatetimeIndex, lat: float, lon: float) -> np.ndarray:
     """Identify preceding intervals entirely below the geometric solar horizon."""
     return interval_solar_geometry(index, lat, lon)[3]
@@ -109,8 +97,8 @@ def _solar_inputs(
                 hours=int(positive_dark.sum()),
             )
         # Measure outage length before darkness splits it: daytime pieces of
-        # an outage longer than the temporal ceiling are left for ERA5.
-        long_gap = _long_missing_runs(series, C.MAX_GAP_HOURS)
+        # an outage longer than the solar temporal limit are left for ERA5.
+        long_gap = G.long_missing_runs(series, C.SOLAR_TEMPORAL_MAX_GAP_HOURS)
         # Darkness establishes zero without a donor or an API request. The
         # interval check keeps real radiation near sunrise/sunset intact.
         series.loc[dark] = 0.0
@@ -217,6 +205,7 @@ def prepare(
                 max_distance_km=max_distance_km,
                 max_stations=max_stations,
                 report=report,
+                max_gap_hours=C.DONOR_MAX_GAP_HOURS,
             )
         except IngestionError as exc:
             warn(

@@ -95,6 +95,13 @@ COS_ZENITH_FLOOR = 0.087
 # reference day-profile method and are never synthesized beyond two days.
 SHORT_GAP_HOURS = 3
 MAX_GAP_HOURS = 48
+# Automatic mode: assessed donors fill only outages of up to this length;
+# longer general-weather outages go to ERA5. A donor that matches ordinary
+# hours can still be badly biased through a week-long heatwave or cold spell.
+DONOR_MAX_GAP_HOURS = 48
+# Automatic mode: solar outages longer than this go to ERA5 rather than
+# daily profiles. Measured on the raw series, before night hours are zeroed.
+SOLAR_TEMPORAL_MAX_GAP_HOURS = 3
 
 # --------------------------------------------------------------------------- #
 # EPW missing-value / default tokens (per EnergyPlus Auxiliary Programs spec)

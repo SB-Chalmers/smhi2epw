@@ -51,12 +51,14 @@ def hourly_observations(series, column):
     return series.resample("h").mean()
 
 
-def unresolved(series, column):
+def unresolved(series, column, max_gap_hours=None):
     """Locate missing hours after giving short interpolation first priority.
 
     Assessed donors precede daily profiles for gaps longer than three hours.
     This preview never modifies the original observations used for assessment.
     Cancelling short wind vectors remain eligible for donor recovery.
+    With ``max_gap_hours``, hours in missing runs longer than that limit are
+    excluded, so those gaps are left for later sources.
     """
     kwargs = dict(
         required=False,
@@ -67,7 +69,18 @@ def unresolved(series, column):
         filled, *_ = P._fill_wind_direction(series, **kwargs)
     else:
         filled, *_ = P._fill_scalar_series(series, solar=False, **kwargs)
-    return filled.isna()
+    eligible = filled.isna()
+    if max_gap_hours is not None:
+        eligible &= ~long_missing_runs(series, max_gap_hours)
+    return eligible
+
+
+def long_missing_runs(series, limit):
+    """Mark missing values in runs longer than ``limit`` consecutive hours."""
+    missing = series.isna()
+    run_id = missing.ne(missing.shift(fill_value=False)).cumsum()
+    run_length = missing.groupby(run_id).transform("sum")
+    return missing & run_length.gt(limit)
 
 
 def _differences(predicted, primary, column):
@@ -215,6 +228,7 @@ def recover(
     max_distance_km=75.0,
     max_stations=3,
     report: P.ProcessingReport | None = None,
+    max_gap_hours: int | None = None,
 ):
     """Fill unresolved primary gaps only with assessed nearby observations.
 
@@ -225,6 +239,8 @@ def recover(
     Short interpolation retains first priority. Insufficient overlap and
     unsuitable transfers leave gaps for bounded daily profiles and, in
     automatic mode, reanalysis. The caller applies bounded temporal filling.
+    ``max_gap_hours`` excludes longer primary outages from donor transfer;
+    automatic mode uses it so long gaps go to reanalysis instead.
     """
     report = report if report is not None else P.ProcessingReport()
     columns = list(C.METOBS_REQUIRED_PARAMETERS.values())
@@ -241,7 +257,7 @@ def recover(
         report.primary_missing_hours[column] = int(cleaned.isna().sum())
         originals[column] = cleaned.copy()
         frame[column] = cleaned
-        masks[column] = unresolved(cleaned, column)
+        masks[column] = unresolved(cleaned, column, max_gap_hours)
     report.required_reconstructed_fraction = sum(
         report.primary_missing_hours.values()
     ) / (len(frame) * len(columns))
