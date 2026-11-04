@@ -51,23 +51,26 @@ card(mx, lane_cand[0], mw, lane_cand[1] - lane_cand[0], "2", "Hide data",
 # 3 reconstruct
 cx, cw = 69, 36
 card(cx, lane_cand[0], cw, lane_cand[1] - lane_cand[0], "3", "Fill the gaps",
-     "no method can see the\nhidden values")
+     "hidden values stay unseen")
 methods = [
-    ("linear only", "neutral", "straight line across any gap"),
-    ("own record", "interp", "straight line ≤ 3 h, daily pattern ≤ 48 h"),
-    ("nearby station", "donor", "tested donor station"),
-    ("ERA5 only", "era5", "reanalysis for every hidden hour"),
-    ("diyepw-style", "solar", "approach used by the diyepw tool"),
-    ("smhi2epw", "primary", "full sequence (Fig. 2)"),
-    ("smhi2epw, older order", "profile", "daily pattern before nearby station"),
+    ("straight line only", "neutral", ["straight line across any gap"]),
+    ("filling over time", "interp", ["straight line ≤ 3 h, daily pattern ≤ 48 h"]),
+    ("nearby station", "donor", ["tested donor station"]),
+    ("ERA5", "era5", ["reanalysis for every hidden hour;", "also the ERA5-only baseline"]),
+    ("diyepw-style", "solar", ["straight line up to 6 h; for 7–48 h,", "the same hour averaged over the", "surrounding 4 weeks; longer gaps: ERA5"]),
+    ("smhi2epw", "primary", ["full sequence (Fig. 2)"]),
+    ("smhi2epw, older order", "profile", ["daily pattern before nearby station"]),
 ]
-yy = lane_cand[1] - 18.6
+top = lane_cand[1] - 10.0
 for name, key, desc in methods:
     ec = RUNG.get(key, MUTED)
-    box(ax, cx + 1.8, yy, cw - 3.6, 5.5, fc=TINT[key], ec=ec, lw=0.6, r=0.7)
-    ax.text(cx + 3.2, yy + 3.85, name, fontsize=5.7, weight="bold", va="center")
-    ax.text(cx + 3.2, yy + 1.55, desc, fontsize=5.0, va="center", color=INK)
-    yy -= 6.2
+    h = 5.2 + 2.2 * (len(desc) - 1)
+    yy = top - h
+    box(ax, cx + 1.8, yy, cw - 3.6, h, fc=TINT[key], ec=ec, lw=0.6, r=0.7)
+    ax.text(cx + 3.2, yy + h - 1.6, name, fontsize=5.7, weight="bold", va="center")
+    for k, line in enumerate(desc):
+        ax.text(cx + 3.2, yy + h - 3.8 - 2.2 * k, line, fontsize=5.0, va="center", color=INK)
+    top = yy - 0.5
 
 # 4 EnergyPlus (spans both lanes)
 ex, ew = 110, 33
