@@ -98,3 +98,15 @@ Error in each calendar month that holds a hidden block, against the reference mo
 
 - `*_month_abs_pct_median / p95`: |monthly error|, % of reference monthly demand
 - `*_months_within_5pct`: share of evaluated months within +/-5 %
+
+## strang-vs-era5-ghi.csv
+
+Hourly global horizontal irradiance from SMHI STRÅNG and from ERA5 (both
+sampled at the primary weather station's coordinates) against measured SMHI
+GHI, for the 12 region-years with a measured-GHI station within 50 km.
+Daytime hours with measured GHI above 5 W/m2 and all three series present.
+The last row is the mean over region-years.
+
+- `radiation_station_id`, `radiation_station_name`, `radiation_station_distance_km`: the measuring station and its distance from the sampling point
+- `daytime_hours`, `measured_mean_w_m2`: hours compared and mean measured GHI
+- `strang_*`, `era5_*`: hourly mean absolute error, mean bias (model minus measured) and RMSE in W/m2; daily-total mean absolute error in kWh/m2
