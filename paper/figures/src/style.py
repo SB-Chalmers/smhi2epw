@@ -130,16 +130,50 @@ def canvas(width_mm, height_mm):
     return fig, ax
 
 
-# Filling methods in result plots: plain labels and colours tied to the rungs.
+# Filling methods in result plots (round 2): the manuscript's Table 6 names.
+# Stepwise is the one accent colour; every other method is grey.
+ACCENT = "#5B2A86"            # Stepwise (and, in Fig. 7, "lost")
+ACCENT_SEQ = ["#e4d8ef", "#a882c8", ACCENT]   # light to dark, for ordered shares
+OTHER = "#8e8e93"              # all other methods
+OTHER_DARK = "#636366"
 METHOD = {
-    "linear_only": ("straight line only", "#a1a1a6"),
-    "temporal": ("filling over time", RUNG["interp"]),
-    "donor_assessed": ("nearby station", RUNG["donor"]),
-    "era5": ("ERA5 only", RUNG["era5"]),
-    "diyepw_style": ("diyepw-style", DIYEPW),
-    "automatic_legacy": ("Stepwise, patterns first", RUNG["profile"]),
-    "automatic": ("Stepwise, no length limit", "#636366"),
-    "gap_type_rule": ("Stepwise", INK),
+    "gap_type_rule": ("Stepwise", ACCENT),
+    "automatic": ("Stepwise, no switch", OTHER),
+    "automatic_legacy": ("Stepwise, patterns first", OTHER),
+    "temporal": ("Line then patterns", OTHER),
+    "donor_assessed": ("Nearby station", OTHER),
+    "era5": ("ERA5 only", OTHER),
+    "diyepw_style": ("diyepw-style", OTHER),
+    "linear_only": ("Straight line only", OTHER),
 }
-GAP_LABEL = {3: "3 h", 12: "12 h", 48: "2 days", 168: "1 week"}
+GAP_LABEL = {3: "3 hours", 12: "12 hours", 48: "48 hours", 168: "1 week"}
 SAMPLING_LABEL = {"random_seasonal": "random gaps", "weather_extremes": "gaps at weather events"}
+
+# Season colours, shared with the backgrounds of Fig. 4 (gap layout).
+SEASON_COL = {"winter": "#3E6FA8", "spring": "#4C9A5A", "summer": "#D69A1E", "autumn": "#A3532E"}
+SEASON_TINT = {"winter": "#e3ebf5", "spring": "#e4f1e6", "summer": "#fbefd6", "autumn": "#f3e3da"}
+SEASON_NAME = {"DJF": "winter", "MAM": "spring", "JJA": "summer", "SON": "autumn"}
+
+# Buildings: one hue, light for recent construction, dark for the 1960s.
+BUILDING_ERA_COL = {"SE.06": "#9fcfc9", "SE.03": "#3f8a84", "SE.02": "#17433f"}
+
+
+def end_labels(ax, items, x, *, min_gap, fs=6.5, dx=0.08):
+    """Direct labels at the right end of lines, nudged apart vertically.
+
+    items: list of (y, text, colour, weight). min_gap in data units.
+    """
+    items = sorted([i for i in items if i[0] == i[0]], key=lambda t: t[0])
+    ys = [i[0] for i in items]
+    for k in range(1, len(ys)):
+        ys[k] = max(ys[k], ys[k - 1] + min_gap)
+    # shift the whole stack down if it overflows the top
+    top = ax.get_ylim()[1]
+    over = ys[-1] - top if ys else 0
+    if over > 0:
+        ys = [y - over for y in ys]
+        for k in range(len(ys) - 2, -1, -1):
+            ys[k] = min(ys[k], ys[k + 1] - min_gap)
+    for (y0, txt, col, w), y in zip(items, ys):
+        ax.text(x + dx, y, txt, fontsize=fs, color=col, weight=w, va="center", ha="left",
+                clip_on=False)

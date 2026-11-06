@@ -1,4 +1,4 @@
-"""Fig. B: study strata, primary stations, donors and measured-GHI stations.
+"""Fig. 3: study regions, main stations, nearby stations and measured solar stations.
 
 Station coordinates come from an SMHI MetObs station-metadata snapshot
 (data/smhi_metobs_stations_snapshot.csv); with these coordinates the
@@ -118,7 +118,7 @@ for s in STRATA:
     main.plot(cx, cy, marker="*", ms=6.5, mfc=INK, mec="white", mew=0.4, zorder=6)
     off = {"Gothenburg": (12, 30, "left"), "Malmö": (12, 0, "left"),
            "Stockholm": (12, -8, "left"), "Östersund": (-12, 16, "right"),
-           "Luleå": (12, -4, "left"), "Kiruna": (-12, -30, "right")}[s]
+           "Luleå": (12, -4, "left"), "Kiruna": (12, 55, "left")}[s]
     main.text(mx + (HALF + 8) * np.sign(off[0]) , my + off[1], s, ha=off[2], va="center",
               fontsize=7, weight="bold", zorder=7)
 
@@ -154,7 +154,7 @@ top = 0.99
 YEARS = (2018, 2021, 2023)
 LABEL = {  # station id: (dx km, dy km, ha, va)
     179960: (-6, 8, "right", "bottom"),   # Nikkaluokta
-    180940: (8, 8, "left", "bottom"),     # Kiruna airport
+    180940: (8, -8, "left", "top"),      # Kiruna airport
     180760: (6, -6, "left", "top"),       # Gällivare
     162860: (8, -6, "left", "top"),       # Luleå-Kallax
     124300: (6, 6, "left", "bottom"),     # Klövsjöhöjden
@@ -162,7 +162,7 @@ LABEL = {  # station id: (dx km, dy km, ha, va)
     97400: (6, 6, "left", "bottom"),      # Arlanda
     72420: (8, 0, "left", "center"),      # Landvetter
     62040: (6, 6, "left", "bottom"),      # Helsingborg
-    54290: (-4, 8, "right", "bottom"),    # Skillinge
+    54290: (2, -8, "center", "top"),      # Skillinge
     52240: (8, -6, "left", "top"),        # Falsterbo
 }
 for i, s in enumerate(STRATA):
@@ -186,6 +186,11 @@ for i, s in enumerate(STRATA):
             dx, dy = proj(d.longitude, d.latitude)
             ax.plot([px, dx], [py, dy], color=RUNG["donor"], lw=0.7,
                     ls="-" if rr.supported else ":", zorder=3)
+            if s == "Malmö":
+                ox, oy = {2018: (-11, 10), 2021: (9, 9), 2023: (14, -8)}.get(int(rr.year), (0, 0))
+                ax.text(px + 0.5 * (dx - px) + ox, py + 0.5 * (dy - py) + oy, str(rr.year), fontsize=6.5,
+                        color=RUNG["donor"], ha="center", va="center", zorder=7,
+                        bbox=dict(fc="white", ec="none", alpha=0.85, pad=0.3))
             if pd.notna(rr.ghi_id):
                 g = st.loc[int(rr.ghi_id)]
                 gx_, gy_ = proj(g.longitude, g.latitude)
@@ -237,11 +242,11 @@ handles = [
     Line2D([], [], ls="", marker="o", ms=5, mfc=RUNG["primary"], mec=INK, mew=0.6,
            label="main station (years used)"),
     Line2D([], [], color=RUNG["donor"], marker="D", ms=3.4, mfc=RUNG["donor"], mec=INK,
-           mew=0.35, lw=0.7, label="nearby (donor) station"),
+           mew=0.35, lw=0.7, label="nearby station"),
     Line2D([], [], color=RUNG["solar"], marker="^", ms=4.2, mfc=RUNG["solar"], mec=INK,
            mew=0.35, lw=0.7, label="solar radiation station (≤ 50 km)"),
     Line2D([], [], color=RUNG["donor"], lw=0.5, ls=(0, (2.5, 2)),
-           label="75 km donor search radius"),
+           label="75 km nearby-station search radius"),
     Line2D([], [], ls="", marker="o", ms=5, mfc="white", mec=INK, mew=0.6,
            label="† Kiruna 2018: no station met the data requirements"),
 ]

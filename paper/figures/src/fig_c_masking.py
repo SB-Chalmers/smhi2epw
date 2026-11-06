@@ -1,4 +1,4 @@
-"""Fig. C: synthetic outage design.
+"""Fig. 4: where the gaps are placed.
 
 (a) Random seasonal panels: block positions drawn by the campaign's own sampler
     (see make_mask_example.py) for an example site-year.
@@ -30,8 +30,8 @@ DUR = (3, 12, 48, 168)
 SHADE = {3: "#8e8e93", 12: "#636366", 48: "#3a3a3c", 168: "#1d1d1f"}
 
 fig = plt.figure(figsize=(S.DOUBLE, 68 * S.MM))
-ax = fig.add_axes([0.12, 0.1, 0.56, 0.68])
-bx = fig.add_axes([0.765, 0.17, 0.215, 0.61])
+ax = fig.add_axes([0.12, 0.1, 0.56, 0.62])
+bx = fig.add_axes([0.765, 0.17, 0.215, 0.55])
 
 # ----------------------------------------------------------- (a) seasonal
 season_spans = [("DJF", 0, 59), ("MAM", 59, 151), ("JJA", 151, 243), ("SON", 243, 334),
@@ -80,7 +80,9 @@ for d in DUR:
 
 month_starts = pd.date_range(f"{YEAR}-01-01", periods=12, freq="MS")
 ax.set_xticks([(m - pd.Timestamp(f"{YEAR}-01-01")).days for m in month_starts])
-ax.set_xticklabels([m.strftime("%b")[0] for m in month_starts])
+ax.set_xticklabels([m.strftime("%b") for m in month_starts], fontsize=6.5)
+for lab in ax.get_xticklabels():
+    lab.set_horizontalalignment("left")
 ax.tick_params(axis="x", length=2, pad=1.5)
 ax.set_xlim(0, DAYS)
 ax.set_ylim(ymax + 0.0, -0.6)
@@ -91,9 +93,9 @@ ax.spines["bottom"].set_bounds(0, DAYS)
 ax.xaxis.set_ticks_position("top")
 ax.spines["bottom"].set_visible(False)
 ax.spines["top"].set_visible(True)
-ax.text(0, 1.21, "a  Random gaps, one per season", transform=ax.transAxes, fontsize=8,
+ax.text(0, 1.27, "a  Random gaps, one per season", transform=ax.transAxes, fontsize=8,
         weight="bold", va="bottom")
-ax.text(0, 1.13, "three random draws per gap length; example year 2021",
+ax.text(0, 1.105, "three random draws per gap length; example year 2021;\n3 h and 12 h gaps drawn wider than to scale",
         transform=ax.transAxes, fontsize=6.5, color=MUTED, va="bottom")
 ax.text(DAYS + 2, -0.35, "draw", fontsize=6.5, color=MUTED, ha="left", va="bottom")
 

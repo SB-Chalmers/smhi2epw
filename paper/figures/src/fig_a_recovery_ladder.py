@@ -1,178 +1,108 @@
-"""Fig. A: AMY assembly in smhi2epw and the missing-weather recovery ladder.
+"""Fig. 1: the stepwise method as a ladder over gap length (round 2).
 
-Content follows docs/weather_recovery.rst and docs/pipeline.rst (smhi2epw).
-Coordinates are millimetres on a 174 mm double-column canvas.
+x = length of the gap (log scale), one row per source. A bar shows the gap
+lengths a source may fill. Sources are tried from the top; an hour that one
+source cannot fill falls to the next. Solid accent = used by the stepwise
+method; grey dashed = used only without the switch to ERA5 (the tested
+alternatives). Switch points are vertical lines.
 """
 
 from __future__ import annotations
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 import style as S
-from matplotlib.patches import Rectangle
-from style import INK, MUTED, RUNG, TINT, arrow, box
+from style import ACCENT, ACCENT_SEQ, INK, MIN_FS, MUTED, OTHER, RULE
 
 S.use()
-W, H = 174, 152
-fig, ax = S.canvas(W, H)
-BODY = 6.5
-LINE = 1.32
+FS = MIN_FS
+XMIN, XMAX = 1, 24 * 14
+TICKS = [(1, "1 hour"), (3, "3 hours"), (12, "12 hours"), (24, "1 day"), (48, "2 days"),
+         (168, "1 week"), (336, "2 weeks")]
+
+H = 110
+fig, (a1, a2) = plt.subplots(2, 1, figsize=(S.DOUBLE, H * S.MM),
+                             gridspec_kw=dict(height_ratios=[4, 3]))
+fig.subplots_adjust(left=0.27, right=0.86, top=0.83, bottom=0.09, hspace=0.95)
 
 
-def text(x, y, t, **kw):
-    kw.setdefault("fontsize", BODY)
-    kw.setdefault("color", INK)
-    kw.setdefault("linespacing", LINE)
-    ax.text(x, y, t, **kw)
-
-
-def rung(x, y, w, h, n, title, body, key, *, note=None):
-    box(ax, x, y, w, h, fc=TINT[key], ec=RUNG[key], lw=0.8)
-    ax.add_patch(Rectangle((x, y + 0.4), 1.6, h - 0.8, fc=RUNG[key], ec="none", zorder=3))
-    text(x + 3.6, y + h - 2.2, str(n), fontsize=7.5, weight="bold",
-         color=RUNG[key], va="top")
-    text(x + 7.4, y + h - 2.2, title, fontsize=7, weight="bold", va="top")
-    text(x + 7.4, y + h - 6.4, body, va="top")
-    if note:
-        text(x + w - 2, y + 2.0, note, va="bottom", ha="right", fontsize=6.5,
-             color=MUTED, style="italic")
-
-
-# ------------------------------------------------------------- column frame
-CS, CSW = 2, 38      # source column
-CM, CMW = 46, 70     # meteorology ladder
-CQ, CQW = 124, 48    # solar ladder
-
-text(CS, H - 2.0, "The stepwise method", fontsize=8.5, weight="bold", va="top")
-H0 = H - 8.0  # top of the column headings
-for x, w, t in ((CS, CSW, "Data source\nweather station, model or reanalysis"),
-                (CM, CMW, "General weather\nair temperature, humidity, wind, air pressure"),
-                (CQ, CQW, "Solar radiation\nglobal, direct and diffuse")):
-    first, *rest = t.split("\n")
-    text(x, H0 - 2.5, first, fontsize=7.2, weight="bold", va="top")
-    if rest:
-        text(x, H0 - 6.3, rest[0], fontsize=6.5, color=MUTED, va="top")
-    ax.plot([x, x + w], [H0 - 10.8] * 2, color=INK, lw=0.6)
-
-# ------------------------------------------------------------- rows
-rows = {  # name: (y_bottom, height)
-    1: (112, 16),
-    2: (94, 12.5),
-    3: (65, 23),
-    4: (46.5, 12.5),
-    5: (25.5, 12.5),
-}
-
-sources = {
-    1: ("SMHI weather station", "quality-approved values;\nfull-year station preferred;\nsolar: measured, or STRÅNG", "primary", "-"),
-    2: ("Same station", "its own record", "neutral", "--"),
-    3: ("Nearby SMHI stations", "up to 3 within 75 km;\nsame-hour approved values", "donor", "-"),
-    4: ("Same station", "its own record", "neutral", "--"),
-    5: ("ERA5 via Open-Meteo", "modelled weather for the\nsame year and location", "era5", "-"),
-}
-for n, (title, body, key, ls) in sources.items():
-    y, h = rows[n]
-    ec = RUNG.get(key, MUTED)
-    box(ax, CS, y, CSW, h, fc="white", ec=ec, lw=0.7, ls=ls)
-    text(CS + 2, y + h - 2.2, title, fontsize=6.6, weight="bold", va="top",
-         color=INK if ls == "-" else MUTED)
-    text(CS + 2, y + h - 6.0, body, va="top", fontsize=6.5,
-         color=INK if ls == "-" else MUTED)
-    arrow(ax, (CS + CSW, y + h / 2), (CM, y + h / 2), color=ec, lw=0.7, ms=5)
-
-y, h = rows[1]
-rung(CM, y, CMW, h, 1, "Measured values",
-     "valid measurements are never changed;\ninvalid values are treated as gaps", "primary")
-y, h = rows[2]
-rung(CM, y, CMW, h, 2, "Straight-line fill, gaps ≤ 3 h",
-     "straight line between the values either side;\nwith a value on one side only, it is held", "interp")
-y, h = rows[3]
-rung(CM, y, CMW, h, 3, "Nearby station, gaps ≤ 48 h",
-     "used only if it passes a test: the stations are\n"
-     "compared within 30 days of the gap and tested\n"
-     "on 3 days left out; a fixed correction is kept only\n"
-     "if it cuts the error by 10 %; rejected if the average\n"
-     "error exceeds 3 °C, 15 % RH, 3 m/s, 45° or 5 hPa", "donor")
-y, h = rows[4]
-rung(CM, y, CMW, h, 4, "Daily pattern, gaps ≤ 48 h",
-     "typical 24 h pattern from up to 7 days either\nside, adjusted to meet the values at both ends", "profile")
-y, h = rows[5]
-rung(CM, y, CMW, h, 5, "ERA5 reanalysis",
-     "only for hours still missing;\nwhich data were used is recorded", "era5")
-
-# solar ladder: measured, STRÅNG, straight line <= 3 h, ERA5
-y1, h1 = rows[1]
-rung(CQ, y1, CQW, h1, 1, "Measured, then modelled",
-     "measured total from a station\n≤ 50 km, STRÅNG split scaled to it;\nother hours: STRÅNG as it is", "solar")
-y2, h2 = rows[2]
-rung(CQ, y2, CQW, h2, 2, "Straight line, gaps ≤ 3 h",
-     "sun position every 5 min;\nzero when the sun is down", "interp")
-ytop, ybot = y2 + h2, y2
-text(CQ + 13, ybot - 4, "gaps over 3 h go to ERA5\n\nnever taken from a nearby\nstation: solar stays tied\nto the chosen location",
-     ha="left", va="top", fontsize=6.5, color=MUTED, style="italic")
-y5, h5 = rows[5]
-rung(CQ, y5, CQW, h5, 3, "ERA5 radiation",
-     "all three parts together;\nalready hourly averages", "era5")
-
-# general weather: gaps over 48 h skip the nearby station and daily pattern
-xb = CM + CMW + 3.2
-yb2 = rows[2][0] + rows[2][1] / 2
-yb5 = rows[5][0] + rows[5][1] / 2
-ax.plot([CM + CMW, xb, xb], [yb2, yb2, yb5 + 1.5], color=INK, lw=0.7)
-arrow(ax, (xb, yb5 + 1.5), (CM + CMW, yb5 + 1.5), lw=0.7, ms=5)
-text(xb + 0.7, (rows[3][0] + rows[3][1] + rows[4][0]) / 2, "gaps over 48 h", rotation=90,
-     ha="left", va="center", fontsize=6.5, color=MUTED, style="italic")
-
-# "remaining gaps" connectors
-def down(x, y0, y1, label=True):
-    arrow(ax, (x, y0), (x, y1), lw=0.7, ms=5)
+def bar(ax, row, x0, x1, *, used=True, light=False, label=None):
+    if used:
+        col = ACCENT_SEQ[0] if light else ACCENT
+        ax.barh(row, np.log10(x1) - np.log10(x0), left=np.log10(x0), height=0.5,
+                color=col, lw=0, zorder=3)
+    else:
+        ax.plot([np.log10(x0), np.log10(x1)], [row, row], color=OTHER, lw=3.2,
+                ls=(0, (1.2, 0.9)), solid_capstyle="butt", zorder=2)
     if label:
-        text(x + 1.2, (y0 + y1) / 2, "gaps left", fontsize=6.5, color=MUTED,
-             style="italic", va="center")
+        ax.text(np.log10(x1) + 0.04, row, label, fontsize=FS, va="center", ha="left",
+                color=ACCENT if used and not light else MUTED, clip_on=False)
 
-for a, b in ((1, 2), (2, 3), (3, 4), (4, 5)):
-    down(CM + 10, rows[a][0], rows[b][0] + rows[b][1], label=b != 5)
-down(CQ + 10, rows[1][0], ytop)
-down(CQ + 10, ybot, y5 + h5, label=False)
 
-# strict-policy boundary
-ys = (rows[4][0] + rows[5][0] + rows[5][1]) / 2
-ax.plot([CM - 2, W - 1], [ys, ys], color=INK, lw=0.6, ls=(0, (3, 2)), zorder=0)
-text(CM + 12, ys + 0.8, "strict setting stops here and reports the gaps left",
-     ha="left", va="bottom", fontsize=6.5, color=MUTED, style="italic")
-text(CM + 12, ys - 0.8, "default setting continues to ERA5",
-     ha="left", va="top", fontsize=6.5, color=MUTED, style="italic")
+def frame(ax, rows, letter, title):
+    ax.set_xlim(np.log10(XMIN), np.log10(XMAX))
+    ax.set_ylim(len(rows) - 0.4, -0.6)
+    ax.set_yticks(range(len(rows)))
+    ax.set_yticklabels([])
+    for i, (name, note) in enumerate(rows):
+        ax.text(-0.012, i - 0.05, name, transform=ax.get_yaxis_transform(), ha="right",
+                va="bottom", fontsize=7, weight="bold", color=INK)
+        ax.text(-0.012, i + 0.07, note, transform=ax.get_yaxis_transform(), ha="right",
+                va="top", fontsize=FS, color=MUTED)
+    ax.set_xticks([np.log10(t) for t, _ in TICKS])
+    ax.set_xticklabels([l for _, l in TICKS])
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    ax.grid(axis="x", color=RULE, lw=0.4, zorder=0)
+    ax.set_axisbelow(True)
+    ax.set_xlabel("length of the gap")
+    ax.annotate(f"{letter}  {title}", (-0.36, 1), xycoords="axes fraction", xytext=(0, 24),
+                textcoords="offset points", fontsize=7.5, weight="bold", va="bottom")
 
-# ------------------------------------------------------------- finalise row
-yb = 2.0
-hb = 19.6
-ytie = 23.4
-ax.plot([CM + CMW / 2, CM + CMW / 2], [rows[5][0], ytie], color=INK, lw=0.7)
-ax.plot([CQ + CQW / 2, CQ + CQW / 2], [rows[5][0], ytie], color=INK, lw=0.7)
-ax.plot([CS + 8, CQ + CQW / 2], [ytie, ytie], color=INK, lw=0.7)
-arrow(ax, (CS + 8, ytie), (CS + 8, yb + hb), lw=0.7, ms=5)
 
-steps = [
-    ("Derive", "dew point and sky\nradiation; cloud cover\nused only for sky\nradiation", 27),
-    ("Check", "every hour present,\nvalues in range, dew\npoint ≤ air temperature,\nsolar parts add up", 29.5),
-    ("Flag", "jumps where sources\nmeet: > 10 °C, 40 %\nRH, 15 m/s, 10 hPa;\nfor review only", 27.5),
-    ("Shift", "to local standard\ntime (UTC+1),\nno summer time", 21),
-]
-x = CS
-for t, b, w in steps:
-    box(ax, x, yb, w, hb, fc=TINT["neutral"], ec=INK, lw=0.6)
-    text(x + 2, yb + hb - 2.2, t, fontsize=6.8, weight="bold", va="top")
-    text(x + 2, yb + hb - 6.0, b, va="top", fontsize=6.5)
-    x2 = x + w + 3.2
-    arrow(ax, (x + w, yb + hb / 2), (x2, yb + hb / 2), lw=0.7, ms=5)
-    x = x2
-wf = W - 1 - x
-box(ax, x, yb, wf, hb, fc="white", ec=INK, lw=1.0)
-text(x + 2, yb + hb - 2.2, "Weather file + record file", fontsize=6.8, weight="bold", va="top")
-text(x + 2, yb + hb - 6.0, "EPW for one actual year; a JSON\nrecord of settings, stations used,\ntest errors and share by source:",
-     va="top", fontsize=6.5)
-cx = x + 2
-for key, t, cw in (("primary", "measured", 12.8), ("interp", "own record", 14.8), ("donor", "nearby", 10.4),
-                   ("era5", "ERA5", 8.4)):
-    box(ax, cx, yb + 1.6, cw, 3.6, t, fc=TINT[key], ec=RUNG[key], lw=0.5, fs=6.5, r=0.6)
-    cx += cw + 0.8
+def switch(ax, h, text, used, ha="center"):
+    ax.axvline(np.log10(h), color=ACCENT if used else MUTED, lw=1.0 if used else 0.7,
+               ls="-" if used else (0, (3, 2)), zorder=4)
+    dx = {"center": 0, "left": 2, "right": -2}[ha]
+    ax.annotate(text, (np.log10(h), 1), xycoords=("data", "axes fraction"), xytext=(dx, 2),
+                textcoords="offset points", fontsize=FS, ha=ha, va="bottom",
+                color=ACCENT if used else MUTED, weight="bold" if used else "normal")
 
+
+# ------------------------------------------------------------- a general weather
+rows_a = [("Straight line", "between the values either side"),
+          ("Nearby station", "up to 3 within 75 km, if one passes a test"),
+          ("Daily pattern", "typical day from the week either side"),
+          ("ERA5", "reanalysis for the same hours")]
+frame(a1, rows_a, "a", "General weather: measured neighbours up to two days, then ERA5")
+bar(a1, 0, 1, 3)
+bar(a1, 1, 3, 48)
+bar(a1, 1, 48, XMAX, used=False, label=None)
+bar(a1, 2, 3, 48, label="if no station passes")
+bar(a1, 3, 1, 48, light=True)
+bar(a1, 3, 48, XMAX)
+a1.text(np.log10(5), 3, "any hour still empty", fontsize=FS, va="center", ha="left",
+        color=INK, zorder=5)
+a1.text(np.log10(60), 1.42, "without the switch", fontsize=FS, va="center", ha="left",
+        color=MUTED)
+switch(a1, 24, "switch at 1 day\n(tested)", False, ha="right")
+switch(a1, 48, "switch at 2 days\n(used)", True, ha="left")
+
+# ------------------------------------------------------------- b solar
+rows_b = [("Straight line", "follows the sun; zero at night"),
+          ("Daily pattern", "typical day from the week either side"),
+          ("ERA5", "all three parts together")]
+frame(a2, rows_b, "b", "Solar radiation: straight line up to three hours, then ERA5")
+bar(a2, 0, 1, 3)
+bar(a2, 1, 3, 48, used=False, label="without the switch")
+bar(a2, 2, 1, 3, light=True)
+bar(a2, 2, 3, XMAX)
+switch(a2, 3, "switch at 3 hours\n(used)", True)
+switch(a2, 12, "12 h\n(tested)", False)
+switch(a2, 48, "48 h\n(tested)", False)
+
+fig.text(0.012, 0.965, "Sources are tried from the top; an hour one source cannot fill falls to "
+         "the next.  Purple: Stepwise.  Grey dashed: only without the switch to ERA5.",
+         fontsize=FS, color=MUTED)
 S.save(fig, "fig_a_recovery_ladder")
