@@ -267,9 +267,13 @@ ROWS8 = [("winter", "random_seasonal", "winter", "heating", False),
 
 
 def fig_position():
-    H = 92
+    H = 100
     fig, axes = plt.subplots(1, 2, figsize=(S.DOUBLE, H * S.MM))
-    fig.subplots_adjust(left=0.13, right=0.97, top=0.86, bottom=0.12, wspace=0.18)
+    fig.subplots_adjust(left=0.13, right=0.97, top=0.80, bottom=0.11, wspace=0.18)
+    fig.text(0.012, 0.97, "Error that 95% of cases stay below over the gap and the following week, as % of annual heating "
+             "(heating rows) or annual cooling (cooling rows).", fontsize=FS, color=MUTED)
+    fig.text(0.012, 0.94, "Ringed dots: gap centred on a cold spell (heating) or a heatwave (cooling). "
+             "Summer heating is below 0.1% and not shown.", fontsize=FS, color=MUTED)
     titles = {"meteorology": "General weather: winter drives heating, summer cooling",
               "solar": "Solar: a hidden heatwave week dominates"}
     global VMAX_POS

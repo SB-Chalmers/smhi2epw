@@ -80,22 +80,23 @@ def fig_method_diagram():
             ax.text(1, -12.3, "grey: that source outside the gap", fontsize=FS - 0.4, color=OTHER)
     # f: the stepwise method
     ax = fig.add_subplot(gs[1, 2]); ax.axis("off")
-    ax.set_xlim(0, 60); ax.set_ylim(0, 44)
+    ax.set_xlim(0, 60); ax.set_ylim(-10, 44)
     title(ax, "f", "Stepwise", y=1.30)
     ax.text(0, 1.04, "Tries the sources in order; long gaps\ngo straight to ERA5 (Figure 1)",
             transform=ax.transAxes, fontsize=FS, color=MUTED, va="bottom", linespacing=1.15)
     steps = [("linear interpolation", "up to 3 hours"), ("nearby station", "if one passes the check"),
              ("daily patterns", "up to 48 hours"), ("ERA5", "anything left")]
     for i, (s1, s2) in enumerate(steps):
-        y = 38 - i * 10.5
-        box(ax, 1, y - 4.2, 36, 8.4, "", fc="#f1ebf6" if i < 3 else "#e4d8ef", ec=ACCENT, lw=0.6, r=1.0)
-        ax.text(3, y + 1.7, s1, fontsize=FS, weight="bold", va="center", color=INK)
-        ax.text(3, y - 2.0, s2, fontsize=FS - 0.4, va="center", color=MUTED)
+        y = 38.3 - i * 11.3
+        box(ax, 1, y - 4.8, 38, 9.6, "", fc="#f1ebf6" if i < 3 else "#e4d8ef", ec=ACCENT, lw=0.6, r=1.0)
+        ax.text(3, y + 2.0, s1, fontsize=FS, weight="bold", va="center", color=INK)
+        ax.text(3, y - 2.4, s2, fontsize=FS - 0.4, va="center", color=MUTED)
         if i < 3:
-            arrow(ax, (18, y - 4.4), (18, y - 6.1), color=ACCENT, lw=0.7, ms=5)
+            arrow(ax, (18, y - 5.0), (18, y - 6.4), color=ACCENT, lw=0.7, ms=5)
     ax.text(40.5, 30, "longer gaps\ngo straight\nto ERA5", fontsize=FS - 0.4,
             color=ACCENT, va="center", linespacing=1.15)
-    arrow(ax, (45, 24.5), (37.5, 6.5), color=ACCENT, lw=0.7, ms=5, conn="arc3,rad=-0.25")
+    arrow(ax, (45, 24.5), (39.6, 4.5), color=ACCENT, lw=0.7, ms=5, conn="arc3,rad=-0.25")
+    ax.text(1, -6.6, "Solar radiation: linear interpolation up to\n3 hours, then ERA5", fontsize=FS - 0.4, color=MUTED, va="center", linespacing=1.15)
     S.save(fig, "fig_methods_diagram")
 
 
@@ -209,11 +210,11 @@ def fig_regret_heatmap():
     H = 82
     fig, axes = plt.subplots(1, 2, figsize=(S.DOUBLE, H * S.MM))
     fig.subplots_adjust(left=0.21, right=0.985, top=0.80, bottom=0.06, wspace=0.08)
-    f3 = lambda v: f"{v:.3f}" if v < 0.1 else f"{v:.2f}"
-    heat(axes[0], R_WORST, ROWS_R, f3, LogNorm(0.04, 0.9), "a", "Worst case: rare large errors")
-    heat(axes[1], R_P95, ROWS_R, f3, LogNorm(0.001, 0.2), "b", "95th percentile: typical bad case", ylabels=False)
-    fig.text(0.012, 0.955, "Regret: how much worse than the best method on the same case, as a share of the reference "
-             "(0.1 = 10%). General weather gaps.", fontsize=FS, color=MUTED)
+    topct = lambda T: [[None if v is None else f"{float(v) * 100:.1f}" for v in r] for r in T]
+    heat(axes[0], topct(R_WORST), ROWS_R, None, LogNorm(4, 90), "a", "Worst case: rare large errors")
+    heat(axes[1], topct(R_P95), ROWS_R, None, LogNorm(0.1, 20), "b", "95th percentile", ylabels=False)
+    fig.text(0.012, 0.955, "Regret: how much worse than the best method on the same case, as % of the reference "
+             "value. General weather gaps.", fontsize=FS, color=MUTED)
     fig.text(0.012, 0.92, "Darker = larger (log scale). –: the method does not fill gaps this long.", fontsize=FS, color=MUTED)
     S.save(fig, "fig_regret_heatmap")
 
