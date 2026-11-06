@@ -87,16 +87,16 @@ def title(ax, letter, text, y=1.04):
 
 
 def f1(v):
-    return f"{v:.1f}"
+    return "<0.1" if 0 <= v < 0.05 else f"{v:.1f}"
 
 
 # ------------------------------------------------------------- Fig. 5 annual error
 EVENT_FOR = {"heating": ("cold_spell_coldest_hour", "cold spell"),
              "cooling": ("heatwave_hottest_hour", "heatwave")}
 FIG5_TITLES = {("meteorology", "heating"): "Heating: under 2 % even for a week",
-               ("meteorology", "cooling"): "Cooling: up to 6 % when a heatwave is hidden",
+               ("meteorology", "cooling"): "Cooling: 6 % when a heatwave week is hidden",
                ("solar", "heating"): "Heating: about 1 % at most",
-               ("solar", "cooling"): "Cooling: up to 20 % for a hidden heatwave week"}
+               ("solar", "cooling"): "Cooling: 20 % for a hidden heatwave week"}
 
 
 def fig_annual():
@@ -156,7 +156,7 @@ def fig_peaks():
     fig.subplots_adjust(left=0.08, right=0.87, top=0.92, bottom=0.1, wspace=0.3, hspace=0.6)
     titles = {"heating": ("Heating peaks: half move over a day at one week",
                           "Heating peak error: small for most, large for a few"),
-              "cooling": ("Cooling peaks: up to a third move over a day",
+              "cooling": ("Cooling peaks: a fifth to a third move over a day",
                           "Cooling peak error: mostly near 1 W/m²")}
     for j, mode in enumerate(("heating", "cooling")):
         ax = axes[0, j]
@@ -240,13 +240,13 @@ def fig_events():
             bottom += v
         kept_step, kept_line = rows[3]["kept_exact_share"] * 100, ln["kept_exact_share"] * 100
         ax.set_xticks(XX)
-        ax.set_xticklabels(["3 h", "12 h", "48 h", "1\nweek", "1 week,\nstraight\nline"], fontsize=FS)
+        ax.set_xticklabels(["3 h", "12 h", "48 h", "1\nweek", "1 week,\nlinear\ninterp."], fontsize=FS)
         ax.axvline(3.65, color=RULE, lw=0.6)
         ax.set_ylim(0, 100)
         ax.set_yticks([0, 25, 50, 75, 100])
         ax.text(0.5, 1.3, name, transform=ax.transAxes, ha="center", va="bottom", fontsize=7.5,
                 weight="bold")
-        ax.text(0.5, 1.24, f"{kept_step:.0f} % kept at one week\n(straight line: {kept_line:.0f} %)",
+        ax.text(0.5, 1.24, f"{kept_step:.0f} % kept at one week\n(linear interpolation: {kept_line:.0f} %)",
                 transform=ax.transAxes, ha="center", va="top", fontsize=FS, linespacing=1.2)
     axes[0].set_ylabel("% of events hit by the gap")
     for (key, col), yk in zip(OUTCOME, (15, 50, 85)):
@@ -270,8 +270,17 @@ def fig_position():
     H = 92
     fig, axes = plt.subplots(1, 2, figsize=(S.DOUBLE, H * S.MM))
     fig.subplots_adjust(left=0.13, right=0.97, top=0.86, bottom=0.12, wspace=0.18)
-    titles = {"meteorology": "General weather: summer gaps matter most",
+    titles = {"meteorology": "General weather: winter drives heating, summer cooling",
               "solar": "Solar: a hidden heatwave week dominates"}
+    global VMAX_POS
+    VMAX_POS = 0
+    for sc in ("meteorology", "solar"):
+        g = read("gap-window", sc)
+        g = g[g.method == STEP]
+        for (_, event, season, mode, _) in ROWS8:
+            v = g[(g.event_type == event) & (g.season == season) & (g["mode"] == mode)]["window_abs_p95_pct"]
+            if len(v):
+                VMAX_POS = max(VMAX_POS, float(v.max()))
     for ax, scope, letter in zip(axes, ("meteorology", "solar"), "ab"):
         gw = read("gap-window", scope)
         a = gw[gw.method == STEP]
@@ -280,7 +289,7 @@ def fig_position():
             d = a[(a.event_type == event) & (a.season == season) & (a["mode"] == mode)] \
                 .set_index("gap_hours").reindex(GAPS)
             vals[i] = d["window_abs_p95_pct"].to_numpy()
-        vmax = np.nanmax(vals)
+        vmax = VMAX_POS
         for i, (name, event, season, mode, ring) in enumerate(ROWS8):
             for j, v in enumerate(vals[i]):
                 size = 520 * np.sqrt(max(v, 0) / vmax) + 4
@@ -398,9 +407,9 @@ def method_figure(name_full, name_subset, col, scale, caps, xlabel, titles, fnam
 def fig_methods():
     caps = {(0, "heating"): 2.4, (0, "cooling"): 7, (1, "heating"): 1.6, (1, "cooling"): 7,
             (2, "heating"): 1.6, (2, "cooling"): 7}
-    titles = {(0, "heating"): "Heating: methods close; straight line worst",
+    titles = {(0, "heating"): "Heating: methods close; linear interpolation worst",
               (0, "cooling"): "Cooling: no switch does best at one week",
-              (1, "heating"): "Heating: a passing nearby station is as good",
+              (1, "heating"): "Heating: nearby station and ERA5 only close",
               (1, "cooling"): "Cooling: nearby station best at one week",
               (2, "heating"): "Heating: Stepwise and ERA5 only lowest",
               (2, "cooling"): "Cooling: Stepwise and ERA5 only lowest"}
@@ -411,11 +420,11 @@ def fig_methods():
 
 def fig_monthly():
     caps = {(r, m): 60 for r in range(3) for m in ("heating", "cooling")}
-    titles = {(0, "heating"): "Heating: only the straight line fails often",
+    titles = {(0, "heating"): "Heating: only linear interpolation fails often",
               (0, "cooling"): "Cooling: one month in five fails at one week",
               (1, "heating"): "Heating: almost no months fail",
               (1, "cooling"): "Cooling: nearby station fails least",
-              (2, "heating"): "Heating: only the straight line fails often",
+              (2, "heating"): "Heating: only linear interpolation fails often",
               (2, "cooling"): "Cooling: one month in four fails at one week"}
     method_figure("monthly-error", "method-steps-donor-subset", "{mode}_months_outside", 100.0,
                   caps, "% of months outside ±5 % of the reference", titles, "fig11_monthly",

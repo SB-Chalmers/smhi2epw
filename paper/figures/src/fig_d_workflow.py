@@ -58,14 +58,14 @@ card(mx, lane_cand[0], mw, lane_cand[1] - lane_cand[0], "2", "Hide data",
 card(cx, lane_cand[0], cw, lane_cand[1] - lane_cand[0], "3", "Fill the gaps",
      "hidden values stay unseen")
 methods = [  # Table 6 names
-    ("Stepwise", True, ["Fig. 1: ERA5 after 2 days", "(solar: after 3 h)"]),
+    ("Stepwise", True, ["ERA5 after 2 days", "(solar: after 3 h)"]),
     ("Stepwise, no switch", False, ["nearby station at any length;", "solar daily pattern ≤ 48 h"]),
     ("Stepwise, patterns first", False, ["daily pattern before", "nearby station"]),
-    ("Line then patterns", False, ["straight line ≤ 3 h,", "daily pattern ≤ 48 h"]),
+    ("Interpolation then patterns", False, ["linear ≤ 3 h,", "daily pattern ≤ 48 h"]),
     ("Nearby station", False, ["tested nearby station only"]),
     ("ERA5 only", False, ["reanalysis for every hour"]),
-    ("diyepw-style", False, ["line ≤ 6 h; 7–48 h: 4-week", "same-hour mean; then ERA5"]),
-    ("Straight line only", False, ["straight line across any gap"]),
+    ("Four-week average", False, ["linear ≤ 6 h; 7–48 h: 4-week", "same-hour mean; then ERA5"]),
+    ("Linear interpolation only", False, ["straight line across any gap"]),
 ]
 top = lane_cand[1] - 10.2
 for name, step, desc in methods:
@@ -82,7 +82,7 @@ for name, step, desc in methods:
 # 4 EnergyPlus (spans both lanes)
 card(ex, lane_cand[0], ew, lane_ref[1] - lane_cand[0], "4", "Simulate",
      "EnergyPlus 24.2,\nideal heating\nand cooling\n\nsame building\nfor both files")
-profiles = ["house, 1961–75", "house, 2006–21", "flats, 1961–75", "flats, 2006–21",
+profiles = ["house, 1961–75", "house, 2006–21", "apartments, 1961–75", "apartments, 2006–21",
             "office, 2006–21", "school, 1976–85"]
 yy = lane_cand[0] + 2.0
 for p in profiles[::-1]:

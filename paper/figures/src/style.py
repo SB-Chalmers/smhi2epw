@@ -29,10 +29,10 @@ PAPER = "#ffffff"
 RUNG = {
     "primary": "#4d4d4d",  # accepted SMHI observations
     "interp": "#0072B2",  # <= 3 h interpolation
-    "donor": "#D55E00",  # assessed donor stations
+    "donor": "#5B2A86",  # assessed donor stations
     "profile": "#009E73",  # <= 48 h daily profiles
     "era5": "#CC79A7",  # ERA5 via Open-Meteo
-    "solar": "#E69F00",  # solar branch accent
+    "solar": "#a882c8",  # solar branch accent
 }
 TINT = {
     "primary": "#ececec",
@@ -52,7 +52,7 @@ TINT["diyepw"] = "#e1f1fb"
 GREY = {"dark": "#3a3a3c", "mid": "#8e8e93", "light": "#c7c7cc", "pale": "#e5e5ea"}
 MIN_FS = 6.5  # smallest text size at final print size, pt
 
-SEASON = {"DJF": "#e8eef7", "MAM": "#eaf4ea", "JJA": "#fbf1df", "SON": "#f5e9e1"}
+SEASON = {"DJF": "#ebe3f3", "MAM": "#f7f3fb", "JJA": "#ebe3f3", "SON": "#f7f3fb"}
 
 
 def use() -> None:
@@ -140,17 +140,17 @@ METHOD = {
     "gap_type_rule": ("Stepwise", ACCENT),
     "automatic": ("Stepwise, no switch", OTHER),
     "automatic_legacy": ("Stepwise, patterns first", OTHER),
-    "temporal": ("Line then patterns", OTHER),
+    "temporal": ("Interpolation then patterns", OTHER),
     "donor_assessed": ("Nearby station", OTHER),
     "era5": ("ERA5 only", OTHER),
-    "diyepw_style": ("diyepw-style", OTHER),
-    "linear_only": ("Straight line only", OTHER),
+    "diyepw_style": ("Four-week average", OTHER),
+    "linear_only": ("Linear interpolation only", OTHER),
 }
 GAP_LABEL = {3: "3 hours", 12: "12 hours", 48: "48 hours", 168: "1 week"}
 SAMPLING_LABEL = {"random_seasonal": "random gaps", "weather_extremes": "gaps at weather events"}
 
 # Season colours, shared with the backgrounds of Fig. 4 (gap layout).
-SEASON_COL = {"winter": "#3E6FA8", "spring": "#4C9A5A", "summer": "#D69A1E", "autumn": "#A3532E"}
+SEASON_COL = {"winter": "#5B2A86", "spring": "#5B2A86", "summer": "#5B2A86", "autumn": "#5B2A86"}
 SEASON_TINT = {"winter": "#e3ebf5", "spring": "#e4f1e6", "summer": "#fbefd6", "autumn": "#f3e3da"}
 SEASON_NAME = {"DJF": "winter", "MAM": "spring", "JJA": "summer", "SON": "autumn"}
 

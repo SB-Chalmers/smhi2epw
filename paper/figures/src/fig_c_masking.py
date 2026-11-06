@@ -27,7 +27,7 @@ DAYS = 365
 MIN_W = 1.6  # days; minimum drawn width so 3 h and 12 h blocks stay visible
 
 DUR = (3, 12, 48, 168)
-SHADE = {3: "#8e8e93", 12: "#636366", 48: "#3a3a3c", 168: "#1d1d1f"}
+SHADE = {3: "#a882c8", 12: "#8a5fb4", 48: "#6f3f9e", 168: "#5B2A86"}
 
 fig = plt.figure(figsize=(S.DOUBLE, 68 * S.MM))
 ax = fig.add_axes([0.12, 0.1, 0.56, 0.62])

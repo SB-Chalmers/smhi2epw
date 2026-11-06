@@ -71,11 +71,11 @@ def switch(ax, h, text, used, ha="center"):
 
 
 # ------------------------------------------------------------- a general weather
-rows_a = [("Straight line", "between the values either side"),
+rows_a = [("Linear interpolation", "between the values either side"),
           ("Nearby station", "up to 3 within 75 km, if one passes a test"),
           ("Daily pattern", "typical day from the week either side"),
           ("ERA5", "reanalysis for the same hours")]
-frame(a1, rows_a, "a", "General weather: measured neighbours up to two days, then ERA5")
+frame(a1, rows_a, "a", "General weather: local sources up to two days, then ERA5")
 bar(a1, 0, 1, 3)
 bar(a1, 1, 3, 48)
 bar(a1, 1, 48, XMAX, used=False, label=None)
@@ -90,10 +90,10 @@ switch(a1, 24, "switch at 1 day\n(tested)", False, ha="right")
 switch(a1, 48, "switch at 2 days\n(used)", True, ha="left")
 
 # ------------------------------------------------------------- b solar
-rows_b = [("Straight line", "follows the sun; zero at night"),
+rows_b = [("Linear interpolation", "follows the sun; zero at night"),
           ("Daily pattern", "typical day from the week either side"),
           ("ERA5", "all three parts together")]
-frame(a2, rows_b, "b", "Solar radiation: straight line up to three hours, then ERA5")
+frame(a2, rows_b, "b", "Solar radiation: linear interpolation up to three hours, then ERA5")
 bar(a2, 0, 1, 3)
 bar(a2, 1, 3, 48, used=False, label="without the switch")
 bar(a2, 2, 1, 3, light=True)
