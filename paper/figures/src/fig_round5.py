@@ -147,7 +147,7 @@ def fig_guidance():
     bx(xr, 55, wr, 40, "Peaks, peak timing,\nheatwave studies\n\nCould a gap hide the peak?\nYes if it falls in the peak season\n"
        "next to the coldest or hottest\ndays, or the simulated peak\nlands in or near filled hours")
     bx(xr, 30, wr, 19, "Annual cooling\n\nCheck summer gaps: a week over\na heatwave can move it 6%,\nor 20% for a solar gap")
-    bx(xr, 5, wr, 19, "Annual heating\n\nSafe for gaps up to a week and\nup to about 8% of the year filled;\nlikely error in Table 8 (under 2%)")
+    bx(xr, 5, wr, 19, "Annual heating\n\nSafe for gaps up to a week and\nup to about 8% of the year filled;\nlikely error in Table 7 (under 2%)")
     _arrow(ax, x + w, 87.5, xr, 87.5, "yes", ly=2.4)
     for yy in (62, 39.5, 14.5):
         _arrow(ax, x + w, 19.5, xr, yy)
