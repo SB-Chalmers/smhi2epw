@@ -1,0 +1,59 @@
+% Energy and Buildings (Elsevier) version.
+% Build: latexmk -pdf main-enb.tex   (or: make enb)
+% The text lives in sections/ and is shared with main-jbps.tex, so the paper
+% can be moved to the Journal of Building Performance Simulation by building
+% that file instead. Only the front matter and the reference style differ.
+\documentclass[preprint,12pt,a4paper]{elsarticle}
+
+\input{preamble}
+
+% Energy and Buildings uses numbered references in square brackets.
+% For author-year citations instead, use: \biboptions{authoryear}
+% together with \bibliographystyle{elsarticle-harv} below.
+\biboptions{numbers,sort&compress}
+
+\journal{Energy and Buildings}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{\papertitle}
+
+\author[cth]{Sanjay Somanath\corref{cor1}}
+\ead{\correspondingemail}
+\author[cth]{Alexander Hollberg}
+\cortext[cor1]{Corresponding author.}
+\affiliation[cth]{organization={Department of Architecture and Civil Engineering, Chalmers University of Technology},
+            city={Gothenburg},
+            country={Sweden}}
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\begin{graphicalabstract}
+\graphicalabstractslot
+\end{graphicalabstract}
+
+\begin{highlights}
+\input{sections/highlights}
+\end{highlights}
+
+\begin{keyword}
+\input{sections/keywords}
+\end{keyword}
+
+\end{frontmatter}
+
+\input{sections/body}
+
+\input{sections/backmatter}
+
+\bibliographystyle{elsarticle-num-names}
+\bibliography{refs}
+
+\appendix
+\input{sections/appendix}
+
+\end{document}

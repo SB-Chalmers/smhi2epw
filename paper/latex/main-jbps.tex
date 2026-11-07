@@ -1,0 +1,45 @@
+% Journal of Building Performance Simulation (Taylor & Francis) version.
+% Needs the Taylor & Francis "Interact" LaTeX template files, which are not
+% part of TeX Live. Download the APA (author-date) variant from
+% https://www.tandf.co.uk/journals/authors/InteractAPALaTeX.zip and copy
+% interact.cls and apacite.sty (or the .bst it ships) into this folder.
+% Build: latexmk -pdf main-jbps.tex   (or: make jbps)
+\documentclass{interact}
+
+\input{preamble}
+\usepackage[natbibapa]{apacite}  % author-date citations, as JBPS asks
+\bibliographystyle{apacite}
+
+\begin{document}
+
+\articletype{Research article}
+
+\title{\papertitle}
+
+\author{
+\name{Sanjay Somanath\textsuperscript{a}\thanks{Corresponding author. Email: \correspondingemail}
+and Alexander Hollberg\textsuperscript{a}}
+\affil{\textsuperscript{a}Department of Architecture and Civil Engineering,
+Chalmers University of Technology, Gothenburg, Sweden}
+}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/abstract}
+\end{abstract}
+
+\begin{keywords}
+\input{sections/keywords}
+\end{keywords}
+
+\input{sections/body}
+
+\input{sections/backmatter}
+
+\bibliography{refs}
+
+\appendix
+\input{sections/appendix}
+
+\end{document}
