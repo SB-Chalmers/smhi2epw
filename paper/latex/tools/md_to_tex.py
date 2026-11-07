@@ -13,7 +13,7 @@ What it does:
 - turns author-year citations into \\citep / \\citet keys from refs.bib;
 - turns "Figure N", "Table N", "Section x.y" and "Appendix X" into \\ref links;
 - writes each figure as a figure float that loads figures/figNN (pdf or png);
-- writes each Markdown table as a table float with tabularx.
+- writes each Markdown table as a table float, column widths set from the text.
 Anything it cannot match is listed on stderr for a hand check.
 """
 import re
@@ -171,19 +171,35 @@ def table_block(n, caption, rows):
     cells = [[c.strip() for c in r.strip().strip("|").split("|")] for r in rows]
     head, body = cells[0], cells[2:]
     ncol = len(head)
-    # first column a bit narrower when the table has many columns
-    spec = "@{}" + "Y" * ncol + "@{}"
-    if all(len(c) <= 2 for r in body for c in r[1:3]) and ncol == 4 and n == "6":
-        spec = "@{}L{0.22\\linewidth}cc Y@{}".replace(" ", "")
-    conv = lambda s: inline(prep(s)) if s else ""
+    # column widths in proportion to the longest words / average text per column
+    cols = []
+    for j in range(ncol):
+        col = [r[j] if j < len(r) else "" for r in cells[:1] + body]
+        longest = max(len(w) for c in col for w in (c.split() or [""]))
+        if all(len(c) <= 2 for c in col[1:]):
+            cols.append(("C", longest * 3.0))  # dots and dashes: centred
+            continue
+        avg = sum(len(c) for c in col) / len(col)
+        cols.append(("L", max(avg, longest * 3.5, 8)))
+    total = sum(w for _, w in cols)
+    spec = "@{}"
+    for t, w in cols:
+        spec += f"{t}{{\\dimexpr{w / total:.3f}\\linewidth-2\\tabcolsep}}"
+    spec += "@{}"
+    def cell_cite(c):
+        m = re.match(rf"({AUTH}),\s*({YEAR})(\b.*)$", c)
+        k = key_for(m.group(1), m.group(2)) if m else None
+        return f"\\citet{{{k}}}{m.group(3)}" if k else c
+    esc = lambda c: re.sub(r"^(\d+)\.\s", r"\1\\. ", c)  # '1. Main' is not a list
+    conv = lambda s: inline(prep(cell_cite(esc(s)))) if s else ""
     lines = [" & ".join(conv(c) for c in head) + " \\\\"]
     body_tex = [" & ".join(conv(c) for c in r) + " \\\\" for r in body]
     captex = f"\\caption{{{inline(prep(caption))}}}\n\\label{{tab:{n}}}\n" if caption else ""
     size = "\\footnotesize" if sum(len(c) for r in cells for c in r) > 1200 else "\\small"
     return ("\\begin{table}[tbp]\n\\centering\n" + size + "\n" + captex +
-            f"\\begin{{tabularx}}{{\\linewidth}}{{{spec}}}\n\\toprule\n"
+            f"\\begin{{tabular}}{{{spec}}}\n\\toprule\n"
             + lines[0] + "\n\\midrule\n" + "\n".join(body_tex) +
-            "\n\\bottomrule\n\\end{tabularx}\n\\end{table}\n")
+            "\n\\bottomrule\n\\end{tabular}\n\\end{table}\n")
 
 
 def heading(line):
@@ -191,7 +207,11 @@ def heading(line):
     level, txt = len(m.group(1)), m.group(2).strip()
     am = re.match(r"Appendix ([A-Z])\.\s*(.*)", txt)
     if am:
-        return f"\\section{{{inline(am.group(2))}}}\\label{{app:{am.group(1)}}}\n"
+        L = am.group(1)
+        return (f"\\section{{{inline(am.group(2))}}}\\label{{app:{L}}}\n"
+                "\\setcounter{figure}{0}\\setcounter{table}{0}\n"
+                f"\\renewcommand{{\\thefigure}}{{{L}\\arabic{{figure}}}}\n"
+                f"\\renewcommand{{\\thetable}}{{{L}\\arabic{{table}}}}\n")
     nm = re.match(r"(\d+(?:\.\d+)*)\s+(.*)", txt)
     cmd = {2: "section", 3: "subsection", 4: "subsubsection"}[level]
     if nm:

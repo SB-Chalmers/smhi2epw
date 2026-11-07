@@ -3,7 +3,10 @@
 % The text lives in sections/ and is shared with main-jbps.tex, so the paper
 % can be moved to the Journal of Building Performance Simulation by building
 % that file instead. Only the front matter and the reference style differ.
-\documentclass[preprint,12pt,a4paper]{elsarticle}
+% Layout: review preprint (12 pt, wide margins) by default.
+% main-enb-11pt.tex sets a tighter journal-like layout for page counts.
+\providecommand{\enblayout}{preprint,12pt}
+\expandafter\documentclass\expandafter[\enblayout,a4paper]{elsarticle}
 
 \input{preamble}
 

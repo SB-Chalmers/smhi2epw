@@ -9,5 +9,6 @@ paper still compiles.
 `graphical_abstract.pdf` (or `.png`) fills the Elsevier graphical abstract.
 Elsevier asks for at least 1328 x 531 px, readable at 5 x 13 cm.
 
-Current source: branch `claude/project-thread-qzmwnv`,
-`paper/figures/round6/manuscript/` (fig03 is the station map, `fig_b_map.pdf`).
+Current files: round 7 (manuscript revision 456), from branch
+`claude/project-thread-qzmwnv`, `paper/figures/round7/manuscript/`, with the
+name suffix dropped (`fig02_gap_census.pdf` -> `fig02.pdf`).

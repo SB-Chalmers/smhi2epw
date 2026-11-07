@@ -15,7 +15,8 @@ Simulation** (Taylor & Francis, `interact`).
 | `tools/md_to_tex.py` | Turns the manuscript's Markdown export into `sections/` |
 | `tools/refs_md_to_bib.py` | Turns its reference list into `refs.bib` (first pass, then checked by hand) |
 
-Build with `make enb` (or `latexmk -pdf main-enb.tex`). On Overleaf, upload this
+Build with `make enb` (12 pt review preprint) or `latexmk -pdf main-enb-11pt.tex`
+(11 pt, journal margins, for page counts). Build with `make enb` (or `latexmk -pdf main-enb.tex`). On Overleaf, upload this
 folder and set `main-enb.tex` as the main document.
 
 ## Switching journal

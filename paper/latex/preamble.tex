@@ -29,7 +29,9 @@
 \sisetup{detect-all}
 \setlength{\emergencystretch}{3em}
 \renewcommand{\arraystretch}{1.15}
-\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage{ragged2e}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcolumntype{C}[1]{>{\Centering\arraybackslash}p{#1}}
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 
 % Figures: drop updated files into figures/ with the same names.
