@@ -291,7 +291,7 @@ def fig_headline5():
     ax.set_ylim(0, 75); ax.set_yticks([0, 25, 50, 75])
     ax.set_ylabel("heating peaks that moved\nby more than a day, %")
     ax.legend(loc="upper left", bbox_to_anchor=(-0.02, -0.15), ncol=1, fontsize=FS, frameon=False)
-    N.title(ax, "b", "Heating peaks: half move a day, often to a near-equal day", y=1.08)
+    N.title(ax, "b", "Heating peaks: half move by over a day", y=1.08)
     for ax in axes:
         ax.set_xticks(X); ax.set_xticklabels(GAPS)
         ax.grid(axis="y", color=RULE, lw=0.4); ax.set_axisbelow(True)

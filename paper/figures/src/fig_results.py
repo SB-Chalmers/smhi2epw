@@ -238,6 +238,9 @@ def fig_events():
                              "lost": "lost_share"}[key]] for r in rows]) * 100
             ax.bar(XX, v, bottom=bottom, width=0.7, color=col, edgecolor="white", lw=0.6, zorder=3)
             bottom += v
+        for x, r in zip(XX, rows):
+            ax.text(x, 101.5, f"n={int(r['reference_exposed_events'])}", ha="center", va="bottom",
+                    fontsize=FS - 1, color=INK)
         kept_step, kept_line = rows[3]["kept_exact_share"] * 100, ln["kept_exact_share"] * 100
         ax.set_xticks(XX)
         ax.set_xticklabels(["3 h", "12 h", "48 h", "1\nweek", "1 week,\nlinear\ninterp."], fontsize=FS)
