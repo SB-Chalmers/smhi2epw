@@ -9,9 +9,9 @@ r = r[r.season.str.startswith("heating")].set_index("building_id")
 NAMES = {"sf_se02": "single-family house, 1960s", "school_se03": "school", "mf_se02": "apartment block, 1960s",
          "office_se06_wwr60": "office, large windows", "sf_se06": "single-family house, recent", "mf_se06": "apartment block, recent"}
 order = r["kwh_m2_per_day_1C_too_cold_through_zero"].sort_values(ascending=False).index.tolist()
-# grey lines; purple only for the steepest (dark) and the flattest (light) building
+# grey lines; one non-method hue (teal) for the steepest (dark) and the flattest (light) building
 cols = {b: S.GREY["mid"] for b in order}
-cols[order[0]] = "#2e1145"; cols[order[-1]] = "#a882c8"
+cols[order[0]] = "#1b4f4a"; cols[order[-1]] = "#7fbfb6"
 fig, ax = plt.subplots(figsize=(S.DOUBLE, 84 * S.MM))
 fig.subplots_adjust(left=0.10, right=0.68, top=0.90, bottom=0.17)
 x = -d.error_degree_days; y = d.heating_change_kwh_m2
