@@ -215,8 +215,8 @@ def fig_peaks():
 
 # ------------------------------------------------------------- Fig. 7 events
 OUTCOME = ["kept", "changed", "lost"]
-COLS_STEP = {"kept": ACCENT, "changed": GREY["light"], "lost": GREY["mid"]}
-COLS_LIN = {"kept": GREY["dark"], "changed": GREY["light"], "lost": GREY["mid"]}
+COLS_STEP = {"kept": ACCENT, "changed": GREY["light"], "lost": GREY["mid"]}  # linear-only bar uses METHOD colour
+COLS_LIN = {"kept": METHOD["linear_only"][1], "changed": GREY["light"], "lost": GREY["mid"]}
 
 
 def fig_events():
@@ -254,7 +254,7 @@ def fig_events():
                 transform=ax.transAxes, ha="center", va="top", fontsize=FS, linespacing=1.2)
     axes[0].set_ylabel("% of events hit by the gap")
     axes[0].text(-0.75, 101.5, "n", ha="right", va="bottom", fontsize=FS, color=MUTED)
-    keys = [("kept (stepwise)", ACCENT), ("kept (linear only)", GREY["dark"]),
+    keys = [("kept (stepwise)", ACCENT), ("kept (linear only)", METHOD["linear_only"][1]),
             ("changed", GREY["light"]), ("lost", GREY["mid"])]
     for (lab, col), yk in zip(keys, (80, 60, 40, 20)):
         axes[-1].scatter([XX[-1] + 0.85], [yk], s=22, marker="s", c=col, clip_on=False)
@@ -348,9 +348,9 @@ def method_panel(ax, d, col, methods, scale, cap, fmt):
     for i, (m, v48, v168) in enumerate(rows):
         lab, colr = METHOD[m]
         step = m == STEP
-        c = ACCENT if step else OTHER
+        c = colr
         if step:
-            ax.axhspan(i - 0.45, i + 0.45, color="#f1ebf6", zorder=0, lw=0)
+            ax.axhspan(i - 0.45, i + 0.45, color="#e8f1f8", zorder=0, lw=0)
         p48, p168 = min(v48, cap), min(v168, cap)
         ax.plot([p48, p168], [i, i], color=c, lw=0.8, zorder=2)
         ax.scatter([p48], [i], s=16, facecolors="white", edgecolors=c, linewidths=0.9, zorder=3,

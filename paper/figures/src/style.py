@@ -130,27 +130,30 @@ def canvas(width_mm, height_mm):
     return fig, ax
 
 
-# Filling methods in result plots (round 2): the manuscript's Table 6 names.
-# Stepwise is the one accent colour; every other method is grey.
-ACCENT = "#5B2A86"            # Stepwise (and, in Fig. 7, "lost")
-ACCENT_SEQ = ["#e4d8ef", "#a882c8", ACCENT]   # light to dark, for ordered shares
-OTHER = "#8e8e93"              # all other methods
+# Filling methods (round 7): one Okabe-Ito colour per method, the same in every
+# figure; colour-blind safe. Stepwise is blue and always drawn strongest.
+# The stepwise variants (sensitivity tests) are grey.
+ACCENT = "#0072B2"            # Stepwise
+ACCENT_SEQ = ["#d6e6f3", "#7fb0d8", ACCENT]   # light to dark blue, for ordered shares
+SRC = {"linear": "#E69F00", "nearby": "#D55E00", "patterns": "#009E73", "era5": "#56B4E9",
+       "fourweek": "#CC79A7", "stepwise": ACCENT}
+OTHER = "#8e8e93"              # variants and non-method marks
 OTHER_DARK = "#636366"
 METHOD = {
     "gap_type_rule": ("Stepwise", ACCENT),
     "automatic": ("Stepwise, no switch", OTHER),
     "automatic_legacy": ("Stepwise, patterns first", OTHER),
     "temporal": ("Interpolation then patterns", OTHER),
-    "donor_assessed": ("Nearby station", OTHER),
-    "era5": ("ERA5 only", OTHER),
-    "diyepw_style": ("Four-week average", OTHER),
-    "linear_only": ("Linear interpolation only", OTHER),
+    "donor_assessed": ("Nearby station", SRC["nearby"]),
+    "era5": ("ERA5 only", SRC["era5"]),
+    "diyepw_style": ("Four-week average", SRC["fourweek"]),
+    "linear_only": ("Linear interpolation only", SRC["linear"]),
 }
 GAP_LABEL = {3: "3 hours", 12: "12 hours", 48: "48 hours", 168: "1 week"}
 SAMPLING_LABEL = {"random_seasonal": "random gaps", "weather_extremes": "gaps at weather events"}
 
 # Season colours, shared with the backgrounds of Fig. 4 (gap layout).
-SEASON_COL = {"winter": "#5B2A86", "spring": "#5B2A86", "summer": "#5B2A86", "autumn": "#5B2A86"}
+SEASON_COL = {"winter": ACCENT, "spring": ACCENT, "summer": ACCENT, "autumn": ACCENT}
 SEASON_TINT = {"winter": "#e3ebf5", "spring": "#e4f1e6", "summer": "#fbefd6", "autumn": "#f3e3da"}
 SEASON_NAME = {"DJF": "winter", "MAM": "spring", "JJA": "summer", "SON": "autumn"}
 
@@ -179,9 +182,9 @@ def end_labels(ax, items, x, *, min_gap, fs=6.5, dx=0.08):
                 clip_on=False)
 
 
-# Round 6: banded grey scale for heat maps (colour = method only, so magnitude is grey).
+# Banded sequential scale for heat maps (light to dark, safe in greyscale print).
 BANDS = [0, 1, 5, 20, 1e9]
-BAND_COL = ["#f4f4f6", "#d8d8dd", "#a5a5ac", "#5f5f66"]
+BAND_COL = ["#eff3f8", "#c6dbef", "#6baed6", "#1f5a96"]
 BAND_LAB = ["under 1%", "1–5%", "5–20%", "over 20%"]
 
 
