@@ -198,3 +198,101 @@ def fig_regret_by_type():
     fig.text(0.012, 0.905, "Below the line: the nearby station alone, scored only on gaps where it passed its checks, "
              "so not comparable.", fontsize=FS, color=MUTED)
     S.save(fig, "fig_regret_by_type")
+
+
+# ------------------------------------------------------------------ peaks after near-tie check (round 5)
+import numpy as np
+from style import RULE
+GAPS = N.GAPS
+LIGHT = "#c9b3dc"
+# stepwise, event cases with the reference peak hidden, deduplicated (round5 t1 + a1)
+PK = {
+ "heating": dict(n=[23, 39, 49, 49], same=[.74, .41, .37, .31], day=[.04, .36, .29, .18],
+                 tie=[5 / 23, 8 / 39, 10 / 49, 12 / 49], low=[0, 1 / 39, 7 / 49, 13 / 49]),
+ "cooling": dict(n=[17, 39, 55, 79], same=[.35, .51, .44, .58], day=[.47, .26, .25, .25],
+                 tie=[3 / 17, 7 / 39, 14 / 55, 8 / 79], low=[0, 2 / 39, 3 / 55, 5 / 79]),
+}
+# stepwise, peak hidden (random and event): single-hour vs mean of 10 highest hours, W/m2 median / p95
+RB = {
+ "heating": dict(single=[(.37, 4.4), (.97, 7.3), (2.0, 7.6), (1.2, 12.8)], top=[(.11, .64), (.49, 2.3), (1.1, 5.4), (1.0, 10.0)]),
+ "cooling": dict(single=[(.56, 1.8), (.64, 2.7), (.78, 3.5), (1.12, 6.1)], top=[(.17, 1.7), (.38, 1.4), (.41, 2.5), (.74, 5.1)]),
+}
+
+
+def _timing(ax, d, letter, ttl, legend=False):
+    X = np.arange(4); w = 0.6
+    parts = [("same hour", d["same"], "#e9e1f0"), ("within a day", d["day"], "#cdbfe0"),
+             ("moved >1 day, to a day within 5 % of the peak", d["tie"], LIGHT and "#9d7fc0"),
+             ("moved >1 day, to a clearly lower day", d["low"], ACCENT)]
+    b = np.zeros(4)
+    for lab, v, c in parts:
+        v = np.array(v) * 100
+        ax.bar(X, v, w, bottom=b, color=c, label=lab, edgecolor="white", lw=0.5)
+        b += v
+    for x, n in zip(X, d["n"]):
+        ax.text(x, 102, f"n={n}", ha="center", va="bottom", fontsize=FS, color=MUTED)
+    ax.set_ylim(0, 112); ax.set_yticks([0, 25, 50, 75, 100]); ax.set_ylabel("% of hidden peaks")
+    ax.set_xticks(X); ax.set_xticklabels(GAPS, fontsize=FS)
+    N.title(ax, letter, ttl, y=1.06)
+    if legend:
+        ax.legend(loc="upper left", bbox_to_anchor=(0, -0.16), ncol=2, fontsize=FS, frameon=False)
+
+
+def _robust(ax, d, letter, ttl):
+    X = np.arange(4)
+    for k, (key, lab, c, dx) in enumerate([("single", "single peak hour", "#9d7fc0", -0.12), ("top", "mean of the 10 highest hours", ACCENT, 0.12)]):
+        med = [m for m, _ in d[key]]; p95 = [p for _, p in d[key]]
+        ax.vlines(X + dx, med, p95, color=c, lw=1.2)
+        ax.plot(X + dx, med, "o", color=c, ms=4.5, label=f"{lab}: median (dot) to 95th percentile")
+        ax.plot(X + dx, p95, "_", color=c, ms=8, mew=1.4)
+    ax.set_xticks(X); ax.set_xticklabels(GAPS, fontsize=FS); ax.set_ylabel("peak error, W/m²")
+    ax.grid(axis="y", color=RULE, lw=0.4); ax.set_axisbelow(True)
+    N.title(ax, letter, ttl, y=1.06)
+
+
+def fig_peaks5():
+    H = 150
+    fig, axes = plt.subplots(2, 2, figsize=(S.DOUBLE, H * S.MM))
+    fig.subplots_adjust(left=0.08, right=0.985, top=0.9, bottom=0.07, wspace=0.25, hspace=0.75)
+    _timing(axes[0, 0], PK["heating"], "a", "Heating peak timing: many moves are near-ties")
+    _timing(axes[0, 1], PK["cooling"], "b", "Cooling peak timing", legend=False)
+    _robust(axes[1, 0], RB["heating"], "c", "Heating peak size: a 10-hour peak is steadier")
+    _robust(axes[1, 1], RB["cooling"], "d", "Cooling peak size")
+    h, l = axes[0, 0].get_legend_handles_labels()
+    fig.legend(h, l, loc="upper left", bbox_to_anchor=(0.06, 0.535), ncol=2, fontsize=FS, frameon=False)
+    h, l = axes[1, 0].get_legend_handles_labels()
+    fig.legend(h, l, loc="lower left", bbox_to_anchor=(0.06, -0.005), ncol=2, fontsize=FS, frameon=False)
+    fig.text(0.012, 0.965, "When the year's peak hour fell inside a gap. Timing: gaps at weather events. "
+             "Size: random and event gaps. Stepwise method, general weather.", fontsize=FS, color=MUTED)
+    S.save(fig, "fig_peaks5")
+
+
+def fig_headline5():
+    heat = [0.0128367, 0.112491, 0.399888, 1.68952]
+    d = PK["heating"]
+    X = np.arange(4); H = 74
+    fig, axes = plt.subplots(1, 2, figsize=(S.DOUBLE, H * S.MM))
+    fig.subplots_adjust(left=0.08, right=0.98, top=0.80, bottom=0.32, wspace=0.28)
+    ax = axes[0]
+    ax.plot(X, heat, color=ACCENT, lw=1.3, marker="o", ms=5)
+    for x, v in zip(X, heat):
+        ax.annotate(f"{v:.2f} %" if v >= 0.1 else "<0.1 %", (x, v), xytext=(6 if x == 0 else 0, 6),
+                    textcoords="offset points", ha="center", fontsize=FS)
+    ax.set_ylim(0, 2.2); ax.set_yticks([0, 0.5, 1, 1.5, 2])
+    ax.set_ylabel("error in annual heating,\n% of demand (95% of cases below)")
+    N.title(ax, "a", "Annual heating: under 2 % even for week-long gaps", y=1.08)
+    ax = axes[1]
+    tie = np.array(d["tie"]) * 100; low = np.array(d["low"]) * 100
+    ax.bar(X, low, 0.55, color=ACCENT, label="to a clearly lower day")
+    
+    ax.bar(X, tie, 0.55, bottom=low, color="#9d7fc0", label="to a day within 5 % of the peak")
+    for x, a, b, n in zip(X, tie, low, d["n"]):
+        ax.text(x, a + b + 2, f"{a + b:.0f} %\n(n={n})", ha="center", va="bottom", fontsize=FS)
+    ax.set_ylim(0, 75); ax.set_yticks([0, 25, 50, 75])
+    ax.set_ylabel("heating peaks that moved\nby more than a day, %")
+    ax.legend(loc="upper left", bbox_to_anchor=(-0.02, -0.15), ncol=1, fontsize=FS, frameon=False)
+    N.title(ax, "b", "Heating peaks: half move a day, often to a near-equal day", y=1.08)
+    for ax in axes:
+        ax.set_xticks(X); ax.set_xticklabels(GAPS)
+        ax.grid(axis="y", color=RULE, lw=0.4); ax.set_axisbelow(True)
+    S.save(fig, "fig_headline5")
