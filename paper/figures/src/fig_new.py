@@ -17,60 +17,68 @@ def title(ax, letter, text, y=1.04, x=0):
 
 # ---------------------------------------------------------------- method diagram
 def fig_method_diagram():
-    rng = np.random.default_rng(4)
-    t = np.arange(0, 24 * 5)                       # five days, hourly
-    g0, g1 = 50, 86                                 # 36-hour gap
-    base = -4 + 0.02 * t
-    true = base + 4 * np.sin((t - 9) / 24 * 2 * np.pi) + np.cumsum(rng.normal(0, 0.25, t.size))
-    true[g0:g1] -= np.linspace(0, 1, g1 - g0) * 0 + 2.5 * np.sin(np.linspace(0, np.pi, g1 - g0))  # a cold dip
-    gap = np.arange(g0, g1)
-    a, b = true[g0 - 1], true[g1]
+    """Fig 5: how each method fills one real 48-hour gap (Stockholm-Arlanda, April 2023).
 
-    lin = np.interp(gap, [g0 - 1, g1], [a, b])
-    # daily pattern: mean shape of the days either side, adjusted to meet both ends
-    shape = 4 * np.sin((gap - 9) / 24 * 2 * np.pi)
-    trend = np.interp(gap, [g0 - 1, g1], [a - 4 * np.sin((g0 - 1 - 9) / 24 * 2 * np.pi),
-                                         b - 4 * np.sin((g1 - 9) / 24 * 2 * np.pi)])
-    patt = shape + trend
-    patt = patt + 0.9 * np.sin(np.linspace(0, np.pi, g1 - g0)) ** 2  # a small miss at the cold dip
-    # four-week average of the same hour: weaker cycle, month-mean level
-    four = -2.2 + 2.6 * np.sin((gap - 9) / 24 * 2 * np.pi)
-    # nearby station: same weather, own local quirks (bias that grows at the extreme)
-    near = true[g0:g1] + 0.6 - 1.4 * np.sin(np.linspace(0, np.pi, g1 - g0)) + rng.normal(0, 0.3, g1 - g0)
-    # ERA5: smooth grid average, smaller daily range
-    era = base[g0:g1] - 1.6 * np.sin(np.linspace(0, np.pi, g1 - g0)) + 2.6 * np.sin((gap - 10) / 24 * 2 * np.pi)
-
-    near = true[g0:g1] + 0.5 - 1.4 * np.sin(np.linspace(0, np.pi, g1 - g0)) + rng.normal(0, 0.12, g1 - g0)
-    FILL = S.GREY["dark"]       # single methods: dark grey; purple only for the stepwise method
-    SRC = "#b8b8be"             # the same source outside the gap
+    Data: source/data/method_sketch_week.csv, fills rerun with the campaign's own code.
+    """
+    import pandas as pd
+    from pathlib import Path
+    d = pd.read_csv(Path(__file__).resolve().parents[1] / "source" / "data" / "method_sketch_week.csv",
+                    parse_dates=["time"])
+    t = d.time
+    ing = d.in_gap == 1
+    i0, i1 = np.flatnonzero(ing)[[0, -1]]
+    g0, g1 = t.iloc[i0] - pd.Timedelta(minutes=30), t.iloc[i1] + pd.Timedelta(minutes=30)
+    # draw the measured line through the gap edges so fills join it
+    pre = d.index <= i0 - 1
+    post = d.index >= i1 + 1
     panels = [
-        ("Linear interpolation", "A straight line between the last value\nbefore and the first value after the gap", lin, None),
-        ("Daily patterns", "The shape of the days either side,\nadjusted to meet both ends of the gap", patt, None),
-        ("Four-week average (as in diyepw)", "The average of the same hour of day over\nfour weeks; need not meet the gap ends", four, None),
-        ("Nearby station", "The same hours from a nearby station,\nchecked against the main station first", near, "near"),
-        ("ERA5", "The same hours from a global weather\nmodel; smooth, misses local extremes", era, "era"),
-        ("Stepwise", "Takes the first source that works: here the\nnearby station passed its checks (Figure 1)", near, "step"),
+        ("Linear interpolation", "A straight line between the last value\nbefore and the first value after the gap",
+         "linear", None, "linear"),
+        ("Daily patterns", "The shape of the days either side,\nadjusted to meet both ends of the gap",
+         "daily_patterns", None, "patterns"),
+        ("Four-week average (as in diyepw)", "The average of the same hour of day over\nfour weeks; here too cold",
+         "four_week_average", None, "fourweek"),
+        ("Nearby station", "The same hours from a station 30 km away,\nchecked and shifted to match the main station",
+         "stepwise", "nearby_station", "nearby"),
+        ("ERA5", "The same hours from a global weather\nmodel (reanalysis)",
+         "era5", "era5", "era5"),
+        ("Stepwise", "Takes the first source that works: here the\nnearby station passed its checks (Figure 1)",
+         "stepwise", None, "stepwise"),
     ]
-    H = 92
+    H = 96
     fig = plt.figure(figsize=(S.DOUBLE, H * S.MM))
-    gs = fig.add_gridspec(2, 3, left=0.05, right=0.98, top=0.86, bottom=0.03, wspace=0.18, hspace=0.62)
+    gs = fig.add_gridspec(2, 3, left=0.06, right=0.985, top=0.87, bottom=0.07, wspace=0.16, hspace=0.70)
     letters = iter("abcdef")
-    nearsrc = true + 0.5 + rng.normal(0, 0.25, t.size)
-    eraf = base - 1.6 * np.interp(t, gap, np.sin(np.linspace(0, np.pi, g1 - g0)), left=0, right=0) \
-        + 2.6 * np.sin((t - 10) / 24 * 2 * np.pi)
-    for k, (name, desc, fill, src) in enumerate(panels):
+    SRCC = "#c7c7cc"
+    import matplotlib.dates as mdates
+    for k, (name, desc, col, src, ckey) in enumerate(panels):
         ax = fig.add_subplot(gs[k // 3, k % 3])
-        ax.axvspan(g0 - 0.5, g1 - 0.5, color="#ececef", lw=0, zorder=0)
-        if src in ("near", "step"):
-            ax.plot(t[:g0], nearsrc[:g0], color=SRC, lw=0.6); ax.plot(t[g1:], nearsrc[g1:], color=SRC, lw=0.6)
-        if src == "era":
-            ax.plot(t[:g0], eraf[:g0], color=SRC, lw=0.6); ax.plot(t[g1:], eraf[g1:], color=SRC, lw=0.6)
-        ax.plot(t[:g0], true[:g0], color=INK, lw=0.9)
-        ax.plot(t[g1:], true[g1:], color=INK, lw=0.9)
-        ax.plot(gap, true[g0:g1], color=MUTED, lw=0.8, ls=(0, (2, 1.5)))
-        ax.plot(gap, fill, color=[S.SRC[c] for c in ("linear", "patterns", "fourweek", "nearby", "era5", "stepwise")][k], lw=1.7)
-        ax.set_xlim(0, t[-1]); ax.set_ylim(-13, 8)
-        ax.set_xticks([]); ax.set_yticks([])
+        ax.axvspan(g0, g1, color="#ececef", lw=0, zorder=0)
+        if src:
+            ax.plot(t, d[src].where(~ing), color=SRCC, lw=0.8, zorder=1)
+        ax.plot(t[pre | (d.index == i0 - 1)], d.measured[pre], color=INK, lw=0.9, zorder=2)
+        ax.plot(t[post], d.measured[post], color=INK, lw=0.9, zorder=2)
+        # hidden truth, joined to the measured ends
+        jt = d.index[(d.index >= i0 - 1) & (d.index <= i1 + 1)]
+        ax.plot(t[jt], d.measured[jt], color=MUTED, lw=0.8, ls=(0, (2, 1.5)), zorder=2)
+        fill = d[col].where(ing)
+        ax.plot(t, fill, color=S.SRC[ckey], lw=1.6, zorder=3)
+        mae = (d[col][ing] - d.measured[ing]).abs().mean()
+        ax.text(t.iloc[-1], -7, f"mean error in the gap: {mae:.1f} °C", ha="right",
+                va="bottom", fontsize=FS, color=S.SRC[ckey] if ckey != "fourweek" else "#b0558e",
+                weight="bold" if ckey == "stepwise" else "normal")
+        ax.set_ylim(-9, 26)
+        ax.set_yticks([0, 10, 20])
+        ax.set_xlim(t.iloc[0], t.iloc[-1])
+        ax.xaxis.set_major_locator(mdates.DayLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%-d Apr"))
+        ax.tick_params(labelsize=FS, length=2)
+        if k % 3:
+            ax.set_yticklabels([])
+        if k < 3:
+            ax.set_xticklabels([])
+        ax.grid(axis="y", color=RULE, lw=0.4, zorder=0)
         for sp in ("left", "bottom"):
             ax.spines[sp].set_color(RULE)
         for sp in ("top", "right"):
@@ -78,19 +86,19 @@ def fig_method_diagram():
         title(ax, next(letters), name, y=1.30)
         ax.text(0, 1.04, desc, transform=ax.transAxes, fontsize=FS, color=MUTED, va="bottom", linespacing=1.15)
         if k == 0:
-            ax.text((g0 + g1) / 2, 6.6, "gap", ha="center", fontsize=FS, color=MUTED)
-            ax.text(4, 6.6, "measured", fontsize=FS, color=INK)
-            ax.annotate("hidden true values", xy=(g0 + 20, true[g0 + 20]), xytext=(g0 - 6, -12.3),
-                        fontsize=FS, color=MUTED, arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.5))
-            ax.text(g1 - 3, b + 1.4, "filled", ha="right", va="bottom", fontsize=FS, color=S.SRC["linear"], weight="bold")
-        if src == "near":
-            ax.annotate("nearby station", xy=(t[g1 + 14], nearsrc[g1 + 14]), xytext=(g1 + 2, -12.3),
-                        fontsize=FS, color="#8e8e93", arrowprops=dict(arrowstyle="-", color=SRC, lw=0.5))
-        if src == "era":
-            ax.annotate("ERA5", xy=(t[g1 + 20], eraf[g1 + 20]), xytext=(g1 + 12, -12.3),
-                        fontsize=FS, color="#8e8e93", arrowprops=dict(arrowstyle="-", color=SRC, lw=0.5))
+            ax.text(g0 + (g1 - g0) / 2, 24, "gap", ha="center", va="center", fontsize=FS, color=MUTED)
+            ax.text(t.iloc[2], 24, "measured", va="center", fontsize=FS, color=INK)
+            j = i0 + 24 + int(np.argmax(d.measured.values[i0 + 24:i1]))
+            ax.annotate("hidden true values", xy=(t.iloc[j], d.measured.iloc[j] + 0.3),
+                        xytext=(t.iloc[i1 + 3], 24), fontsize=FS, color=MUTED, va="center",
+                        arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.5, shrinkA=1, shrinkB=1))
+        if src:
+            j = i1 + 8 + int(np.argmax(d[src].values[i1 + 8:i1 + 20]))
+            ax.annotate("nearby station" if src == "nearby_station" else "ERA5", xy=(t.iloc[j], d[src].iloc[j] + 0.3),
+                        xytext=(t.iloc[i1 + 14], 24), fontsize=FS, color="#8e8e93", va="center",
+                        arrowprops=dict(arrowstyle="-", color=SRCC, lw=0.5))
         if k % 3 == 0:
-            ax.set_ylabel("temperature", fontsize=FS, color=MUTED, labelpad=2)
+            ax.set_ylabel("air temperature, °C", fontsize=FS, color=INK, labelpad=2)
     S.save(fig, "fig_methods_diagram")
 
 
