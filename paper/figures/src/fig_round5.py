@@ -59,7 +59,7 @@ def fig_regret_worst():
 
 def _monthly(rows, titles, fname, H):
     fig, axes = plt.subplots(len(rows), 2, figsize=(S.DOUBLE, H * S.MM), squeeze=False)
-    top = 1 - 26 / H
+    top = 1 - (26 if len(rows) > 1 else 17) / H
     fig.subplots_adjust(left=0.2, right=0.95, top=top, bottom=16 / H, wspace=0.85, hspace=0.95)
     letters = iter("abcdef")
     for r, (kind, scope, rtitle) in enumerate(rows):
@@ -82,7 +82,8 @@ def _monthly(rows, titles, fname, H):
             ax.text(-0.62, 1.1, f"{next(letters)}  {titles[(r, mode)]}", transform=ax.transAxes,
                     fontsize=7.5, weight="bold", va="bottom")
             ax.set_xlabel("% of months outside ±5 % of the reference", fontsize=FS)
-        R.row_title(fig, axes[r, 0], rtitle, H, up_mm=9)
+        if len(rows) > 1:
+            R.row_title(fig, axes[r, 0], rtitle, H, up_mm=9)
     fig.text(0.012, 1 - 5 / H, "Open dot: 48-hour gaps.  Filled dot and number: one-week gaps.  "
              "Methods ranked by the one-week value, best at the top.", fontsize=FS, color=MUTED)
     S.save(fig, fname)
@@ -92,7 +93,7 @@ def fig_monthly_general():
     _monthly((R.ROWS3[0],),
              {(0, "heating"): "Heating: only linear interpolation fails often",
               (0, "cooling"): "Cooling: one month in five fails at one week"},
-             "fig_monthly_general", 70)
+             "fig_monthly_general", 60)
 
 
 def fig_monthly_appendix():
@@ -119,34 +120,36 @@ def _arrow(ax, x0, y0, x1, y1, label=None, lx=0, ly=0):
 
 
 def fig_guidance():
-    H = 112
+    H = 118
     fig = plt.figure(figsize=(S.DOUBLE, H * S.MM))
     ax = fig.add_axes([0, 0, 1, 1])
     ax.set_xlim(0, 174); ax.set_ylim(0, H); ax.axis("off")
     q = "#f1ebf6"; ok = "#eef3ee"; risk = "#f7e6e6"
-    ax.text(6, H - 7, "Is a filled weather file safe for my result?", fontsize=9, weight="bold", color=INK)
-    ax.text(6, H - 13, "A simple check for a modeller using an actual-year file with filled gaps.",
+    ax.text(6, H - 7, "Is a filled weather file safe for my result? Five steps", fontsize=9, weight="bold", color=INK)
+    ax.text(6, H - 13, "For a modeller using an actual-year file with filled gaps of up to a week.",
             fontsize=7, color=MUTED)
 
-    w = 50
-    _box(ax, 6, 72, w, 16, "1  Find the filled gaps\nlength, general weather or solar,\nshare of the year", q)
-    _box(ax, 6, 48, w, 16, "2  Note the season and events\nwinter gaps → heating, summer → cooling;\nheatwaves or cold spells?", q)
-    _box(ax, 6, 24, w, 16, "3  Which result do I need?", q, bold=True)
-    _arrow(ax, 31, 72, 31, 64)
-    _arrow(ax, 31, 48, 31, 40)
+    w = 52; x = 6
+    _box(ax, x, 86, w, 13, "1  Did the year have heatwaves\nor cold spells?", q)
+    _box(ax, x, 64, w, 15, "2  List the filled gaps:\nlength, general weather or solar,\nshare of the year filled", q)
+    _box(ax, x, 42, w, 15, "3  Note the season of each gap:\nwinter → heating, summer → cooling,\nspring solar → heating too", q)
+    _box(ax, x, 22, w, 13, "4  Match the gaps to\nthe result you need", q, bold=True)
+    _arrow(ax, x + w / 2, 86, x + w / 2, 79)
+    _arrow(ax, x + w / 2, 64, x + w / 2, 57)
+    _arrow(ax, x + w / 2, 42, x + w / 2, 35)
 
-    xr = 70; wr = 46
-    _box(ax, xr, 66, wr, 18, "Annual heating\n\nSafe. Read the likely error\nfrom Table 8 (under 2%)", ok)
-    _box(ax, xr, 40, wr, 18, "Annual cooling\n\nCheck summer gaps: a hidden\nheatwave week can move it 6–20%", ok)
-    _box(ax, xr, 8, wr, 24, "Peaks, peak timing,\nheatwave studies\n\nDoes a gap fall in the peak season\nnext to the coldest or hottest days,\nor does the peak land in filled hours?", q)
-    for yy in (75, 49, 20):
-        _arrow(ax, 56, 32, xr, yy)
+    xr = 72; wr = 46
+    _box(ax, xr, 74, wr, 20, "Annual heating\n\nSafe for gaps up to a week and\nup to about 8% of the year filled;\nlikely error in Table 8 (under 2%)", ok)
+    _box(ax, xr, 48, wr, 19, "Annual cooling\n\nCheck summer gaps: a week over\na heatwave can move it 6%,\nor 20% for a solar gap", ok)
+    _box(ax, xr, 8, wr, 33, "Peaks, peak timing,\nheatwave studies\n\nCould a gap hide the peak?\nYes if it falls in the peak season\nnext to the coldest or hottest\nmeasured days, or the simulated\npeak lands in or near filled hours", q)
+    for yy in (84, 57, 25):
+        _arrow(ax, x + w, 28.5, xr, yy)
 
-    xo = 126; wo = 42
-    _box(ax, xo, 20, wo, 22, "Yes: report a range\n\npeak ±15% (week-long gap);\nor re-run with a second\nfilling method", risk)
-    _box(ax, xo, 2, wo, 14, "No: the filled file is\nsafe for this result", ok)
-    _arrow(ax, xr + wr, 24, xo, 31, "yes", ly=2.5)
-    _arrow(ax, xr + wr, 14, xo, 9, "no", ly=-2.5)
+    xo = 128; wo = 41
+    _box(ax, xo, 22, wo, 22, "5  Yes: report a range\n\npeak ±15% for a week-long\ngap, or re-run with a\nsecond filling method", risk, bold=False)
+    _box(ax, xo, 4, wo, 12, "No: the filled file is\nsafe for this result", ok)
+    _arrow(ax, xr + wr, 27, xo, 33, "yes", ly=2.5)
+    _arrow(ax, xr + wr, 14, xo, 10, "no", ly=-2.5)
     S.save(fig, "fig_guidance")
 
 
