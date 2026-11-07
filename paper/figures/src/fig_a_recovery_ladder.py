@@ -27,17 +27,20 @@ fig, (a1, a2) = plt.subplots(2, 1, figsize=(S.DOUBLE, H * S.MM),
 fig.subplots_adjust(left=0.305, right=0.86, top=0.87, bottom=0.09, hspace=0.95)
 
 
+ROWCOL = {}  # (axis, row) -> source colour, set below
+
+
 def bar(ax, row, x0, x1, *, used=True, light=False, label=None):
+    src = ROWCOL.get((id(ax), row), ACCENT)
     if used:
-        col = ACCENT_SEQ[0] if light else ACCENT
         ax.barh(row, np.log10(x1) - np.log10(x0), left=np.log10(x0), height=0.5,
-                color=col, lw=0, zorder=3)
+                color=src, alpha=0.35 if light else 1.0, lw=0, zorder=3)
     else:
         ax.plot([np.log10(x0), np.log10(x1)], [row, row], color=OTHER, lw=3.2,
                 ls=(0, (1.2, 0.9)), solid_capstyle="butt", zorder=2)
     if label:
         ax.text(np.log10(x1) + 0.04, row, label, fontsize=FS, va="center", ha="left",
-                color=ACCENT if used and not light else MUTED, clip_on=False)
+                color=src if used and not light else MUTED, clip_on=False)
 
 
 def frame(ax, rows, letter, title):
@@ -76,6 +79,10 @@ rows_a = [("Linear interpolation", "between the values either side"),
           ("Daily pattern", "typical day from the week either side"),
           ("ERA5", "reanalysis for the same hours")]
 frame(a1, rows_a, "a", "General weather: local sources up to two days, then ERA5")
+for k, c in enumerate(("linear", "nearby", "patterns", "era5")):
+    ROWCOL[(id(a1), k)] = S.SRC[c]
+for k, c in enumerate(("linear", "patterns", "era5")):
+    ROWCOL[(id(a2), k)] = S.SRC[c]
 bar(a1, 0, 1, 3)
 bar(a1, 1, 3, 48)
 bar(a1, 1, 48, XMAX, used=False, label=None)

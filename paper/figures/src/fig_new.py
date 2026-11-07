@@ -40,66 +40,57 @@ def fig_method_diagram():
     # ERA5: smooth grid average, smaller daily range
     era = base[g0:g1] - 1.6 * np.sin(np.linspace(0, np.pi, g1 - g0)) + 2.6 * np.sin((gap - 10) / 24 * 2 * np.pi)
 
+    near = true[g0:g1] + 0.5 - 1.4 * np.sin(np.linspace(0, np.pi, g1 - g0)) + rng.normal(0, 0.12, g1 - g0)
+    FILL = S.GREY["dark"]       # single methods: dark grey; purple only for the stepwise method
+    SRC = "#b8b8be"             # the same source outside the gap
     panels = [
         ("Linear interpolation", "A straight line between the last value\nbefore and the first value after the gap", lin, None),
         ("Daily patterns", "The shape of the days either side,\nadjusted to meet both ends of the gap", patt, None),
-        ("Four-week average (as in diyepw)", "The average of the same hour of day\nover the four weeks around the gap", four, None),
+        ("Four-week average (as in diyepw)", "The average of the same hour of day over\nfour weeks; need not meet the gap ends", four, None),
         ("Nearby station", "The same hours from a nearby station,\nchecked against the main station first", near, "near"),
         ("ERA5", "The same hours from a global weather\nmodel; smooth, misses local extremes", era, "era"),
+        ("Stepwise", "Takes the first source that works: here the\nnearby station passed its checks (Figure 1)", near, "step"),
     ]
-    H = 96
+    H = 92
     fig = plt.figure(figsize=(S.DOUBLE, H * S.MM))
-    gs = fig.add_gridspec(2, 3, left=0.05, right=0.98, top=0.86, bottom=0.07, wspace=0.18, hspace=0.78)
+    gs = fig.add_gridspec(2, 3, left=0.05, right=0.98, top=0.86, bottom=0.03, wspace=0.18, hspace=0.62)
     letters = iter("abcdef")
+    nearsrc = true + 0.5 + rng.normal(0, 0.25, t.size)
+    eraf = base - 1.6 * np.interp(t, gap, np.sin(np.linspace(0, np.pi, g1 - g0)), left=0, right=0) \
+        + 2.6 * np.sin((t - 10) / 24 * 2 * np.pi)
     for k, (name, desc, fill, src) in enumerate(panels):
         ax = fig.add_subplot(gs[k // 3, k % 3])
         ax.axvspan(g0 - 0.5, g1 - 0.5, color="#ececef", lw=0, zorder=0)
+        if src in ("near", "step"):
+            ax.plot(t[:g0], nearsrc[:g0], color=SRC, lw=0.6); ax.plot(t[g1:], nearsrc[g1:], color=SRC, lw=0.6)
+        if src == "era":
+            ax.plot(t[:g0], eraf[:g0], color=SRC, lw=0.6); ax.plot(t[g1:], eraf[g1:], color=SRC, lw=0.6)
         ax.plot(t[:g0], true[:g0], color=INK, lw=0.9)
         ax.plot(t[g1:], true[g1:], color=INK, lw=0.9)
         ax.plot(gap, true[g0:g1], color=MUTED, lw=0.8, ls=(0, (2, 1.5)))
-        if src == "near":
-            ax.plot(t[:g0], true[:g0] + 0.5 + rng.normal(0, 0.25, g0), color=OTHER, lw=0.6, alpha=0.8)
-            ax.plot(t[g1:], true[g1:] + 0.5 + rng.normal(0, 0.25, t.size - g1), color=OTHER, lw=0.6, alpha=0.8)
-        if src == "era":
-            eraf = base - 1.6 * np.interp(t, gap, np.sin(np.linspace(0, np.pi, g1 - g0)), left=0, right=0) \
-                + 2.6 * np.sin((t - 10) / 24 * 2 * np.pi)
-            ax.plot(t[:g0], eraf[:g0], color=OTHER, lw=0.6, alpha=0.8)
-            ax.plot(t[g1:], eraf[g1:], color=OTHER, lw=0.6, alpha=0.8)
-        ax.plot(gap, fill, color=ACCENT, lw=1.6)
+        ax.plot(gap, fill, color=[S.SRC[c] for c in ("linear", "patterns", "fourweek", "nearby", "era5", "stepwise")][k], lw=1.7)
         ax.set_xlim(0, t[-1]); ax.set_ylim(-13, 8)
         ax.set_xticks([]); ax.set_yticks([])
-        for s in ("left", "bottom"):
-            ax.spines[s].set_color(RULE)
+        for sp in ("left", "bottom"):
+            ax.spines[sp].set_color(RULE)
+        for sp in ("top", "right"):
+            ax.spines[sp].set_visible(False)
         title(ax, next(letters), name, y=1.30)
         ax.text(0, 1.04, desc, transform=ax.transAxes, fontsize=FS, color=MUTED, va="bottom", linespacing=1.15)
         if k == 0:
             ax.text((g0 + g1) / 2, 6.6, "gap", ha="center", fontsize=FS, color=MUTED)
             ax.text(4, 6.6, "measured", fontsize=FS, color=INK)
-            ax.annotate("hidden true values", xy=(g0 + 20, true[g0 + 20]), xytext=(g0 + 2, -12.3),
+            ax.annotate("hidden true values", xy=(g0 + 20, true[g0 + 20]), xytext=(g0 - 6, -12.3),
                         fontsize=FS, color=MUTED, arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.5))
-        if src:
-            ax.text(0, -0.04, "grey: that source outside the gap", transform=ax.transAxes, fontsize=FS,
-                    color=OTHER, va="top")
+            ax.text(g1 - 3, b + 1.4, "filled", ha="right", va="bottom", fontsize=FS, color=S.SRC["linear"], weight="bold")
+        if src == "near":
+            ax.annotate("nearby station", xy=(t[g1 + 14], nearsrc[g1 + 14]), xytext=(g1 + 2, -12.3),
+                        fontsize=FS, color="#8e8e93", arrowprops=dict(arrowstyle="-", color=SRC, lw=0.5))
+        if src == "era":
+            ax.annotate("ERA5", xy=(t[g1 + 20], eraf[g1 + 20]), xytext=(g1 + 12, -12.3),
+                        fontsize=FS, color="#8e8e93", arrowprops=dict(arrowstyle="-", color=SRC, lw=0.5))
         if k % 3 == 0:
             ax.set_ylabel("temperature", fontsize=FS, color=MUTED, labelpad=2)
-    # f: the stepwise method
-    ax = fig.add_subplot(gs[1, 2]); ax.axis("off")
-    ax.set_xlim(0, 60); ax.set_ylim(-6.5, 46)
-    title(ax, "f", "Stepwise", y=1.30)
-    ax.text(0, 1.04, "Tries the sources in order; long gaps go\nstraight to ERA5. Solar: linear, then ERA5",
-            transform=ax.transAxes, fontsize=FS, color=MUTED, va="bottom", linespacing=1.15)
-    steps = [("linear interpolation", "up to 3 hours"), ("nearby station", "if one passes the checks"),
-             ("daily patterns", "up to 48 hours"), ("ERA5", "anything left")]
-    for i, (s1, s2) in enumerate(steps):
-        y = 39.5 - i * 13.0
-        box(ax, 1, y - 5.6, 38, 11.2, "", fc="#f1ebf6" if i < 3 else "#e4d8ef", ec=ACCENT, lw=0.6, r=1.0)
-        ax.text(3, y + 2.2, s1, fontsize=FS, weight="bold", va="center", color=INK)
-        ax.text(3, y - 2.5, s2, fontsize=FS, va="center", color=MUTED)
-        if i < 3:
-            arrow(ax, (18, y - 5.7), (18, y - 7.3), color=ACCENT, lw=0.7, ms=5)
-    ax.text(41.5, 38.5, "longer gaps\ngo straight\nto ERA5", fontsize=FS,
-            color=ACCENT, va="center", linespacing=1.15)
-    arrow(ax, (46, 31.5), (39.6, 0.5), color=ACCENT, lw=0.7, ms=5, conn="arc3,rad=-0.3")
     S.save(fig, "fig_methods_diagram")
 
 
@@ -168,7 +159,7 @@ def heat(ax, vals, rows, fmt, norm, letter, ttl, ylabels=True, sep=None):
     ax.grid(which="minor", color="white", lw=1.2); ax.tick_params(which="minor", length=0)
     if "Stepwise" in rows:
         i = rows.index("Stepwise")
-        ax.add_patch(Rectangle((-0.47, i - 0.47), V.shape[1] - 0.06, 0.94, fill=False, ec=ACCENT, lw=1.0,
+        ax.add_patch(Rectangle((-0.47, i - 0.47), V.shape[1] - 0.06, 0.94, fill=False, ec=INK, lw=1.0,
                                zorder=5, clip_on=False))
     if sep is not None:
         ax.axhline(sep + 0.5, color=INK, lw=0.9)

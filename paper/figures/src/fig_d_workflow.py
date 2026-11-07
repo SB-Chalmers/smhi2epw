@@ -64,8 +64,11 @@ for name in methods:
     step = name == "Stepwise"
     h = 5.0
     yy = top - h
-    box(ax, cx + 1.6, yy, cw - 3.2, h, fc="#f1ebf6" if step else "white",
-        ec=ACCENT if step else MUTED, lw=0.8 if step else 0.5, r=0.7)
+    key = {"Stepwise": "gap_type_rule", "Nearby station (checked)": "donor_assessed", "ERA5 only": "era5",
+           "Four-week average": "diyepw_style", "Linear interpolation only": "linear_only"}.get(name)
+    mc = S.METHOD[key][1] if key else MUTED
+    box(ax, cx + 1.6, yy, cw - 3.2, h, fc="#e8f1f8" if step else "white",
+        ec=mc, lw=0.9 if key else 0.5, r=0.7)
     ax.text(cx + 3.0, yy + h / 2, name, fontsize=B, weight="bold" if step else "normal", va="center",
             color=ACCENT if step else INK)
     top = yy - 0.75

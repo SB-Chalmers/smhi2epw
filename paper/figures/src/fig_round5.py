@@ -206,7 +206,7 @@ def fig_regret_by_type():
 import numpy as np
 from style import RULE
 GAPS = N.GAPS
-LIGHT = "#c9b3dc"
+LIGHT = "#9cc3e4"
 # stepwise, event cases with the reference peak hidden, deduplicated (round5 t1 + a1)
 PK = {
  "heating": dict(n=[23, 39, 49, 49], same=[.74, .41, .37, .31], day=[.04, .36, .29, .18],
