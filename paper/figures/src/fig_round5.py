@@ -156,3 +156,45 @@ def fig_guidance():
 if __name__ == "__main__":
     fig_error_general(); fig_error_solar(); fig_regret_worst()
     fig_monthly_general(); fig_monthly_appendix(); fig_guidance()
+
+
+# ------------------------------------------------------------------ regret by result type (round 5, deduplicated events)
+ROWS_RT = ["Stepwise", "Stepwise, no switch", "Stepwise, patterns first", "Interpolation then patterns",
+           "ERA5 only", "Four-week average", "Linear interpolation only", "Nearby station (own subset)"]
+_N = None
+RT = {
+ "heat": [[.02, .26, 1.21, 5.17], [.02, .26, 1.21, 5.30], [.02, .58, 1.38, 5.30], [.02, .58, 1.38, _N],
+          [.10, .47, .98, 5.17], [.02, 1.19, 3.09, 5.17], [.02, .21, 1.57, 6.50], [.03, .17, .55, .54]],
+ "cool": [[1.21, 2.30, 6.36, 11.2], [1.21, 2.30, 6.36, 13.7], [1.21, 8.20, 8.89, 13.7], [1.21, 8.20, 8.89, _N],
+          [.88, 2.65, 4.92, 11.2], [1.21, 20.1, 26.8, 11.2], [1.21, 11.7, 20.9, 53.5], [.51, 1.48, 2.63, 13.7]],
+ "hpk": [[3.0, 7.5, 13.5, 14.3], [3.0, 7.5, 13.5, 31.1], [3.0, 10.1, 13.7, 31.1], [3.0, 10.1, 13.7, _N],
+         [10.5, 10.6, 16.9, 14.3], [3.0, 10.6, 15.2, 14.3], [3.0, 6.9, 11.3, 15.2], [4.4, 2.7, 2.8, 7.0]],
+ "cpk": [[8.6, 11.6, 19.7, 15.8], [8.6, 11.6, 19.7, 84.7], [8.6, 12.5, 22.6, 84.7], [8.6, 12.5, 22.6, _N],
+         [23.2, 15.5, 16.2, 15.8], [8.6, 29.6, 37.5, 15.8], [8.6, 25.1, 13.5, 37.7], [2.2, 5.9, 11.2, 11.8]],
+}
+
+
+def _fmt(T):
+    return [[None if v is None else (f"{v:.2f}" if v < 1 else f"{v:.1f}" if v < 10 else f"{v:.0f}") for v in r] for r in T]
+
+
+def fig_regret_by_type():
+    H = 132
+    fig, axes = plt.subplots(2, 2, figsize=(S.DOUBLE, H * S.MM))
+    fig.subplots_adjust(left=0.24, right=0.985, top=0.86, bottom=0.04, wspace=0.08, hspace=0.32)
+    norm = LogNorm(1, 90)
+    spec = [("heat", "a", "Annual heating: under 7% for all methods"),
+            ("cool", "b", "Annual cooling: linear interpolation worst"),
+            ("hpk", "c", "Heating peak: no switch doubles the worst case"),
+            ("cpk", "d", "Cooling peak: no switch reaches 85%")]
+    for k, (key, let, ttl) in enumerate(spec):
+        ax = axes.flat[k]
+        N.heat(ax, _fmt(RT[key]), ROWS_RT, None, norm, let, ttl, ylabels=(k % 2 == 0))
+        ax.axhline(6.5, color=INK, lw=0.9)
+    fig.text(0.012, 0.965, "Worst case of each method: how much worse than the best method on the same case, "
+             "% of the reference value.", fontsize=FS, color=MUTED)
+    fig.text(0.012, 0.935, "General weather gaps, random and event placements, each event week counted once. "
+             "Darker = larger (log scale).", fontsize=FS, color=MUTED)
+    fig.text(0.012, 0.905, "Below the line: the nearby station alone, scored only on gaps where it passed its checks, "
+             "so not comparable.", fontsize=FS, color=MUTED)
+    S.save(fig, "fig_regret_by_type")
