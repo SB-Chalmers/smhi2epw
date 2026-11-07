@@ -50,9 +50,9 @@ TINT["diyepw"] = "#e1f1fb"
 # Categories that are not filling methods (gap placement, seasons, event
 # outcomes, peak timing) are drawn in greys, so colour always means a method.
 GREY = {"dark": "#3a3a3c", "mid": "#8e8e93", "light": "#c7c7cc", "pale": "#e5e5ea"}
-MIN_FS = 6.5  # smallest text size at final print size, pt
+MIN_FS = 7.0  # smallest text size at final print size, pt
 
-SEASON = {"DJF": "#ebe3f3", "MAM": "#f7f3fb", "JJA": "#ebe3f3", "SON": "#f7f3fb"}
+SEASON = {"DJF": "#e8e8ec", "MAM": "#f5f5f7", "JJA": "#e8e8ec", "SON": "#f5f5f7"}  # greys: seasons are not methods
 
 
 def use() -> None:
@@ -177,3 +177,15 @@ def end_labels(ax, items, x, *, min_gap, fs=6.5, dx=0.08):
     for (y0, txt, col, w), y in zip(items, ys):
         ax.text(x + dx, y, txt, fontsize=fs, color=col, weight=w, va="center", ha="left",
                 clip_on=False)
+
+
+# Round 6: banded grey scale for heat maps (colour = method only, so magnitude is grey).
+BANDS = [0, 1, 5, 20, 1e9]
+BAND_COL = ["#f4f4f6", "#d8d8dd", "#a5a5ac", "#5f5f66"]
+BAND_LAB = ["under 1%", "1–5%", "5–20%", "over 20%"]
+
+
+def sig2(v):
+    """Two significant figures, as used in every table cell."""
+    v = float(v)
+    return f"{v:.2f}" if v < 1 else (f"{v:.1f}" if v < 10 else f"{v:.0f}")

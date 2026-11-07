@@ -20,29 +20,23 @@ FS = N.FS
 
 
 def fig_error_general():
-    H = 82
+    H = 80
     fig, axes = plt.subplots(1, 2, figsize=(S.DOUBLE, H * S.MM))
-    fig.subplots_adjust(left=0.21, right=0.985, top=0.80, bottom=0.07, wspace=0.08)
-    N.heat(axes[0], N.G_HEAT, N.ROWS_G, N.pct, LogNorm(0.01, 6.0), "a", "Heating: all methods small up to 48 hours")
-    N.heat(axes[1], N.G_COOL, N.ROWS_G, N.pct, LogNorm(0.1, 27), "b", "Cooling: linear interpolation fails at one week",
-           ylabels=False)
-    fig.text(0.012, 0.955, "Error in annual demand that 95% of cases stay below, % of demand; four random general "
-             "weather gaps a year.", fontsize=FS, color=MUTED)
-    fig.text(0.012, 0.92, "Darker = larger (log scale). –: the method does not fill gaps this long.",
-             fontsize=FS, color=MUTED)
+    fig.subplots_adjust(left=0.21, right=0.985, top=0.86, bottom=0.17, wspace=0.08)
+    N.heat(axes[0], N.G_HEAT, N.ROWS_G, None, None, "a", "Heating: all methods small up to 48 hours", sep=6)
+    N.heat(axes[1], N.G_COOL, N.ROWS_G, None, None, "b", "Cooling: linear interpolation fails at one week",
+           ylabels=False, sep=6)
+    N.band_key(fig, 0.21, 0.035, "error, % of annual demand")
     S.save(fig, "fig_error_general")
 
 
 def fig_error_solar():
-    H = 70
+    H = 66
     fig, axes = plt.subplots(1, 2, figsize=(S.DOUBLE, H * S.MM))
-    fig.subplots_adjust(left=0.21, right=0.985, top=0.77, bottom=0.08, wspace=0.08)
-    N.heat(axes[0], N.S_HEAT, N.ROWS_S, N.pct, LogNorm(0.01, 6.0), "a", "Solar gaps: heating")
-    N.heat(axes[1], N.S_COOL, N.ROWS_S, N.pct, LogNorm(0.1, 27), "b", "Solar gaps: cooling", ylabels=False)
-    fig.text(0.012, 0.955, "Error in annual demand that 95% of cases stay below, % of demand; four random solar "
-             "gaps a year.", fontsize=FS, color=MUTED)
-    fig.text(0.012, 0.915, "Darker = larger (log scale). –: the method does not fill gaps this long.",
-             fontsize=FS, color=MUTED)
+    fig.subplots_adjust(left=0.21, right=0.985, top=0.86, bottom=0.2, wspace=0.08)
+    N.heat(axes[0], N.S_HEAT, N.ROWS_S, None, None, "a", "Solar gaps: heating")
+    N.heat(axes[1], N.S_COOL, N.ROWS_S, None, None, "b", "Solar gaps: cooling", ylabels=False)
+    N.band_key(fig, 0.21, 0.04, "error, % of annual demand")
     S.save(fig, "fig_error_solar")
 
 
@@ -59,8 +53,8 @@ def fig_regret_worst():
 
 def _monthly(rows, titles, fname, H):
     fig, axes = plt.subplots(len(rows), 2, figsize=(S.DOUBLE, H * S.MM), squeeze=False)
-    top = 1 - (26 if len(rows) > 1 else 17) / H
-    fig.subplots_adjust(left=0.2, right=0.95, top=top, bottom=16 / H, wspace=0.85, hspace=0.95)
+    top = 1 - (16 if len(rows) > 1 else 8) / H
+    fig.subplots_adjust(left=0.2, right=0.95, top=top, bottom=17 / H, wspace=0.85, hspace=0.95)
     letters = iter("abcdef")
     for r, (kind, scope, rtitle) in enumerate(rows):
         if kind == "full":
@@ -78,22 +72,30 @@ def _monthly(rows, titles, fname, H):
             methods = [m for m in methods if m != "automatic_legacy"]
         for c, mode in enumerate(("heating", "cooling")):
             ax = axes[r, c]
-            R.method_panel(ax, d, f"{mode}_months_outside", methods, 100.0, 60, lambda v: f"{v:.0f} %")
+            R.method_panel(ax, d, f"{mode}_months_outside", methods, 100.0, 80, lambda v: f"{v:.0f}%")
             ax.text(-0.62, 1.1, f"{next(letters)}  {titles[(r, mode)]}", transform=ax.transAxes,
                     fontsize=7.5, weight="bold", va="bottom")
-            ax.set_xlabel("% of months outside ±5 % of the reference", fontsize=FS)
+            ax.set_xlabel("% of months outside ±5% of the reference", fontsize=FS)
         if len(rows) > 1:
             R.row_title(fig, axes[r, 0], rtitle, H, up_mm=9)
-    fig.text(0.012, 1 - 5 / H, "Open dot: 48-hour gaps.  Filled dot and number: one-week gaps.  "
-             "Methods ranked by the one-week value, best at the top.", fontsize=FS, color=MUTED)
+    _dot_key(fig, H)
     S.save(fig, fname)
+
+
+def _dot_key(fig, H):
+    """Open/filled dot key under the panels (replaces the old grey header line)."""
+    from matplotlib.lines import Line2D
+    h = [Line2D([], [], ls="", marker="o", mfc="white", mec=S.OTHER, ms=4.5, label="48-hour gaps"),
+         Line2D([], [], ls="", marker="o", mfc=S.OTHER, mec=S.OTHER, ms=4.5, label="one-week gaps (number)")]
+    fig.legend(handles=h, loc="lower left", bbox_to_anchor=(0.2, 0.0), ncol=2, fontsize=FS, frameon=False,
+               handletextpad=0.3, columnspacing=1.5)
 
 
 def fig_monthly_general():
     _monthly((R.ROWS3[0],),
              {(0, "heating"): "Heating: only linear interpolation fails often",
               (0, "cooling"): "Cooling: one month in five fails at one week"},
-             "fig_monthly_general", 60)
+             "fig_monthly_general", 54)
 
 
 def fig_monthly_appendix():
@@ -102,7 +104,7 @@ def fig_monthly_appendix():
               (0, "cooling"): "Cooling: nearby station fails least",
               (1, "heating"): "Heating: only linear interpolation fails often",
               (1, "cooling"): "Cooling: one month in four fails at one week"},
-             "fig_monthly_appendix", 120)
+             "fig_monthly_appendix", 116)
 
 
 # ------------------------------------------------------------------ decision flow
@@ -116,40 +118,47 @@ def _arrow(ax, x0, y0, x1, y1, label=None, lx=0, ly=0):
     ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
                 arrowprops=dict(arrowstyle="-|>", color=INK, lw=0.7, mutation_scale=7, shrinkA=0, shrinkB=0))
     if label:
-        ax.text((x0 + x1) / 2 + lx, (y0 + y1) / 2 + ly, label, fontsize=6.8, color=MUTED, ha="center", va="center")
+        ax.text((x0 + x1) / 2 + lx, (y0 + y1) / 2 + ly, label, fontsize=FS, color=MUTED, ha="center", va="center")
 
 
 def fig_guidance():
-    H = 118
+    H = 100
     fig = plt.figure(figsize=(S.DOUBLE, H * S.MM))
     ax = fig.add_axes([0, 0, 1, 1])
     ax.set_xlim(0, 174); ax.set_ylim(0, H); ax.axis("off")
-    q = "#f1ebf6"; ok = "#eef3ee"; risk = "#f7e6e6"
-    ax.text(6, H - 7, "Is a filled weather file safe for my result? Five steps", fontsize=9, weight="bold", color=INK)
-    ax.text(6, H - 13, "For a modeller using an actual-year file with filled gaps of up to a week.",
-            fontsize=7, color=MUTED)
+    W = "white"; G = S.GREY["mid"]
 
-    w = 52; x = 6
-    _box(ax, x, 86, w, 13, "1  Did the year have heatwaves\nor cold spells?", q)
-    _box(ax, x, 64, w, 15, "2  List the filled gaps:\nlength, general weather or solar,\nshare of the year filled", q)
-    _box(ax, x, 42, w, 15, "3  Note the season of each gap:\nwinter → heating, summer → cooling,\nspring solar → heating too", q)
-    _box(ax, x, 22, w, 13, "4  Match the gaps to\nthe result you need", q, bold=True)
-    _arrow(ax, x + w / 2, 86, x + w / 2, 79)
-    _arrow(ax, x + w / 2, 64, x + w / 2, 57)
-    _arrow(ax, x + w / 2, 42, x + w / 2, 35)
+    def bx(x, y, w, h, text, ec=G, bold=False, color=INK, lw=0.7):
+        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0,rounding_size=1.2", fc=W, ec=ec, lw=lw))
+        ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=FS, color=color,
+                weight="bold" if bold else "normal", linespacing=1.3)
 
-    xr = 72; wr = 46
-    _box(ax, xr, 74, wr, 20, "Annual heating\n\nSafe for gaps up to a week and\nup to about 8% of the year filled;\nlikely error in Table 8 (under 2%)", ok)
-    _box(ax, xr, 48, wr, 19, "Annual cooling\n\nCheck summer gaps: a week over\na heatwave can move it 6%,\nor 20% for a solar gap", ok)
-    _box(ax, xr, 8, wr, 33, "Peaks, peak timing,\nheatwave studies\n\nCould a gap hide the peak?\nYes if it falls in the peak season\nnext to the coldest or hottest\nmeasured days, or the simulated\npeak lands in or near filled hours", q)
-    for yy in (84, 57, 25):
-        _arrow(ax, x + w, 28.5, xr, yy)
+    # left column: steps 1-4
+    x, w = 4, 52
+    bx(x, 80, w, 15, "1  Did the year and place have\nheatwaves or cold spells?")
+    bx(x, 57, w, 16, "2  List the filled gaps:\nlength, general weather or solar,\nshare of the year filled")
+    bx(x, 34, w, 16, "3  Note the season of each gap:\nwinter → heating, summer → cooling,\nspring solar → heating too")
+    bx(x, 12, w, 15, "4  Match the gaps to\nthe result you need", bold=True)
+    for y0, y1 in ((80, 73), (57, 50), (34, 27)):
+        _arrow(ax, x + w / 2, y0, x + w / 2, y1)
 
-    xo = 128; wo = 41
-    _box(ax, xo, 22, wo, 22, "5  Yes: report a range\n\npeak ±15% for a week-long\ngap, or re-run with a\nsecond filling method", risk, bold=False)
-    _box(ax, xo, 4, wo, 12, "No: the filled file is\nsafe for this result", ok)
-    _arrow(ax, xr + wr, 27, xo, 33, "yes", ly=2.5)
-    _arrow(ax, xr + wr, 14, xo, 10, "no", ly=-2.5)
+    # middle column: what each result needs
+    xr, wr = 68, 50
+    bx(xr, 55, wr, 40, "Peaks, peak timing,\nheatwave studies\n\nCould a gap hide the peak?\nYes if it falls in the peak season\n"
+       "next to the coldest or hottest\ndays, or the simulated peak\nlands in or near filled hours")
+    bx(xr, 30, wr, 19, "Annual cooling\n\nCheck summer gaps: a week over\na heatwave can move it 6%,\nor 20% for a solar gap")
+    bx(xr, 5, wr, 19, "Annual heating\n\nSafe for gaps up to a week and\nup to about 8% of the year filled;\nlikely error in Table 8 (under 2%)")
+    _arrow(ax, x + w, 87.5, xr, 87.5, "yes", ly=2.4)
+    for yy in (62, 39.5, 14.5):
+        _arrow(ax, x + w, 19.5, xr, yy)
+
+    # right column: outcome for peaks
+    xo, wo = 130, 40
+    bx(xo, 70, wo, 25, "5  Yes: report a range\n\npeak ±15% for a week-long\ngap, or re-run with a\nsecond filling method",
+       ec=ACCENT, bold=False, lw=1.2)
+    bx(xo, 48, wo, 13, "No: the filled file is\nsafe for this result")
+    _arrow(ax, xr + wr, 80, xo, 82.5, "yes", ly=2.4)
+    _arrow(ax, xr + wr, 62, xo, 54.5, "no", ly=-2.4)
     S.save(fig, "fig_guidance")
 
 
@@ -179,24 +188,17 @@ def _fmt(T):
 
 
 def fig_regret_by_type():
-    H = 132
+    H = 128
     fig, axes = plt.subplots(2, 2, figsize=(S.DOUBLE, H * S.MM))
-    fig.subplots_adjust(left=0.24, right=0.985, top=0.86, bottom=0.04, wspace=0.08, hspace=0.32)
-    norm = LogNorm(1, 90)
+    fig.subplots_adjust(left=0.24, right=0.985, top=0.93, bottom=0.1, wspace=0.08, hspace=0.32)
     spec = [("heat", "a", "Annual heating: under 7% for all methods"),
             ("cool", "b", "Annual cooling: linear interpolation worst"),
             ("hpk", "c", "Heating peak: no switch doubles the worst case"),
             ("cpk", "d", "Cooling peak: no switch reaches 85%")]
     for k, (key, let, ttl) in enumerate(spec):
         ax = axes.flat[k]
-        N.heat(ax, _fmt(RT[key]), ROWS_RT, None, norm, let, ttl, ylabels=(k % 2 == 0))
-        ax.axhline(6.5, color=INK, lw=0.9)
-    fig.text(0.012, 0.965, "Worst case of each method: how much worse than the best method on the same case, "
-             "% of the reference value.", fontsize=FS, color=MUTED)
-    fig.text(0.012, 0.935, "General weather gaps, random and event placements, each event week counted once. "
-             "Darker = larger (log scale).", fontsize=FS, color=MUTED)
-    fig.text(0.012, 0.905, "Below the line: the nearby station alone, scored only on gaps where it passed its checks, "
-             "so not comparable.", fontsize=FS, color=MUTED)
+        N.heat(ax, RT[key], ROWS_RT, None, None, let, ttl, ylabels=(k % 2 == 0), sep=6)
+    N.band_key(fig, 0.24, 0.025, "worst case, % of reference")
     S.save(fig, "fig_regret_by_type")
 
 
@@ -221,12 +223,13 @@ RB = {
 
 def _timing(ax, d, letter, ttl, legend=False):
     X = np.arange(4); w = 0.6
-    parts = [("same hour", d["same"], "#e9e1f0"), ("within a day", d["day"], "#cdbfe0"),
-             ("moved >1 day, to a day within 5 % of the peak", d["tie"], LIGHT and "#9d7fc0"),
+    parts = [("same hour", d["same"], S.GREY["pale"]), ("within a day", d["day"], S.GREY["light"]),
+             ("moved >1 day, to a day within 5% of the peak", d["tie"], LIGHT),
              ("moved >1 day, to a clearly lower day", d["low"], ACCENT)]
+    tot = np.sum([np.array(v) for _, v, _ in parts], axis=0)   # rounding: make each bar sum to 100
     b = np.zeros(4)
     for lab, v, c in parts:
-        v = np.array(v) * 100
+        v = np.array(v) / tot * 100
         ax.bar(X, v, w, bottom=b, color=c, label=lab, edgecolor="white", lw=0.5)
         b += v
     for x, n in zip(X, d["n"]):
@@ -234,13 +237,12 @@ def _timing(ax, d, letter, ttl, legend=False):
     ax.set_ylim(0, 112); ax.set_yticks([0, 25, 50, 75, 100]); ax.set_ylabel("% of hidden peaks")
     ax.set_xticks(X); ax.set_xticklabels(GAPS, fontsize=FS)
     N.title(ax, letter, ttl, y=1.06)
-    if legend:
-        ax.legend(loc="upper left", bbox_to_anchor=(0, -0.16), ncol=2, fontsize=FS, frameon=False)
 
 
 def _robust(ax, d, letter, ttl):
     X = np.arange(4)
-    for k, (key, lab, c, dx) in enumerate([("single", "single peak hour", "#9d7fc0", -0.12), ("top", "mean of the 10 highest hours", ACCENT, 0.12)]):
+    for k, (key, lab, c, dx) in enumerate([("single", "single peak hour", S.GREY["mid"], -0.12),
+                                           ("top", "mean of the 10 highest hours", ACCENT, 0.12)]):
         med = [m for m, _ in d[key]]; p95 = [p for _, p in d[key]]
         ax.vlines(X + dx, med, p95, color=c, lw=1.2)
         ax.plot(X + dx, med, "o", color=c, ms=4.5, label=f"{lab}: median (dot) to 95th percentile")
@@ -251,19 +253,17 @@ def _robust(ax, d, letter, ttl):
 
 
 def fig_peaks5():
-    H = 150
+    H = 132
     fig, axes = plt.subplots(2, 2, figsize=(S.DOUBLE, H * S.MM))
-    fig.subplots_adjust(left=0.08, right=0.985, top=0.9, bottom=0.07, wspace=0.25, hspace=0.75)
+    fig.subplots_adjust(left=0.08, right=0.985, top=0.93, bottom=0.085, wspace=0.25, hspace=0.62)
     _timing(axes[0, 0], PK["heating"], "a", "Heating peak timing: many moves are near-ties")
-    _timing(axes[0, 1], PK["cooling"], "b", "Cooling peak timing", legend=False)
+    _timing(axes[0, 1], PK["cooling"], "b", "Cooling peak timing: most stay within a day")
     _robust(axes[1, 0], RB["heating"], "c", "Heating peak size: a 10-hour peak is steadier")
-    _robust(axes[1, 1], RB["cooling"], "d", "Cooling peak size")
+    _robust(axes[1, 1], RB["cooling"], "d", "Cooling peak size: the same pattern, smaller")
     h, l = axes[0, 0].get_legend_handles_labels()
-    fig.legend(h, l, loc="upper left", bbox_to_anchor=(0.06, 0.535), ncol=2, fontsize=FS, frameon=False)
+    fig.legend(h, l, loc="upper left", bbox_to_anchor=(0.06, 0.555), ncol=2, fontsize=FS, frameon=False)
     h, l = axes[1, 0].get_legend_handles_labels()
-    fig.legend(h, l, loc="lower left", bbox_to_anchor=(0.06, -0.005), ncol=2, fontsize=FS, frameon=False)
-    fig.text(0.012, 0.965, "When the year's peak hour fell inside a gap. Timing: gaps at weather events. "
-             "Size: random and event gaps. Stepwise method, general weather.", fontsize=FS, color=MUTED)
+    fig.legend(h, l, loc="lower left", bbox_to_anchor=(0.06, -0.008), ncol=2, fontsize=FS, frameon=False)
     S.save(fig, "fig_peaks5")
 
 

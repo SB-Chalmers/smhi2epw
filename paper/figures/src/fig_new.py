@@ -6,7 +6,7 @@ import style as S
 from style import INK, MUTED, RULE, ACCENT, ACCENT_SEQ, OTHER, box, arrow
 
 S.use()
-FS = 6.8
+FS = 7.0
 PURPLES = LinearSegmentedColormap.from_list("p", ["#f7f3fb", "#d9c8ea", "#a882c8", "#7a4aa6", ACCENT, "#2e1047"])
 GAPS = ["3 hours", "12 hours", "48 hours", "1 week"]
 
@@ -32,6 +32,7 @@ def fig_method_diagram():
     trend = np.interp(gap, [g0 - 1, g1], [a - 4 * np.sin((g0 - 1 - 9) / 24 * 2 * np.pi),
                                          b - 4 * np.sin((g1 - 9) / 24 * 2 * np.pi)])
     patt = shape + trend
+    patt = patt + 0.9 * np.sin(np.linspace(0, np.pi, g1 - g0)) ** 2  # a small miss at the cold dip
     # four-week average of the same hour: weaker cycle, month-mean level
     four = -2.2 + 2.6 * np.sin((gap - 9) / 24 * 2 * np.pi)
     # nearby station: same weather, own local quirks (bias that grows at the extreme)
@@ -46,13 +47,13 @@ def fig_method_diagram():
         ("Nearby station", "The same hours from a nearby station,\nchecked against the main station first", near, "near"),
         ("ERA5", "The same hours from a global weather\nmodel; smooth, misses local extremes", era, "era"),
     ]
-    H = 104
+    H = 96
     fig = plt.figure(figsize=(S.DOUBLE, H * S.MM))
-    gs = fig.add_gridspec(2, 3, left=0.05, right=0.98, top=0.86, bottom=0.08, wspace=0.18, hspace=0.95)
+    gs = fig.add_gridspec(2, 3, left=0.05, right=0.98, top=0.86, bottom=0.07, wspace=0.18, hspace=0.78)
     letters = iter("abcdef")
     for k, (name, desc, fill, src) in enumerate(panels):
         ax = fig.add_subplot(gs[k // 3, k % 3])
-        ax.axvspan(g0 - 0.5, g1 - 0.5, color="#ebe3f3", lw=0, zorder=0)
+        ax.axvspan(g0 - 0.5, g1 - 0.5, color="#ececef", lw=0, zorder=0)
         ax.plot(t[:g0], true[:g0], color=INK, lw=0.9)
         ax.plot(t[g1:], true[g1:], color=INK, lw=0.9)
         ax.plot(gap, true[g0:g1], color=MUTED, lw=0.8, ls=(0, (2, 1.5)))
@@ -72,31 +73,33 @@ def fig_method_diagram():
         title(ax, next(letters), name, y=1.30)
         ax.text(0, 1.04, desc, transform=ax.transAxes, fontsize=FS, color=MUTED, va="bottom", linespacing=1.15)
         if k == 0:
-            ax.text((g0 + g1) / 2, 6.6, "gap", ha="center", fontsize=FS, color=ACCENT)
+            ax.text((g0 + g1) / 2, 6.6, "gap", ha="center", fontsize=FS, color=MUTED)
             ax.text(4, 6.6, "measured", fontsize=FS, color=INK)
             ax.annotate("hidden true values", xy=(g0 + 20, true[g0 + 20]), xytext=(g0 + 2, -12.3),
                         fontsize=FS, color=MUTED, arrowprops=dict(arrowstyle="-", color=MUTED, lw=0.5))
         if src:
-            ax.text(1, -12.3, "grey: that source outside the gap", fontsize=FS - 0.4, color=OTHER)
+            ax.text(0, -0.04, "grey: that source outside the gap", transform=ax.transAxes, fontsize=FS,
+                    color=OTHER, va="top")
+        if k % 3 == 0:
+            ax.set_ylabel("temperature", fontsize=FS, color=MUTED, labelpad=2)
     # f: the stepwise method
     ax = fig.add_subplot(gs[1, 2]); ax.axis("off")
-    ax.set_xlim(0, 60); ax.set_ylim(-10, 44)
+    ax.set_xlim(0, 60); ax.set_ylim(-6.5, 46)
     title(ax, "f", "Stepwise", y=1.30)
-    ax.text(0, 1.04, "Tries the sources in order; long gaps\ngo straight to ERA5 (Figure 1)",
+    ax.text(0, 1.04, "Tries the sources in order; long gaps go\nstraight to ERA5. Solar: linear, then ERA5",
             transform=ax.transAxes, fontsize=FS, color=MUTED, va="bottom", linespacing=1.15)
-    steps = [("linear interpolation", "up to 3 hours"), ("nearby station", "if one passes the check"),
+    steps = [("linear interpolation", "up to 3 hours"), ("nearby station", "if one passes the checks"),
              ("daily patterns", "up to 48 hours"), ("ERA5", "anything left")]
     for i, (s1, s2) in enumerate(steps):
-        y = 38.3 - i * 11.3
-        box(ax, 1, y - 4.8, 38, 9.6, "", fc="#f1ebf6" if i < 3 else "#e4d8ef", ec=ACCENT, lw=0.6, r=1.0)
-        ax.text(3, y + 2.0, s1, fontsize=FS, weight="bold", va="center", color=INK)
-        ax.text(3, y - 2.4, s2, fontsize=FS - 0.4, va="center", color=MUTED)
+        y = 39.5 - i * 13.0
+        box(ax, 1, y - 5.6, 38, 11.2, "", fc="#f1ebf6" if i < 3 else "#e4d8ef", ec=ACCENT, lw=0.6, r=1.0)
+        ax.text(3, y + 2.2, s1, fontsize=FS, weight="bold", va="center", color=INK)
+        ax.text(3, y - 2.5, s2, fontsize=FS, va="center", color=MUTED)
         if i < 3:
-            arrow(ax, (18, y - 5.0), (18, y - 6.4), color=ACCENT, lw=0.7, ms=5)
-    ax.text(40.5, 30, "longer gaps\ngo straight\nto ERA5", fontsize=FS - 0.4,
+            arrow(ax, (18, y - 5.7), (18, y - 7.3), color=ACCENT, lw=0.7, ms=5)
+    ax.text(41.5, 38.5, "longer gaps\ngo straight\nto ERA5", fontsize=FS,
             color=ACCENT, va="center", linespacing=1.15)
-    arrow(ax, (45, 24.5), (39.6, 4.5), color=ACCENT, lw=0.7, ms=5, conn="arc3,rad=-0.25")
-    ax.text(1, -6.6, "Solar radiation: linear interpolation up to\n3 hours, then ERA5", fontsize=FS - 0.4, color=MUTED, va="center", linespacing=1.15)
+    arrow(ax, (46, 31.5), (39.6, 0.5), color=ACCENT, lw=0.7, ms=5, conn="arc3,rad=-0.3")
     S.save(fig, "fig_methods_diagram")
 
 
@@ -132,20 +135,26 @@ def fig_headline():
 
 
 # ---------------------------------------------------------------- heat maps
-def heat(ax, vals, rows, fmt, norm, letter, ttl, ylabels=True):
-    L = vals
+def heat(ax, vals, rows, fmt, norm, letter, ttl, ylabels=True, sep=None):
+    """Heat map in four grey bands (style.BANDS); numbers printed in every cell.
+
+    The Stepwise row is outlined in the accent colour. sep: draw a rule below this row index.
+    """
+    from matplotlib.colors import BoundaryNorm, ListedColormap
+    from matplotlib.patches import Rectangle
     V = np.array([[np.nan if v is None else float(v) for v in r] for r in vals], dtype=float)
     M = np.ma.masked_invalid(V)
-    cm = PURPLES.copy(); cm.set_bad("#ffffff")
-    ax.imshow(np.clip(M, norm.vmin, None), cmap=cm, norm=norm, aspect="auto")
+    cm = ListedColormap(S.BAND_COL); cm.set_bad("#ffffff")
+    bn = BoundaryNorm(S.BANDS, cm.N)
+    ax.imshow(M, cmap=cm, norm=bn, aspect="auto")
     for i in range(V.shape[0]):
         for j in range(V.shape[1]):
             v = V[i, j]
             if np.isnan(v):
                 ax.text(j, i, "–", ha="center", va="center", fontsize=FS, color=MUTED)
                 continue
-            dark = norm(max(v, norm.vmin)) > 0.55
-            ax.text(j, i, L[i][j], ha="center", va="center", fontsize=FS, color="white" if dark else INK,
+            dark = v >= S.BANDS[3]
+            ax.text(j, i, cell(vals[i][j]), ha="center", va="center", fontsize=FS, color="white" if dark else INK,
                     weight="bold" if rows[i] == "Stepwise" else "normal")
     ax.set_xticks(range(len(GAPS))); ax.set_xticklabels(GAPS, fontsize=FS)
     ax.set_yticks(range(len(rows))); ax.set_yticklabels(rows if ylabels else [], fontsize=FS)
@@ -157,7 +166,41 @@ def heat(ax, vals, rows, fmt, norm, letter, ttl, ylabels=True):
         s.set_visible(False)
     ax.set_xticks(np.arange(-0.5, 4, 1), minor=True); ax.set_yticks(np.arange(-0.5, len(rows), 1), minor=True)
     ax.grid(which="minor", color="white", lw=1.2); ax.tick_params(which="minor", length=0)
+    if "Stepwise" in rows:
+        i = rows.index("Stepwise")
+        ax.add_patch(Rectangle((-0.47, i - 0.47), V.shape[1] - 0.06, 0.94, fill=False, ec=ACCENT, lw=1.0,
+                               zorder=5, clip_on=False))
+    if sep is not None:
+        ax.axhline(sep + 0.5, color=INK, lw=0.9)
     title(ax, letter, ttl, y=1.03)
+
+
+def band_key(fig, x, y, what="error"):
+    """Key for the four grey bands, in figure coordinates (x = left edge, y = centre)."""
+    from matplotlib.patches import Rectangle
+    r = fig.canvas.get_renderer()
+    W = fig.get_figwidth() * fig.dpi
+    def put(xx, txt, col):
+        t = fig.text(xx, y, txt, fontsize=FS, color=col, va="center", ha="left")
+        return xx + t.get_window_extent(r).width / W
+    x = put(x, what, MUTED) + 0.015
+    sw = 0.02
+    for c, lab in zip(S.BAND_COL, S.BAND_LAB):
+        fig.patches.append(Rectangle((x, y - 0.011), sw, 0.022, transform=fig.transFigure, fc=c,
+                                     ec=RULE, lw=0.4, figure=fig))
+        x = put(x + sw + 0.006, lab, INK) + 0.02
+
+
+def cell(v):
+    """Two significant figures, never more decimals than the source value has."""
+    if v is None:
+        return None
+    sv = str(v)
+    src_dec = len(sv.split(".")[1]) if "." in sv and isinstance(v, str) else 9
+    f = float(v)
+    dec = 2 if f < 1 else (1 if f < 10 else 0)
+    dec = min(dec, src_dec)
+    return f"{round(f, dec):.{dec}f}"
 
 
 ROWS_G = ["Stepwise", "Stepwise, no switch", "Stepwise, patterns first", "Interpolation then patterns",

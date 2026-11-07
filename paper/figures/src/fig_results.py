@@ -214,49 +214,52 @@ def fig_peaks():
 
 
 # ------------------------------------------------------------- Fig. 7 events
-OUTCOME = [("kept", GREY["dark"]), ("changed", GREY["light"]), ("lost", ACCENT)]
+OUTCOME = ["kept", "changed", "lost"]
+COLS_STEP = {"kept": ACCENT, "changed": GREY["light"], "lost": GREY["mid"]}
+COLS_LIN = {"kept": GREY["dark"], "changed": GREY["light"], "lost": GREY["mid"]}
 
 
 def fig_events():
     ev = read("event-preservation-3day")
     ev = ev[ev.sampling == "weather_extremes"]
-    types = [("heatwave", "Heatwaves", "3+ days ≥ 25 °C"),
-             ("warm_spell", "Warm spells", "3+ days above the summer 95th pct."),
-             ("cold_spell", "Cold spells", "3+ days ≤ −10 °C"),
-             ("relative_cold_spell", "Relative cold spells", "3+ days below the winter 5th pct.")]
-    fig, axes = plt.subplots(1, 4, figsize=(S.DOUBLE, 70 * S.MM), sharey=True)
-    fig.subplots_adjust(left=0.065, right=0.905, top=0.68, bottom=0.22, wspace=0.14)
-    XX = np.array([0, 1, 2, 3, 4.3])
-    for ax, (t, name, rule) in zip(axes, types):
+    types = [("heatwave", "Heatwaves"), ("warm_spell", "Warm spells"),
+             ("cold_spell", "Cold spells"), ("relative_cold_spell", "Relative cold spells")]
+    fig, axes = plt.subplots(1, 4, figsize=(S.DOUBLE, 68 * S.MM), sharey=True)
+    fig.subplots_adjust(left=0.065, right=0.885, top=0.70, bottom=0.24, wspace=0.16)
+    XX = np.array([0, 1, 2, 3, 4.55])
+    for ax, (t, name) in zip(axes, types):
         d = ev[ev.event_type == t]
         st = d[d.method == STEP].set_index("gap_hours").loc[GAPS]
         ln = d[(d.method == "linear_only") & (d.gap_hours == 168)].iloc[0]
         rows = [st.loc[g] for g in GAPS] + [ln]
         bottom = np.zeros(len(rows))
-        for key, col in OUTCOME:
+        for key in OUTCOME:
             v = np.array([r[{"kept": "kept_exact_share", "changed": "changed_bounds_share",
                              "lost": "lost_share"}[key]] for r in rows]) * 100
-            ax.bar(XX, v, bottom=bottom, width=0.7, color=col, edgecolor="white", lw=0.6, zorder=3)
+            cols = [COLS_STEP[key]] * 4 + [COLS_LIN[key]]
+            ax.bar(XX, v, bottom=bottom, width=0.7, color=cols, edgecolor="white", lw=0.6, zorder=3)
             bottom += v
         for x, r in zip(XX, rows):
-            ax.text(x, 101.5, f"n={int(r['reference_exposed_events'])}", ha="center", va="bottom",
-                    fontsize=FS - 1, color=INK)
+            ax.text(x, 101.5, f"{int(r['reference_exposed_events'])}", ha="center", va="bottom",
+                    fontsize=FS, color=MUTED)
         kept_step, kept_line = rows[3]["kept_exact_share"] * 100, ln["kept_exact_share"] * 100
         ax.set_xticks(XX)
-        ax.set_xticklabels(["3 h", "12 h", "48 h", "1\nweek", "1 week,\nlinear\ninterp."], fontsize=FS)
-        ax.axvline(3.65, color=RULE, lw=0.6)
+        ax.set_xticklabels(["3 h", "12 h", "48 h", "1\nweek", "1 week,\nlinear\nonly"], fontsize=FS)
+        ax.axvline(3.78, color=RULE, lw=0.6)
         ax.set_ylim(0, 100)
         ax.set_yticks([0, 25, 50, 75, 100])
-        ax.text(0.5, 1.3, name, transform=ax.transAxes, ha="center", va="bottom", fontsize=7.5,
+        ax.text(0.5, 1.36, name, transform=ax.transAxes, ha="center", va="bottom", fontsize=7.5,
                 weight="bold")
-        ax.text(0.5, 1.24, f"{kept_step:.0f} % kept at one week\n(linear interpolation: {kept_line:.0f} %)",
+        ax.text(0.5, 1.33, f"{kept_step:.0f}% kept at one week\n(linear interpolation: {kept_line:.0f}%)",
                 transform=ax.transAxes, ha="center", va="top", fontsize=FS, linespacing=1.2)
     axes[0].set_ylabel("% of events hit by the gap")
-    for (key, col), yk in zip(OUTCOME, (15, 50, 85)):
-        axes[-1].scatter([XX[-1] + 0.75], [yk], s=22, marker="s", c=col, clip_on=False)
-        axes[-1].text(XX[-1] + 1.0, yk, key, fontsize=FS, va="center", ha="left",
-                      color=ACCENT if key == "lost" else INK, clip_on=False)
-    fig.text(0.5, 0.03, "Stepwise method; gap centred on the event", ha="center", fontsize=FS_AX)
+    axes[0].text(-0.75, 101.5, "n", ha="right", va="bottom", fontsize=FS, color=MUTED)
+    keys = [("kept (stepwise)", ACCENT), ("kept (linear only)", GREY["dark"]),
+            ("changed", GREY["light"]), ("lost", GREY["mid"])]
+    for (lab, col), yk in zip(keys, (80, 60, 40, 20)):
+        axes[-1].scatter([XX[-1] + 0.85], [yk], s=22, marker="s", c=col, clip_on=False)
+        axes[-1].text(XX[-1] + 1.1, yk, lab, fontsize=FS, va="center", ha="left", color=INK, clip_on=False)
+    fig.text(0.5, 0.025, "Stepwise method unless marked; gap centred on the event", ha="center", fontsize=FS_AX)
     S.save(fig, "fig10_events")
 
 
@@ -270,13 +273,9 @@ ROWS8 = [("winter", "random_seasonal", "winter", "heating", False),
 
 
 def fig_position():
-    H = 100
+    H = 84
     fig, axes = plt.subplots(1, 2, figsize=(S.DOUBLE, H * S.MM))
-    fig.subplots_adjust(left=0.13, right=0.97, top=0.80, bottom=0.11, wspace=0.18)
-    fig.text(0.012, 0.97, "Error that 95% of cases stay below over the gap and the following week, as % of annual heating "
-             "(heating rows) or annual cooling (cooling rows).", fontsize=FS, color=MUTED)
-    fig.text(0.012, 0.94, "Ringed dots: gap centred on a cold spell (heating) or a heatwave (cooling). "
-             "Summer heating is below 0.1% and not shown.", fontsize=FS, color=MUTED)
+    fig.subplots_adjust(left=0.13, right=0.97, top=0.89, bottom=0.13, wspace=0.18)
     titles = {"meteorology": "General weather: winter drives heating, summer cooling",
               "solar": "Solar: a hidden heatwave week dominates"}
     global VMAX_POS
@@ -314,7 +313,7 @@ def fig_position():
         for side in ("left", "bottom"):
             ax.spines[side].set_visible(False)
         ax.set_xlim(-0.5, len(GAPS) - 0.1)
-        ax.set_ylim(len(ROWS8) - 0.4, -0.6)
+        ax.set_ylim(len(ROWS8) - 0.4, -0.45)
         ax.set_xlabel("length of each gap")
         title(ax, letter, titles[scope], y=1.06)
         if letter == "a":
@@ -329,7 +328,7 @@ def fig_position():
 ORDER = ["linear_only", "diyepw_style", "era5", "automatic_legacy", "donor_assessed",
          "automatic", STEP]
 ROWS3 = (("full", "meteorology", "General weather hidden: all gaps"),
-         ("subset", "meteorology", "General weather hidden: only gaps where a nearby station passed the test (about 40 %)"),
+         ("subset", "meteorology", "General weather hidden: only gaps where a nearby station passed its checks (about 40%)"),
          ("full", "solar", "Solar radiation hidden: all gaps (no nearby-station step)"))
 
 

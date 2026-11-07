@@ -21,10 +21,10 @@ XMIN, XMAX = 1, 24 * 14
 TICKS = [(1, "1 hour"), (3, "3 hours"), (12, "12 hours"), (24, "1 day"), (48, "2 days"),
          (168, "1 week"), (336, "2 weeks")]
 
-H = 110
+H = 104
 fig, (a1, a2) = plt.subplots(2, 1, figsize=(S.DOUBLE, H * S.MM),
                              gridspec_kw=dict(height_ratios=[4, 3]))
-fig.subplots_adjust(left=0.27, right=0.86, top=0.83, bottom=0.09, hspace=0.95)
+fig.subplots_adjust(left=0.305, right=0.86, top=0.87, bottom=0.09, hspace=0.95)
 
 
 def bar(ax, row, x0, x1, *, used=True, light=False, label=None):
@@ -72,7 +72,7 @@ def switch(ax, h, text, used, ha="center"):
 
 # ------------------------------------------------------------- a general weather
 rows_a = [("Linear interpolation", "between the values either side"),
-          ("Nearby station", "up to 3 within 75 km, if one passes a test"),
+          ("Nearby station", "up to 3 within 75 km, if one passes checks"),
           ("Daily pattern", "typical day from the week either side"),
           ("ERA5", "reanalysis for the same hours")]
 frame(a1, rows_a, "a", "General weather: local sources up to two days, then ERA5")
@@ -102,7 +102,4 @@ switch(a2, 3, "switch at 3 hours\n(used)", True)
 switch(a2, 12, "12 h\n(tested)", False)
 switch(a2, 48, "48 h\n(tested)", False)
 
-fig.text(0.012, 0.965, "Sources are tried from the top; an hour one source cannot fill falls to "
-         "the next.  Purple: Stepwise.  Grey dashed: only without the switch to ERA5.",
-         fontsize=FS, color=MUTED)
 S.save(fig, "fig_a_recovery_ladder")
