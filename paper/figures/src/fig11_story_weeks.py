@@ -23,7 +23,7 @@ def minus(s):
 
 
 def panel_title(ax, letter, title, finding):
-    ax.text(0, 1.12 + 0.075 * finding.count("\n"), f"{letter}  {title}", transform=ax.transAxes, fontsize=8,
+    ax.text(0, 1.12 + 0.075 * finding.count("\n"), f"{letter}  {title}", transform=ax.transAxes, fontsize=8, weight="bold",
             va="bottom")
     ax.text(0, 1.03, finding, transform=ax.transAxes, fontsize=FS, va="bottom")
 
