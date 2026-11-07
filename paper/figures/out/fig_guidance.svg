@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="493.228346pt" height="283.464567pt" viewBox="0 0 493.228346 283.464567" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-07T21:15:17.630634</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 283.464567 
+L 493.228346 283.464567 
+L 493.228346 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 14.740157 56.692913 
+L 155.338583 56.692913 
+Q 158.740157 56.692913 158.740157 53.291339 
+L 158.740157 17.574803 
+Q 158.740157 14.173228 155.338583 14.173228 
+L 14.740157 14.173228 
+Q 11.338583 14.173228 11.338583 17.574803 
+L 11.338583 53.291339 
+Q 11.338583 56.692913 14.740157 56.692913 
+z
+" clip-path="url(#pd073acbaad)" style="fill: #ffffff; stroke: #8e8e93; stroke-width: 0.7; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 14.740157 121.889764 
+L 155.338583 121.889764 
+Q 158.740157 121.889764 158.740157 118.488189 
+L 158.740157 79.937008 
+Q 158.740157 76.535433 155.338583 76.535433 
+L 14.740157 76.535433 
+Q 11.338583 76.535433 11.338583 79.937008 
+L 11.338583 118.488189 
+Q 11.338583 121.889764 14.740157 121.889764 
+z
+" clip-path="url(#pd073acbaad)" style="fill: #ffffff; stroke: #8e8e93; stroke-width: 0.7; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 14.740157 187.086614 
+L 155.338583 187.086614 
+Q 158.740157 187.086614 158.740157 183.685039 
+L 158.740157 145.133858 
+Q 158.740157 141.732283 155.338583 141.732283 
+L 14.740157 141.732283 
+Q 11.338583 141.732283 11.338583 145.133858 
+L 11.338583 183.685039 
+Q 11.338583 187.086614 14.740157 187.086614 
+z
+" clip-path="url(#pd073acbaad)" style="fill: #ffffff; stroke: #8e8e93; stroke-width: 0.7; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 14.740157 249.448819 
+L 155.338583 249.448819 
+Q 158.740157 249.448819 158.740157 246.047244 
+L 158.740157 210.330709 
+Q 158.740157 206.929134 155.338583 206.929134 
+L 14.740157 206.929134 
+Q 11.338583 206.929134 11.338583 210.330709 
+L 11.338583 246.047244 
+Q 11.338583 249.448819 14.740157 249.448819 
+z
+" clip-path="url(#pd073acbaad)" style="fill: #ffffff; stroke: #8e8e93; stroke-width: 0.7; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 196.15748 127.559055 
+L 331.086614 127.559055 
+Q 334.488189 127.559055 334.488189 124.15748 
+L 334.488189 17.574803 
+Q 334.488189 14.173228 331.086614 14.173228 
+L 196.15748 14.173228 
+Q 192.755906 14.173228 192.755906 17.574803 
+L 192.755906 124.15748 
+Q 192.755906 127.559055 196.15748 127.559055 
+z
+" clip-path="url(#pd073acbaad)" style="fill: #ffffff; stroke: #8e8e93; stroke-width: 0.7; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 196.15748 198.425197 
+L 331.086614 198.425197 
+Q 334.488189 198.425197 334.488189 195.023622 
+L 334.488189 147.968504 
+Q 334.488189 144.566929 331.086614 144.566929 
+L 196.15748 144.566929 
+Q 192.755906 144.566929 192.755906 147.968504 
+L 192.755906 195.023622 
+Q 192.755906 198.425197 196.15748 198.425197 
+z
+" clip-path="url(#pd073acbaad)" style="fill: #ffffff; stroke: #8e8e93; stroke-width: 0.7; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 196.15748 269.291339 
+L 331.086614 269.291339 
+Q 334.488189 269.291339 334.488189 265.889764 
+L 334.488189 218.834646 
+Q 334.488189 215.433071 331.086614 215.433071 
+L 196.15748 215.433071 
+Q 192.755906 215.433071 192.755906 218.834646 
+L 192.755906 265.889764 
+Q 192.755906 269.291339 196.15748 269.291339 
+z
+" clip-path="url(#pd073acbaad)" style="fill: #ffffff; stroke: #8e8e93; stroke-width: 0.7; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 371.905512 85.03937 
+L 478.488189 85.03937 
+Q 481.889764 85.03937 481.889764 81.637795 
+L 481.889764 17.574803 
+Q 481.889764 14.173228 478.488189 14.173228 
+L 371.905512 14.173228 
+Q 368.503937 14.173228 368.503937 17.574803 
+L 368.503937 81.637795 
+Q 368.503937 85.03937 371.905512 85.03937 
+z
+" clip-path="url(#pd073acbaad)" style="fill: #ffffff; stroke: #5b2a86; stroke-width: 1.2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 371.905512 147.401575 
+L 478.488189 147.401575 
+Q 481.889764 147.401575 481.889764 144 
+L 481.889764 113.952756 
+Q 481.889764 110.551181 478.488189 110.551181 
+L 371.905512 110.551181 
+Q 368.503937 110.551181 368.503937 113.952756 
+L 368.503937 144 
+Q 368.503937 147.401575 371.905512 147.401575 
+z
+" clip-path="url(#pd073acbaad)" style="fill: #ffffff; stroke: #8e8e93; stroke-width: 0.7; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_1">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(37.567339 32.973159)">1  Did the year and place have</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(44.96437 41.513295)">heatwaves or cold spells?</text>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(52.160698 92.482618)">2  List the filled gaps:</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(35.040229 101.022755)">length, general weather or solar,</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(50.605933 109.562891)">share of the year filled</text>
+   </g>
+   <g id="text_3">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(35.424683 157.679468)">3  Note the season of each gap:</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(26.686167 166.219605)">winter → heating, summer → cooling,</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(44.18562 174.759742)">spring solar → heating too</text>
+   </g>
+   <g id="text_4">
+    <text style="font-weight: 700; font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(51.399448 225.713752)">4  Match the gaps to</text>
+    <text style="font-weight: 700; font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(52.952573 234.269201)">the result you need</text>
+   </g>
+   <g id="patch_11">
+    <path d="M 85.03937 56.692913 
+Q 85.03937 66.614173 85.03937 75.752809 
+" style="fill: none; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 86.43937 72.952809 
+L 85.03937 75.752809 
+L 83.63937 72.952809 
+z
+" style="fill: #1d1d1f; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 85.03937 121.889764 
+Q 85.03937 131.811024 85.03937 140.94966 
+" style="fill: none; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 86.43937 138.14966 
+L 85.03937 140.94966 
+L 83.63937 138.14966 
+z
+" style="fill: #1d1d1f; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="patch_13">
+    <path d="M 85.03937 187.086614 
+Q 85.03937 197.007874 85.03937 206.14651 
+" style="fill: none; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 86.43937 203.34651 
+L 85.03937 206.14651 
+L 83.63937 203.34651 
+z
+" style="fill: #1d1d1f; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(233.080719 42.785819)">Peaks, peak timing,</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(236.579078 52.017753)">heatwave studies</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(263.622047 58.055937)"/>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(220.813766 68.40623)">Could a gap hide the peak?</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(214.918453 76.946366)">Yes if it falls in the peak season</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(219.654938 86.1783)">next to the coldest or hottest</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(220.82361 94.02664)">days, or the simulated peak</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(221.601266 103.258573)">lands in or near filled hours</text>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(240.6615 156.225946)">Annual cooling</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(263.622047 162.955926)"/>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(210.715172 173.306219)">Check summer gaps: a week over</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(219.850719 182.124715)">a heatwave can move it 6%,</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(229.18861 190.386493)">or 20% for a solar gap</text>
+   </g>
+   <g id="text_7">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(240.270485 227.092088)">Annual heating</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(263.622047 233.822068)"/>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(215.176032 244.172361)">Safe for gaps up to a week and</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(213.426032 252.712498)">up to about 8% of the year filled;</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(213.306266 261.252634)">likely error in Table 8 (under 2%)</text>
+   </g>
+   <g id="patch_14">
+    <path d="M 158.740157 35.433071 
+Q 175.748031 35.433071 191.973282 35.433071 
+" style="fill: none; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 189.173282 34.033071 
+L 191.973282 35.433071 
+L 189.173282 36.833071 
+z
+" style="fill: #1d1d1f; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="text_8">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #6e6e73" x="175.748031" y="30.441445" transform="rotate(-0 175.748031 30.441445)">yes</text>
+   </g>
+   <g id="patch_15">
+    <path d="M 158.740157 228.188976 
+Q 175.748031 167.952756 192.543244 108.469712 
+" style="fill: none; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 190.435079 110.783938 
+L 192.543244 108.469712 
+L 193.129726 111.544779 
+z
+" style="fill: #1d1d1f; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="patch_16">
+    <path d="M 158.740157 228.188976 
+Q 175.748031 199.84252 192.353249 172.167157 
+" style="fill: none; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 189.712171 173.847843 
+L 192.353249 172.167157 
+L 192.113151 175.288432 
+z
+" style="fill: #1d1d1f; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="patch_17">
+    <path d="M 158.740157 228.188976 
+Q 175.748031 235.275591 192.033484 242.061196 
+" style="fill: none; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 189.98733 239.691965 
+L 192.033484 242.061196 
+L 188.910407 242.27658 
+z
+" style="fill: #1d1d1f; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(391.730835 34.207666)">5  Yes: report a range</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(425.19685 41.066162)"/>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(382.809663 51.416455)">peak ±15% for a week-long</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(393.87896 59.956592)">gap, or re-run with a</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(392.318179 68.496729)">second filling method</text>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(396.796538 127.208263)">No: the filled file is</text>
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; fill: #1d1d1f" transform="translate(397.576382 135.748399)">safe for this result</text>
+   </g>
+   <g id="patch_18">
+    <path d="M 334.488189 56.692913 
+Q 351.496063 53.149606 367.737764 49.765919 
+" style="fill: none; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 364.711083 48.966418 
+L 367.737764 49.765919 
+L 365.282154 51.707563 
+z
+" style="fill: #1d1d1f; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #6e6e73" x="351.496063" y="48.15798" transform="rotate(-0 351.496063 48.15798)">yes</text>
+   </g>
+   <g id="patch_19">
+    <path d="M 334.488189 107.716535 
+Q 351.496063 118.346457 367.840273 128.561588 
+" style="fill: none; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+    <path d="M 366.207877 125.890394 
+L 367.840273 128.561588 
+L 364.72388 128.264789 
+z
+" style="fill: #1d1d1f; stroke: #1d1d1f; stroke-width: 0.7; stroke-linecap: round"/>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 7px; font-family: 'Arial', 'Helvetica', 'Liberation Sans', 'DejaVu Sans', sans-serif; text-anchor: middle; fill: #6e6e73" x="351.496063" y="126.96113" transform="rotate(-0 351.496063 126.96113)">no</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pd073acbaad">
+   <rect x="0" y="0" width="493.228346" height="283.464567"/>
+  </clipPath>
+ </defs>
+</svg>

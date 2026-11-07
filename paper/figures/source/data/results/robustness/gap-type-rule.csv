@@ -1,0 +1,17 @@
+scope,sampling,gap_hours,source_method,heating_abs_p95_pct,cooling_abs_p95_pct,heating_abs_p95_kwh_m2,cooling_abs_p95_kwh_m2,heating_months_within_5pct,cooling_months_within_5pct,heating_month_abs_pct_p95,cooling_month_abs_pct_p95,heatwave_3day_kept_exact,heatwave_3day_changed_bounds,heatwave_3day_lost,cold_spell_3day_kept_exact,cold_spell_3day_changed_bounds,cold_spell_3day_lost,heatwave_smhi5d_identical_share
+meteorology,random_seasonal,3,automatic,0.0128367,0.144724,0.00822383,0.00675344,1.0,1.0,0.0645797,0.351941,,,,,,,
+meteorology,weather_extremes,3,automatic,0.0122464,0.216697,0.00759377,0.00735606,0.958333,0.930108,0.137967,0.771787,1.0,0.0,0.0,1.0,0.0,0.0,1.0
+meteorology,random_seasonal,12,automatic,0.112491,1.11404,0.0876764,0.037843,1.0,0.97043,0.601977,3.06063,,,,,,,
+meteorology,weather_extremes,12,automatic,0.121291,0.572517,0.103511,0.0273799,0.958333,0.924731,0.685812,1.40938,1.0,0.0,0.0,1.0,0.0,0.0,1.0
+meteorology,random_seasonal,48,automatic,0.399888,1.30534,0.261441,0.0671361,0.994012,0.833333,1.91965,5.67333,,,,,,,
+meteorology,weather_extremes,48,automatic,0.563808,1.97946,0.463508,0.0770154,0.961538,0.895833,3.19107,4.91505,0.692308,0.230769,0.0769231,0.923077,0.0769231,0.0,0.857143
+meteorology,random_seasonal,168,era5,1.68952,4.98283,1.34761,0.241933,0.928398,0.804054,5.81404,14.2628,,,,,,,
+meteorology,weather_extremes,168,era5,1.08649,5.31242,0.840429,0.196225,0.837736,0.77451,5.81594,9.93311,0.6,0.2,0.2,0.8,0.133333,0.0666667,0.571429
+solar,random_seasonal,3,automatic,0.07618,0.275607,0.0304474,0.0138739,0.99872,0.997449,0.500476,0.840443,,,,,,,
+solar,weather_extremes,3,automatic,0.00789589,0.433313,0.00291814,0.0169473,1.0,0.9375,0.0579243,0.898911,,,,,,,
+solar,random_seasonal,12,era5,0.200927,0.564229,0.0793355,0.0521935,0.996319,0.942466,1.20111,5.34611,,,,,,,
+solar,weather_extremes,12,era5,0.0486748,1.39162,0.0232641,0.0585248,1.0,0.927083,0.428176,3.50745,,,,,,,
+solar,random_seasonal,48,era5,0.578244,1.58821,0.187722,0.142882,0.978313,0.908136,3.27015,7.65924,,,,,,,
+solar,weather_extremes,48,era5,0.259198,3.72404,0.0843471,0.119005,0.991453,0.833333,1.86528,13.6516,,,,,,,
+solar,random_seasonal,168,era5,1.03001,4.88469,0.433141,0.29702,0.92719,0.76298,5.99934,17.3323,,,,,,,
+solar,weather_extremes,168,era5,0.413124,11.3716,0.189997,0.418789,0.977358,0.719048,3.84342,33.3128,,,,,,,

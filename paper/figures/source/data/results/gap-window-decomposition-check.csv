@@ -1,0 +1,3 @@
+mode,files,median_abs_annual,median_abs_residual_outside_windows,p95_abs_residual_outside_windows
+heating,34134,0.00778906,2.09856e-05,0.00221294
+cooling,34134,0.00318165,1.74577e-05,0.00271327
