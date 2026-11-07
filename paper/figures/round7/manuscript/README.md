@@ -22,5 +22,6 @@ Numbered as in the manuscript (Claude Doc revision 456). 600 dpi PNG and vector 
 | figA1_fill_steps | Figure A1 | src/fig_steps_share.py |
 | figC1_solar_error | Figure C1 | src/fig_round5.py |
 | figC2_monthly_subsets | Figure C2 | src/fig_round5.py |
+| graphical_abstract | Graphical abstract (240 x 96 mm, 5669 x 2267 px) | src/fig_graphical_abstract.py |
 
 Tables: 1–8 in the main text, Table C1 in Appendix C. Old Table 4 (gap census) is now Figure 2; old Table A1 is now Figure A1; old Table 9 is now Table C1.
