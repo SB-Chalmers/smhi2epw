@@ -33,14 +33,14 @@ for (ye, b, k), yl in zip(ends, lab):
 ax.axhline(0, color=S.RULE, lw=0.6, zorder=1); ax.axvline(0, color=S.RULE, lw=0.6, zorder=1)
 ax.axvline(7, color=S.MUTED, lw=0.7, ls="--", zorder=1)
 ax.text(7.6, 1.88, "one week filled\n1 °C too cold", fontsize=FS, color=S.MUTED, va="top")
-ax.text(X + 2.5, ends[0][0] + 0.38, "Extra heating for one week\nfilled 1 °C too cold", fontsize=FS, color=S.MUTED,
+ax.text(X + 2.5, ends[0][0] + 0.38, "Heating cost of one week\nfilled 1 °C too cold", fontsize=FS, color=S.MUTED,
         weight="bold", va="bottom", annotation_clip=False) if False else None
-fig.text(0.71, 0.865, "Extra heating for one week\nfilled 1 °C too cold", fontsize=FS, color=S.INK, weight="bold", va="bottom")
+fig.text(0.71, 0.865, "Heating cost of one week\nfilled 1 °C too cold", fontsize=FS, color=S.INK, weight="bold", va="bottom")
 ax.set_xlabel("How much too cold the filled weather was, °C × days\n(for example, 7 = one week 1 °C too cold; negative = too warm)", fontsize=FS)
 ax.set_ylabel("Extra heating over the gap\nand the week after, kWh/m²", fontsize=FS)
 ax.tick_params(labelsize=FS)
 for s in ("top", "right"): ax.spines[s].set_visible(False)
-fig.text(0.012, 0.955, "Filled weather that is too cold adds heating in direct proportion, most in buildings that lose the most heat",
+fig.text(0.012, 0.955, "The heating cost of filling a gap 1 °C too cold: up to 0.29 kWh/m² per week, most in buildings that lose the most heat",
          fontsize=8, weight="bold", color=S.INK)
 fig.text(0.012, 0.915, "Each dot is one hidden gap of two days or one week that starts in October to April; each line is one building.",
          fontsize=FS, color=S.MUTED)
