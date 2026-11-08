@@ -19,7 +19,7 @@ We test gaps of 3 hours to one week, which cover 99\% of the gaps and about two 
 
 \section{Background}\label{sec:2}
 
-Hourly station records lose data for many reasons, from a failed sensor to a station being moved, and how a gap is filled depends mostly on its length. Four kinds of method are in common use (Table~\ref{tab:1}): simple methods work well for short gaps, while long gaps need another source of data.
+How a gap is filled depends mostly on its length. Four kinds of method are in common use (Table~\ref{tab:1}): simple methods work well for short gaps, while long gaps need another source of data.
 
 \begin{table*}[tbp]
 \centering
@@ -228,7 +228,7 @@ We did not test gaps in relative humidity alone, although humidity has the most 
 
 \subsection{Methods compared}\label{sec:4.4}
 
-The eight methods run from linear interpolation, which needs nothing but the hours either side of the gap, to ERA5 only, which ignores the station altogether; nearby stations, daily patterns and the stepwise order lie in between (Table~\ref{tab:5}).
+Table~\ref{tab:5} lists the eight methods, and Figure~\ref{fig:6} shows how each fills a gap.
 
 \begin{table*}[tbp]
 \centering
@@ -251,7 +251,7 @@ Linear interpolation only & ● & ● & Interpolated between the values either s
 \end{tabular}
 \end{table*}
 
-Table~\ref{tab:5} lists the eight methods, and Figure~\ref{fig:6} shows how each fills a gap. The nearby station and the stepwise method with patterns first apply only to general weather gaps, as solar radiation is never copied from nearby stations. The two stepwise orders with no switch use the same stations, data and checks, so comparing them shows the effect of the order alone. The four-week average follows diyepw version 1.3.1 (Section~\ref{sec:2.1}), except that it fills relative humidity rather than dew point, is also applied to solar radiation, and fills gaps longer than 48 hours from ERA5 instead of rejecting them. Each file holds one type and length of gap, so the results for each switch-over length are taken from the runs of the stepwise method with no switch and of ERA5 only; on one region-year, code with the switch gave identical files. Each switch-over length is judged by its worst case and its 95th-percentile regret, and checked on held-out years (Section~\ref{sec:5.6}). Unless stated otherwise, Section~\ref{sec:5} reports a two-day switch for general weather and a three-hour switch for solar gaps.
+The nearby station and the stepwise method with patterns first apply only to general weather gaps, as solar radiation is never copied from nearby stations. The two stepwise orders with no switch use the same stations, data and checks, so comparing them shows the effect of the order alone. The four-week average follows diyepw version 1.3.1 (Section~\ref{sec:2.1}), except that it fills relative humidity rather than dew point, is also applied to solar radiation, and fills gaps longer than 48 hours from ERA5 instead of rejecting them. Each file holds one type and length of gap, so the results for each switch-over length are taken from the runs of the stepwise method with no switch and of ERA5 only; on one region-year, code with the switch gave identical files. Each switch-over length is judged by its worst case and its 95th-percentile regret, and checked on held-out years (Section~\ref{sec:5.6}). Unless stated otherwise, Section~\ref{sec:5} reports a two-day switch for general weather and a three-hour switch for solar gaps.
 
 \begin{figure*}[tbp]
 \centering
@@ -281,7 +281,7 @@ For each building and gap we compare the filled case with its reference. Peak re
 
 \subsection{Size of the experiment and checks}\label{sec:4.6}
 
-The experiment is large enough to show worst cases as well as typical ones: 34,236 building results from 15,390 separate simulations, as identical weather files share one simulation.
+The experiment gave 34,236 building results from 15,390 separate simulations, as identical weather files share one simulation.
 
 The percentiles in Section~\ref{sec:5} describe the cases we tested. They are not confidence intervals, because the six buildings share each weather gap and so are not independent samples. Each 95th percentile for random seasonal gaps rests on 306 building results from 51 filled files. To show how much the results depend on the region-years chosen, we resampled the 17 region-years 1,000 times and report the 95\% range of the resampled 95th percentiles. For four week-long general weather gaps filled by the stepwise method, the heating error was 1.7\%, with a range of 0.8--2.4\%.
 
