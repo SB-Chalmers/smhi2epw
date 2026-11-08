@@ -34,6 +34,9 @@ def proj(lon, lat):
     return np.asarray(x) / 1000, np.asarray(y) / 1000  # km
 
 
+S_NEARBY = "#D55E00"  # nearby station: same colour as the nearby-station method
+S_SOLAR = "#F0E442"   # solar radiation station (Okabe-Ito yellow, black edge)
+S_SOLAR_LINE = "#8a7d00"
 LAND = "#f2f1ee"
 LAND_SE = "#e6e4df"
 WATER = "#ffffff"
@@ -96,7 +99,7 @@ draw_base(main, lw=0.3)
 x, y = proj(temp_st["longitude"], temp_st["latitude"])
 main.scatter(x, y, s=1.6, c=MUTED, lw=0, zorder=3, alpha=0.8)
 x, y = proj(rad_st["longitude"], rad_st["latitude"])
-main.scatter(x, y, s=9, marker="^", c=RUNG["solar"], ec=INK, lw=0.3, zorder=4)
+main.scatter(x, y, s=9, marker="^", c=S_SOLAR, ec=INK, lw=0.3, zorder=4)
 
 HALF = 105  # km; half-width of each inset
 insets = {}
@@ -138,7 +141,7 @@ main.legend(handles=[
     Line2D([], [], ls="", marker="*", ms=6.5, mfc=INK, mec="white", label="study region (city)"),
     Line2D([], [], ls="", marker="o", ms=2, mfc=MUTED, mec="none",
            label="SMHI air-temperature station"),
-    Line2D([], [], ls="", marker="^", ms=4, mfc=RUNG["solar"], mec=INK, mew=0.3,
+    Line2D([], [], ls="", marker="^", ms=4, mfc=S_SOLAR, mec=INK, mew=0.3,
            label="SMHI radiation station"),
 ], loc="upper left", bbox_to_anchor=(0.0, 0.955), frameon=True, fontsize=6.5,
     facecolor="white", edgecolor="none", framealpha=0.85,
@@ -179,28 +182,28 @@ for i, s in enumerate(STRATA):
         p = st.loc[pid]
         px, py = proj(p.longitude, p.latitude)
         supported = any(bool(rr.supported) for rr in rs)
-        ax.add_patch(Circle((px, py), 75, fc="none", ec=RUNG["donor"], lw=0.4,
+        ax.add_patch(Circle((px, py), 75, fc="none", ec=S_NEARBY, lw=0.4,
                             ls=(0, (2.5, 2)), alpha=0.45, zorder=2))
         for rr in rs:
             d = st.loc[int(rr.donor_id)]
             dx, dy = proj(d.longitude, d.latitude)
-            ax.plot([px, dx], [py, dy], color=RUNG["donor"], lw=0.7,
+            ax.plot([px, dx], [py, dy], color=S_NEARBY, lw=0.7,
                     ls="-" if rr.supported else ":", zorder=3)
             if s == "Malmö":
                 ox, oy = {2018: (-11, 10), 2021: (9, 9), 2023: (14, -8)}.get(int(rr.year), (0, 0))
                 ax.text(px + 0.5 * (dx - px) + ox, py + 0.5 * (dy - py) + oy, str(rr.year), fontsize=6.5,
-                        color=RUNG["donor"], ha="center", va="center", zorder=7,
+                        color=S_NEARBY, ha="center", va="center", zorder=7,
                         bbox=dict(fc="white", ec="none", alpha=0.85, pad=0.3))
             if pd.notna(rr.ghi_id):
                 g = st.loc[int(rr.ghi_id)]
                 gx_, gy_ = proj(g.longitude, g.latitude)
-                ax.plot([px, gx_], [py, gy_], color=RUNG["solar"], lw=0.7,
+                ax.plot([px, gx_], [py, gy_], color=S_SOLAR_LINE, lw=0.7,
                         ls="-" if rr.supported else ":", zorder=3)
     # markers after links
     drawn = set()
     for _, rr in rows.iterrows():
-        for col, mk, fc, size in (("donor_id", "D", RUNG["donor"], 3.4),
-                                  ("ghi_id", "^", RUNG["solar"], 4.2)):
+        for col, mk, fc, size in (("donor_id", "D", S_NEARBY, 3.4),
+                                  ("ghi_id", "^", S_SOLAR, 4.2)):
             if pd.isna(rr[col]) or (col, int(rr[col])) in drawn:
                 continue
             drawn.add((col, int(rr[col])))
@@ -241,11 +244,11 @@ for i, s in enumerate(STRATA):
 handles = [
     Line2D([], [], ls="", marker="o", ms=5, mfc=RUNG["primary"], mec=INK, mew=0.6,
            label="main station (years used)"),
-    Line2D([], [], color=RUNG["donor"], marker="D", ms=3.4, mfc=RUNG["donor"], mec=INK,
+    Line2D([], [], color=S_NEARBY, marker="D", ms=3.4, mfc=S_NEARBY, mec=INK,
            mew=0.35, lw=0.7, label="nearby station"),
-    Line2D([], [], color=RUNG["solar"], marker="^", ms=4.2, mfc=RUNG["solar"], mec=INK,
+    Line2D([], [], color=S_SOLAR_LINE, marker="^", ms=4.2, mfc=S_SOLAR, mec=INK,
            mew=0.35, lw=0.7, label="solar radiation station (≤ 50 km)"),
-    Line2D([], [], color=RUNG["donor"], lw=0.5, ls=(0, (2.5, 2)),
+    Line2D([], [], color=S_NEARBY, lw=0.5, ls=(0, (2.5, 2)),
            label="75 km nearby-station search radius"),
     Line2D([], [], ls="", marker="o", ms=5, mfc="white", mec=INK, mew=0.6,
            label="† Kiruna 2018: no station met the data requirements"),

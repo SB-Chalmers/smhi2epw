@@ -13,8 +13,8 @@ ROWS = [  # label, shares in %
     ("share of missing hours,\nusable files", [19.1, 14.9, 13.3, 15.3, 24.7, 12.7]),
     ("share of missing hours,\nall station-years", [6.4, 5.2, 5.0, 5.6, 14.2, 63.5]),
 ]
-# light greys: lengths tested in this study; dark greys: longer
-COL = ["#ececef", "#dcdce0", "#c9c9ce", "#b4b4ba", "#6e6e73", "#3a3a3c"]
+# one blue scale from short (light) to long (dark) gaps
+COL = ["#e3edf7", "#c2d9ee", "#9cc3e4", "#6fa6d4", "#2f74b5", "#163f6b"]
 TXT = [S.INK, S.INK, S.INK, S.INK, "white", "white"]
 
 fig, ax = plt.subplots(figsize=(S.DOUBLE, 62 * S.MM))
@@ -34,7 +34,7 @@ for i, (lab, v) in enumerate(ROWS):
 # legend: one swatch per gap length
 x = 0
 for k, c in enumerate(CLASSES):
-    ax.add_patch(plt.Rectangle((x, 0.62), 2.6, 0.2, color=COL[k], ec=S.GREY["mid"] if k < 4 else COL[k], lw=0.3, clip_on=False))
+    ax.add_patch(plt.Rectangle((x, 0.62), 2.6, 0.2, color=COL[k], ec=COL[k], lw=0.3, clip_on=False))
     ax.text(x + 3.4, 0.72, c, ha="left", va="center", fontsize=FS, color=S.INK)
     x += 3.4 + len(c) * 1.25 + 3.5
 ax.text(101.5, 0.72, "gaps up to 1 week\n(the lengths tested)", ha="left", va="center", fontsize=FS, color=S.MUTED)

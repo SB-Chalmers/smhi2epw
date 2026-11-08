@@ -29,10 +29,10 @@ PAPER = "#ffffff"
 RUNG = {
     "primary": "#4d4d4d",  # accepted SMHI observations
     "interp": "#0072B2",  # <= 3 h interpolation
-    "donor": "#5B2A86",  # assessed donor stations
+    "donor": "#D55E00",  # assessed donor stations (nearby-station colour)
     "profile": "#009E73",  # <= 48 h daily profiles
     "era5": "#CC79A7",  # ERA5 via Open-Meteo
-    "solar": "#a882c8",  # solar branch accent
+    "solar": "#F0E442",  # solar radiation stations
 }
 TINT = {
     "primary": "#ececec",
