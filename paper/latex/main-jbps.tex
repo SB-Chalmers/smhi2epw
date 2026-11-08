@@ -5,7 +5,8 @@
 \documentclass{interact}
 
 \input{preamble}
-\usepackage[natbibapa]{apacite}  % author-date citations, as JBPS asks
+\usepackage[natbibapa,doi]{apacite}  % author-date (APA) citations, as JBPS asks
+\renewcommand{\doiprefix}{https://doi.org/\ignorespaces}
 \bibliographystyle{apacite}
 
 \begin{document}
@@ -36,6 +37,8 @@ Chalmers University of Technology, Gothenburg, Sweden}
 
 \input{sections/backmatter}
 
+% interact.cls uses \doi for the article DOI; in the reference list it is a link.
+\renewcommand{\doi}{\begingroup\urlstyle{rm}\Url}
 \bibliography{refs}
 
 \appendix
