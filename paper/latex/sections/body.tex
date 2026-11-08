@@ -15,7 +15,7 @@ This paper measures how filling gaps in weather data changes building simulation
   Which filling sources work best, and up to what gap length?
 \end{enumerate}
 
-We test gaps of 3 hours to one week, which cover 99\% of the gaps and about two thirds of the missing hours in Swedish records complete enough to make an AMY. We carry the hide-and-refill test, common in studies of gap filling, through to building simulation results: we measure how the length, type and position of a gap, and the filling method, change these results in 17 Swedish weather-years and six typical buildings, and we compare the methods by their worst case as well as their typical error. A heatwave year shifted to a future climate serves as a stress test.
+We test gaps of 3 hours to one week, which cover 99\% of the gaps and about two thirds of the missing hours in Swedish records complete enough to make an AMY. We carry the hide-and-refill test, common in studies of gap filling, through to building simulation results: we measure how the length, type and position of a gap, and the filling method, change these results in 17 Swedish weather-years and six typical buildings, and we compare the methods by their worst case as well as their typical error. As a stress test, we also shift the 2018 heatwave year to a 2050 climate.
 
 \section{Background}\label{sec:2}
 
@@ -384,7 +384,7 @@ Where a gap falls matters: among random week-long gaps, a winter gap changed ann
 
 Gaps on extreme events did more harm than random gaps in the same season (Figure~\ref{fig:10}). At 48 hours, a gap centred on a cold spell gave 2.9 times the heating error of a random winter gap, and one centred on a heatwave 1.75 times the cooling error of a random summer gap. For week-long gaps the ratios fell to 1.35 and 1.4, as a random winter or summer week often holds similar weather. The filled weather was also less accurate at extremes: for 48-hour gaps the median temperature error was 3.3~°C at cold spells and 1.2--1.4~°C at heatwaves, against 0.8--1.1~°C for random gaps.
 
-Among random gaps, winter gaps changed heating most and summer gaps cooling (Figure~\ref{fig:10}): for week-long gaps the 95th percentile of the heating error was 1.06\% in winter against 0.06\% in summer. This follows where each load occurs: winter holds 53--75\% of each building's annual heating, and summer 81--98\% of its cooling. Solar gaps also changed heating most in winter, but in spring they mattered more than weather gaps, because heating demand remains while the sun is already strong. Summer solar gaps drove the cooling error, most of all over a heatwave (20\% against 4.7\% for a random summer week).
+Among random gaps, winter gaps changed heating most and summer gaps cooling (Figure~\ref{fig:10}): for week-long gaps the 95th percentile of the heating error was 1.06\% in winter against 0.06\% in summer. This follows where each load occurs: winter holds 53--75\% of each building's annual heating, and summer 81--98\% of its cooling. Solar gaps also changed heating most in winter, but in spring they mattered more than weather gaps, because heating demand remains while the sun is already strong. Summer solar gaps drove the cooling error, most of all over a heatwave (20\% against 4.6\% for a random summer week).
 
 \begin{figure*}[tbp]
 \centering
@@ -395,9 +395,7 @@ Among random gaps, winter gaps changed heating most and summer gaps cooling (Fig
 
 \subsection{What each step and method adds}\label{sec:5.6}
 
-A checked nearby station gave the smallest typical heating errors for general weather gaps of up to 12 hours and was close to ERA5 at 48 hours, but the two largest single errors in the study came from nearby stations used through a week-long extreme.
-
-For 48-hour gaps, starting with a checked nearby station gave the smallest heating error, and linear interpolation or the four-week average the largest (Figure~\ref{fig:7}a). The local steps help most for gaps of 12 to 48 hours. For week-long gaps, the stepwise method with no switch, which still tried a nearby station first, and ERA5 only gave about the same heating error (1.8\% against 1.7\%).
+Starting with a checked nearby station gave the smallest typical heating errors for general weather gaps of up to 48 hours, and linear interpolation or the four-week average the largest (Figure~\ref{fig:7}a); the local steps help most for gaps of 12 to 48 hours. For week-long gaps, the stepwise method with no switch, which still tried a nearby station first, and ERA5 only gave about the same heating error (1.8\% against 1.7\%), but the two largest single errors in the study came from nearby stations used through a week-long extreme.
 
 In typical cases the two methods were equally good: the stepwise method with no switch gave the smaller heating error in 64\% of paired week-long cases, but the difference in the 95th percentile lay within the resampled range (−0.7 to +0.3 percentage points). For cooling the switch has a cost: for week-long gaps the 95th percentile rose from 4.1\% to 5.0\%, and from 2.2\% to 4.0\% where a nearby station passed its checks, as a good nearby station follows local summer weather better than ERA5. In return the worst case is much smaller (Figure~\ref{fig:11}).
 
