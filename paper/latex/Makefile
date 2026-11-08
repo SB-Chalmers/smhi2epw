@@ -19,3 +19,6 @@ enb11:
 enb5p:
 	latexmk -g -pdf -interaction=nonstopmode main-enb-5p.tex
 .PHONY: enb5p
+compact:
+	latexmk -g -pdf -interaction=nonstopmode main-enb-compact.tex
+.PHONY: compact

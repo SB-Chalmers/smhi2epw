@@ -1,0 +1,22 @@
+% Compact two-column version: Times, 10 pt, two columns, narrow margins,
+% small captions and a tight reference list. Meant for reading and page
+% counts, not for submission. Same text as main-enb.tex.
+\newcommand{\enblayout}{final,5p,twocolumn,10pt}
+\newcommand{\showprelims}{0}
+\newcommand{\extrapreamble}{%
+  \usepackage{mathptmx}%
+  \geometry{top=15mm,bottom=17mm,left=14mm,right=14mm,columnsep=6mm}%
+  \captionsetup{font=small,skip=4pt}%
+  \setlength{\textfloatsep}{8pt plus 2pt minus 2pt}%
+  \setlength{\dbltextfloatsep}{8pt plus 2pt minus 2pt}%
+  \setlength{\floatsep}{6pt plus 2pt minus 2pt}%
+  \setlength{\dblfloatsep}{6pt plus 2pt minus 2pt}%
+  \setlength{\intextsep}{6pt plus 2pt minus 2pt}%
+  \renewcommand{\paperfigure}[2][width=0.9\linewidth]{%
+    \IfFileExists{figures/##2.pdf}{\includegraphics[##1]{##2}}{%
+    \IfFileExists{figures/##2.png}{\includegraphics[##1]{##2}}{%
+    \fbox{Figure file \texttt{figures/##2} missing}}}}%
+  \renewcommand{\bibfont}{\footnotesize}%
+  \setlength{\bibsep}{1pt plus 0.5pt}%
+}
+\input{main-enb}

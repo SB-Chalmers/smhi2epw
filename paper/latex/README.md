@@ -17,7 +17,7 @@ target journal since 8 November 2026. The **Energy and Buildings** (Elsevier,
 | `tools/refs_md_to_bib.py` | Turns its reference list into `refs.bib` (first pass, then checked by hand) |
 
 Build with `make enb` (12 pt review preprint) or `latexmk -pdf main-enb-11pt.tex`
-(11 pt, journal margins) or `main-enb-5p.tex` (two columns, 10 pt, closest to the printed journal). Build with `make enb` (or `latexmk -pdf main-enb.tex`). On Overleaf, upload this
+(11 pt, journal margins) or `main-enb-5p.tex` (two columns, 10 pt, closest to the printed journal) or `main-enb-compact.tex` (two columns, Times, narrow margins, small captions; for reading, `make compact`). Build with `make enb` (or `latexmk -pdf main-enb.tex`). On Overleaf, upload this
 folder and set `main-enb.tex` as the main document.
 
 ## Switching journal
