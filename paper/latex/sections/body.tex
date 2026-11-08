@@ -437,7 +437,14 @@ The STRÅNG step, which the main experiment could not test because STRÅNG was h
 
 \subsubsection*{Where to switch to ERA5}
 
-For general weather, a one-day and a two-day switch give the same results except for 48-hour gaps, which a nearby station fills with a two-day switch and ERA5 with a one-day switch. The two-day switch gave the smaller typical error (95th percentile of the heating error 0.40\% against 0.51\%) and the smaller worst case for the heating peak (14\% against 17\%), and the one-day switch the smaller worst case for the cooling peak (16\% against 20\%); for annual heating they were equal. Never switching was clearly worst (31\% and 85\% for the heating and cooling peaks). To check that the choice was not fitted to the same data, we chose on two of the three years and tested on the third, three times over, using the largest worst regret over the four results. This measure is driven by the cooling peak; it chose a one-day switch twice and a two-day switch once, and never chose no switch. For solar gaps, a three-hour switch was chosen twice and tied with 12 hours once. The switch is therefore clearly needed for week-long and solar gaps, while one and two days were almost equal. We report the two-day switch, the better choice where heating peaks matter most, as in Sweden; where cooling peaks matter most, one day is better. A nearby station passed its checks for only about 40\% of the test gaps, so ERA5 is needed as a last step in any case. Stricter station limits, which act on the same few weak cases as an earlier switch, and the order of the local steps are tested in \ref{app:C}.
+For general weather, a one-day and a two-day switch give the same results except for 48-hour gaps, which a nearby station fills with a two-day switch and ERA5 with a one-day switch. Never switching was clearly worst (Figure\textasciitilde{}\ref{fig:13}). Two days were better for the heating peak and one day for the cooling peak; for annual heating they were equal, with a slightly smaller typical error for two days (95th percentile 0.40\% against 0.51\%). To check that the choice was not fitted to the same data, we chose on two of the three years and tested on the third, three times over. The largest worst regret over the four results, which is driven by the cooling peak, chose one day twice and two days once, and never chose no switch. For solar gaps, a three-hour switch was chosen twice and tied with 12 hours once. We report the two-day switch, the better choice where heating peaks matter most, as in Sweden; where cooling peaks matter most, one day is better. A nearby station passed its checks for only about 40\% of the test gaps, so ERA5 is needed as a last step in any case. Stricter station limits, which act on the same few weak cases as an earlier switch, and the order of the local steps are tested in \ref{app:C}.
+
+\begin{figure*}[tbp]
+\centering
+\paperfigure{fig13}
+\caption{A switch to ERA5 is needed, and one or two days are almost equal. Worst case of the stepwise method for the heating peak (a) and the cooling peak (b) with a switch to ERA5 after one day, after two days (used in this study) and with no switch: how much worse it was than the best method on the same case, as a percentage of the reference value. General weather gaps, random and event placements, with each event week counted once, as in Figure\textasciitilde{}\ref{fig:11}.}
+\label{fig:13}
+\end{figure*}
 
 \subsection{How uncertainty carries through to the results}\label{sec:6.7}
 
@@ -466,7 +473,7 @@ Share of hours filled, longest gap & General weather: heating & General weather:
 
 \subsection{From weather error to building results}\label{sec:6.8}
 
-The error in annual heating follows the temperature error in the filled hours closely, as basic building physics predicts (Table\textasciitilde{}\ref{tab:C1}, Figure\textasciitilde{}\ref{fig:13}). For gaps that start in October to April, the temperature error summed over the gap in °C·days explains 93--99\% of the change in heating over the gap and the following week. A fit with an intercept explains the same share, with intercepts close to zero (−0.007 to +0.004 kWh/m²), and week-long and two-day gaps fall on the same line.
+The error in annual heating follows the temperature error in the filled hours closely, as basic building physics predicts (Table\textasciitilde{}\ref{tab:C1}, Figure\textasciitilde{}\ref{fig:14}). For gaps that start in October to April, the temperature error summed over the gap in °C·days explains 93--99\% of the change in heating over the gap and the following week. A fit with an intercept explains the same share, with intercepts close to zero (−0.007 to +0.004 kWh/m²), and week-long and two-day gaps fall on the same line.
 
 Each day filled 1 °C too cold adds 0.012--0.041 kWh/m² of annual heating, so a week filled 1 °C too cold adds 0.09--0.29 kWh/m² (Table\textasciitilde{}\ref{tab:C1}), two to three times more in the older buildings, which lose more heat per degree. Divided by 24 hours, each slope is 81--97\% of the building's heat-loss coefficient, as degree-day methods predict \citep{cibse2006,day2003}. This gives a modeller a quick check: the likely heating error of a filled gap is the heat-loss coefficient times its temperature error in degree-days. The real error is slightly less, most for the office, probably because internal and solar gains already cover the heat loss in some hours and some of the change is stored in the building's mass beyond the following week; we did not test this. For gaps that start in May to September the slope is only 1--20\% of the heating-season value (R² at most 0.25), because there is little heating to change.
 
@@ -478,20 +485,20 @@ Peaks follow the temperature error more loosely. Where the year's heating peak f
 
 \begin{figure*}[tbp]
 \centering
-\paperfigure{fig13}
+\paperfigure{fig14}
 \caption{The heating cost of a 1 °C error in the filled temperature. Each dot is one hidden gap of two days or one week starting between October and April, and each line is one building. Horizontal axis: how much too cold the fill was, summed over the gap (one week 1 °C too cold gives 7 °C × days, dashed line; negative values are too warm). Vertical axis: extra heating over the gap and the week after. The labels give each building's cost for one week 1 °C too cold, from 0.09 kWh/m² (recent apartment block) to 0.29 kWh/m² (1960s house). About 4\% of the gaps lie beyond the axes.}
-\label{fig:13}
+\label{fig:14}
 \end{figure*}
 
 \subsection{Monthly errors against a calibration limit}\label{sec:6.9}
 
-A stricter test looks at single months. ASHRAE Guideline 14 allows a bias of ±5\% for models calibrated against monthly meter data, over the whole calibration period \citep{ashrae2014}. Applied here to each month that holds a gap, it is harder to pass (Figure\textasciitilde{}\ref{fig:14}). With the stepwise method, heating in that month stayed within ±5\% in 99\% of cases for 48-hour gaps and 93\% for week-long gaps, and cooling in 83\% and 80\%. With linear interpolation across a week-long gap, only 62\% of heating months and 40\% of cooling months stayed within ±5\%.
+A stricter test looks at single months. ASHRAE Guideline 14 allows a bias of ±5\% for models calibrated against monthly meter data, over the whole calibration period \citep{ashrae2014}. Applied here to each month that holds a gap, it is harder to pass (Figure\textasciitilde{}\ref{fig:15}). With the stepwise method, heating in that month stayed within ±5\% in 99\% of cases for 48-hour gaps and 93\% for week-long gaps, and cooling in 83\% and 80\%. With linear interpolation across a week-long gap, only 62\% of heating months and 40\% of cooling months stayed within ±5\%.
 
 \begin{figure*}[tbp]
 \centering
-\paperfigure{fig14}
+\paperfigure{fig15}
 \caption{With the stepwise method few months fall outside ±5\% for heating, but at one week about one month in five does for cooling, and linear interpolation fails far more often. Share of months holding a general weather gap whose demand falls outside ±5\% of the reference, a per-month use of the ASHRAE Guideline 14 bias limit. Months with little demand are left out. Open dots: 48-hour gaps; filled dots and numbers: one-week gaps. Interpolation then patterns has no one-week result. Methods with equal one-week values are ordered by their 48-hour value. Results for gaps where a nearby station passed its checks, and for solar gaps, are in Figure\textasciitilde{}\ref{fig:C2}.}
-\label{fig:14}
+\label{fig:15}
 \end{figure*}
 
 \subsection{Stress test: gap filling in a heatwave year shifted to a future climate}\label{sec:6.10}
@@ -576,7 +583,7 @@ We hid known hours in 17 complete Swedish weather-years, refilled them with seve
 
 Weather files should state which hours were filled and from what source, so that users of peak or event results can judge the risk. Table\textasciitilde{}\ref{tab:7} and the heat-loss rule give a first estimate of the likely heating error. More widely, gap filling should be judged by its effect on simulation results, not only by how closely it matches the missing weather. The test used here needs only complete weather files, a set of buildings and the methods to compare, so it can be repeated for other methods and countries, where the Swedish numbers should not be assumed to hold.
 
-For modellers who build weather files for a particular year from records with gaps, the results suggest five steps (Figure\textasciitilde{}\ref{fig:15}).
+For modellers who build weather files for a particular year from records with gaps, the results suggest five steps (Figure\textasciitilde{}\ref{fig:16}).
 
 \begin{enumerate}
 \item
@@ -593,9 +600,9 @@ For modellers who build weather files for a particular year from records with ga
 
 \begin{figure*}[tbp]
 \centering
-\paperfigure{fig15}
+\paperfigure{fig16}
 \caption{The five steps as a simple check for a modeller who uses an actual-year weather file with filled gaps of up to a week. Annual heating is safe when up to about 8\% of the year is filled; annual cooling needs a look at summer gaps; for peaks and heatwave studies, a gap in the peak season next to the coldest or hottest days, or a peak that lands in filled hours, calls for a range rather than a single value.}
-\label{fig:15}
+\label{fig:16}
 \end{figure*}
 
 Future work should test model sources corrected to the station; gaps longer than a week and gaps in single variables such as humidity; buildings without cooling, so that overheating can be counted; measured direct and diffuse radiation as the solar reference; nearby-station checks weighted towards the hottest and coldest hours; climates where cooling dominates; statistical and machine-learning methods; and filling with several versions of the weather, for example from similar past situations \citep{dellemonache2013}, so that the uncertainty band comes directly from the filling.
