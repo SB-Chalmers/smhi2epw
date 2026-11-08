@@ -19,7 +19,7 @@ We test gaps of 3 hours to one week, which cover 99\% of the gaps and about two 
 
 \section{Background}\label{sec:2}
 
-Four kinds of method are common (Table~\ref{tab:1}). Simple methods work well for short gaps, while long gaps need another source of data.
+Hourly station records lose data for many reasons, from a failed sensor to a station being moved, and how a gap is filled depends mostly on its length. Four kinds of method are in common use (Table~\ref{tab:1}): simple methods work well for short gaps, while long gaps need another source of data.
 
 \begin{table*}[tbp]
 \centering
@@ -106,7 +106,7 @@ This study & Hidden gaps of 3 hours to one week in 17 Swedish actual years, gene
 
 \section{Weather data and gaps in Swedish records}\label{sec:3}
 
-To build the weather files and run the methods we used smhi2epw, our open-source tool that makes actual-year EnergyPlus weather files (EPW) for any place in Sweden from 1999 (see Data and code availability). This section describes the data, the stepwise filling order that serves as the reference method, and how often Swedish records have gaps. Tool details, such as how ERA5 is downloaded and the checks on each finished file, are in \ref{app:A}.
+SMHI publishes hourly observations from 158 stations that record all five weather variables a weather file needs, but the records have gaps: hours, days and sometimes more than a month are missing (Section~\ref{sec:3.3}). We built the weather files with smhi2epw, our open-source tool that makes actual-year EnergyPlus weather files (EPW) for any place in Sweden from 1999 (see Data and code availability); how it downloads ERA5 and checks each finished file is described in \ref{app:A}.
 
 \subsection{Data sources and solar radiation}\label{sec:3.1}
 
@@ -228,6 +228,8 @@ We did not test gaps in relative humidity alone, although humidity has the most 
 
 \subsection{Methods compared}\label{sec:4.4}
 
+The eight methods run from linear interpolation, which needs nothing but the hours either side of the gap, to ERA5 only, which ignores the station altogether; nearby stations, daily patterns and the stepwise order lie in between (Table~\ref{tab:5}).
+
 \begin{table*}[tbp]
 \centering
 \small
@@ -279,7 +281,7 @@ For each building and gap we compare the filled case with its reference. Peak re
 
 \subsection{Size of the experiment and checks}\label{sec:4.6}
 
-The experiment gave 34,236 building results from 15,390 separate simulations; identical weather files share one simulation.
+The experiment is large enough to show worst cases as well as typical ones: 34,236 building results from 15,390 separate simulations, as identical weather files share one simulation.
 
 The percentiles in Section~\ref{sec:5} describe the cases we tested. They are not confidence intervals, because the six buildings share each weather gap and so are not independent samples. Each 95th percentile for random seasonal gaps rests on 306 building results from 51 filled files. To show how much the results depend on the region-years chosen, we resampled the 17 region-years 1,000 times and report the 95\% range of the resampled 95th percentiles. For four week-long general weather gaps filled by the stepwise method, the heating error was 1.7\%, with a range of 0.8--2.4\%.
 
@@ -465,7 +467,7 @@ Share of hours filled, longest gap & General weather: heating & General weather:
 
 \subsection{From weather error to building results}\label{sec:5.8}
 
-Section~\ref{sec:5.1} showed that annual heating errors are small; this section turns that into a rule a modeller can use. Annual heating is close to the heat-loss coefficient H times the degree-days \citep{cibse2006,day2003}, so the extra heating from a filled gap should be about H times the temperature error summed over the gap's hours. We express this summed error in °C·days: one week filled 1~°C too cold gives 7~°C·days.
+The extra heating from a filled gap closely follows the building's heat-loss coefficient H times the temperature error summed over the gap's hours. The degree-day method predicts this: annual heating is close to H times the degree-days \citep{cibse2006,day2003}, so an error in the degree-days of the gap should carry through in the same way. We express the summed error in °C·days: one week filled 1~°C too cold gives 7~°C·days.
 
 The simulations follow this closely (Figure~\ref{fig:14}, Table~\ref{tab:C1}). For gaps that start in October to April, the summed temperature error explains 93--99\% of the change in heating over the gap and the following week, and two-day and week-long gaps fall on the same line through zero. Each day filled 1~°C too cold adds 0.012--0.041~kWh/m² of heating, so a week filled 1~°C too cold adds 0.09--0.29~kWh/m², most for the older, leakier buildings. The fitted slopes, divided by 24 hours, are 81--97\% of each building's H, falling short most for the office, probably as sun and internal heat already cover the heat loss in some hours and some of the change is stored in the building's mass beyond the following week (not tested). In summer the same error changes heating very little (slopes of 1--20\% of the winter value).
 
