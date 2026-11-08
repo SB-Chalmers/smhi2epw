@@ -120,14 +120,14 @@ def convert_refs(text):
         return f"{kind}:{n}"
 
     text = re.sub(r"\bFigures (\d+|[A-Z]\d+) and (\d+|[A-Z]\d+)",
-                  lambda m: f"Figures~\\ref{{fig:{m.group(1)}}} and~\\ref{{fig:{m.group(2)}}}", text)
+                  lambda m: f"Figures\u00a0\\ref{{fig:{m.group(1)}}} and\u00a0\\ref{{fig:{m.group(2)}}}", text)
     text = re.sub(r"\bTables (\d+|[A-Z]\d+) and (\d+|[A-Z]\d+)",
-                  lambda m: f"Tables~\\ref{{tab:{m.group(1)}}} and~\\ref{{tab:{m.group(2)}}}", text)
-    text = re.sub(r"\bFigure (\d+|[A-Z]\d+)(?!\d)", lambda m: f"Figure~\\ref{{fig:{m.group(1)}}}", text)
-    text = re.sub(r"\bTable (\d+|[A-Z]\d+)(?!\d)", lambda m: f"Table~\\ref{{tab:{m.group(1)}}}", text)
+                  lambda m: f"Tables\u00a0\\ref{{tab:{m.group(1)}}} and\u00a0\\ref{{tab:{m.group(2)}}}", text)
+    text = re.sub(r"\bFigure (\d+|[A-Z]\d+)(?!\d)", lambda m: f"Figure\u00a0\\ref{{fig:{m.group(1)}}}", text)
+    text = re.sub(r"\bTable (\d+|[A-Z]\d+)(?!\d)", lambda m: f"Table\u00a0\\ref{{tab:{m.group(1)}}}", text)
     text = re.sub(r"\bSections (\d+(?:\.\d+)?) and (\d+(?:\.\d+)?)",
-                  lambda m: f"Sections~\\ref{{sec:{m.group(1)}}} and~\\ref{{sec:{m.group(2)}}}", text)
-    text = re.sub(r"\bSection (\d+(?:\.\d+)?)", lambda m: f"Section~\\ref{{sec:{m.group(1)}}}", text)
+                  lambda m: f"Sections\u00a0\\ref{{sec:{m.group(1)}}} and\u00a0\\ref{{sec:{m.group(2)}}}", text)
+    text = re.sub(r"\bSection (\d+(?:\.\d+)?)", lambda m: f"Section\u00a0\\ref{{sec:{m.group(1)}}}", text)
     text = re.sub(r"\bAppendix ([A-C])\b", lambda m: f"\\ref{{app:{m.group(1)}}}", text)
     return text
 
@@ -150,6 +150,8 @@ def inline(md):
 def prep(md):
     """Citations and cross-references on Markdown text."""
     md = md.replace("&#91;", "[")
+    # keep a number and its unit on one line
+    md = re.sub(r"(\d) (°C|%|W/m|kWh/m|km|K\b|h\b|hPa|m/s|mm|GB)", "\\1\u00a0\\2", md)
     md = re.sub(r"(?<![<(\[])\b(https?://[^\s)<>]+?)([.,;]?)(?=[\s)]|$)", r"<\1>\2", md)
     md = re.sub(r"\((https?://[^\s)]+)\)", r"(<\1>)", md)
     return convert_refs(convert_citations(md))

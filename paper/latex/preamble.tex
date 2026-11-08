@@ -28,6 +28,18 @@
 
 \sisetup{detect-all}
 \setlength{\emergencystretch}{3em}
+\usepackage{enumitem}
+\setlist{itemsep=2pt,topsep=4pt,parsep=0pt}
+% Let floats share pages with text and stack two to a page.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.75}
+\renewcommand{\dbltopfraction}{0.9}
+\renewcommand{\dblfloatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{dbltopnumber}{3}
+\setcounter{totalnumber}{5}
 \renewcommand{\arraystretch}{1.15}
 \usepackage{ragged2e}
 \newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
@@ -50,6 +62,6 @@
 \newcommand{\correspondingemail}{sanjay.somanath@chalmers.se}
 
 \newcommand{\graphicalabstractslot}{%
-  \IfFileExists{figures/graphical_abstract.pdf}{\includegraphics[width=\linewidth]{graphical_abstract}}{%
-  \IfFileExists{figures/graphical_abstract.png}{\includegraphics[width=\linewidth]{graphical_abstract}}{%
+  \IfFileExists{figures/graphical_abstract.pdf}{\includegraphics[width=\textwidth]{graphical_abstract}}{%
+  \IfFileExists{figures/graphical_abstract.png}{\includegraphics[width=\textwidth]{graphical_abstract}}{%
   \fbox{\parbox[c][6cm][c]{0.9\linewidth}{\centering Graphical abstract: add \texttt{figures/graphical\_abstract.pdf}\\(Elsevier: 1328 $\times$ 531 px or larger, readable at 5 $\times$ 13 cm)}}}}}

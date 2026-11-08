@@ -35,6 +35,10 @@
 \input{sections/abstract}
 \end{abstract}
 
+% Graphical abstract and highlights are separate uploads at Elsevier and are not
+% printed in the article, so the journal-look builds leave them out.
+\providecommand{\showprelims}{1}
+\if1\showprelims
 \begin{graphicalabstract}
 \graphicalabstractslot
 \end{graphicalabstract}
@@ -42,6 +46,7 @@
 \begin{highlights}
 \input{sections/highlights}
 \end{highlights}
+\fi
 
 \begin{keyword}
 \input{sections/keywords}
