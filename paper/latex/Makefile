@@ -14,3 +14,6 @@ clean:
 enb11:
 	latexmk -g -pdf -interaction=nonstopmode main-enb-11pt.tex
 .PHONY: enb11
+enb5p:
+	latexmk -g -pdf -interaction=nonstopmode main-enb-5p.tex
+.PHONY: enb5p

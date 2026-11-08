@@ -17,12 +17,12 @@ Each weather file comes with a record file. It lists the settings, the software 
 
 To see how the stepwise method fills real records, we built weather files with a two-day switch for 60 station-years, chosen across four latitude bands and three levels of missing data. All 60 were completed. Of all filled values, linear interpolation supplied 6.9\%, nearby stations 7.5\%, daily patterns 2.0\% and ERA5 83.6\% (Figure\textasciitilde{}\ref{fig:A1}). ERA5 dominates because most missing hours lie in gaps longer than 48 hours, which skip nearby stations. Without the switch, nearby stations would have supplied 36\% and ERA5 55\%. Gaps of up to 48 hours are filled the same way either way: in station-years complete enough to be a reference, nearby stations supplied 35\% of filled values and ERA5 none. By variable, ERA5 supplied 59\% of filled air temperature values and 74--94\% of the others.
 
-\begin{figure}[tbp]
+\begin{figure*}[tbp]
 \centering
 \paperfigure{figA1}
 \caption{Share of filled values from each step of the stepwise method, by amount of missing data, in 60 real station-years (20 in each row). In files complete enough to be a reference year ERA5 fills nothing; in files with large gaps it fills 93\%.}
 \label{fig:A1}
-\end{figure}
+\end{figure*}
 
 \section{Literature search}\label{app:B}
 \setcounter{figure}{0}\setcounter{table}{0}
@@ -40,7 +40,7 @@ All searches were run on 6 November 2026 with no limits on year, document type o
   Building simulation (C): \texttt{"building\ energy"\ OR\ "building\ performance"\ OR\ "building\ simulation"\ OR\ "energy\ simulation"\ OR\ EnergyPlus\ OR\ "heating\ demand"\ OR\ "cooling\ demand"}
 \end{itemize}
 
-\begin{table}[tbp]
+\begin{table*}[tbp]
 \centering
 \small
 \begin{tabular}{@{}L{\dimexpr0.217\linewidth-2\tabcolsep}L{\dimexpr0.544\linewidth-2\tabcolsep}C{\dimexpr0.101\linewidth-2\tabcolsep}L{\dimexpr0.138\linewidth-2\tabcolsep}@{}}
@@ -53,7 +53,7 @@ Search & Terms & Scopus & Web of Science \\
 4. Comparisons of hourly filling methods & (``gap filling'' OR ``gap-filling'' OR imputation OR ``missing data'' OR ``missing values'' OR infilling) AND hourly AND (``air temperature'' OR ``relative humidity'' OR ``wind speed'' OR ``solar radiation'' OR irradiance OR ``global horizontal'') AND (compar* OR benchmark* OR evaluat*) AND (station* OR observation* OR measured) & 52 & not run \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Records were merged by DOI, or by title where no DOI was given. One reviewer screened titles and abstracts with the help of an AI tool; no second screener was used, so some relevant papers may have been missed. A paper was kept if it fills gaps in, or builds, hourly weather files for simulation; compares filling methods for hourly temperature, humidity, wind or solar radiation; or measures how differences between weather files change simulated loads. Of 360 records, 227 remained after merging and 73 after screening. Two known papers and seven from reference lists brought the total to 82.
 
@@ -62,19 +62,19 @@ Records were merged by DOI, or by title where no DOI was given. One reviewer scr
 \renewcommand{\thefigure}{C\arabic{figure}}
 \renewcommand{\thetable}{C\arabic{table}}
 
-\begin{figure}[tbp]
+\begin{figure*}[tbp]
 \centering
 \paperfigure{figC1}
 \caption{For solar gaps, ERA5 only and the stepwise method give the smallest errors beyond a few hours. Error in annual heating (a) and cooling (b) that 95\% of cases stay below, as \% of annual demand, for four random solar gaps a year. Nearby stations are never used for solar radiation. A dash means that the method does not fill gaps this long. Darker cells are larger errors, in the same four bands as Figure\textasciitilde{}\ref{fig:7}. From 12 hours on, the stepwise method fills solar gaps from ERA5, so its row equals ERA5 only.}
 \label{fig:C1}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[tbp]
+\begin{figure*}[tbp]
 \centering
 \paperfigure{figC2}
 \caption{The monthly test of Figure\textasciitilde{}\ref{fig:14} for (a, b) only the general weather gaps where a nearby station passed its checks (about 40\%), so that the nearby station can be compared on the same cases, and (c, d) solar gaps. Open dots: 48-hour gaps; filled dots and numbers: one-week gaps. Methods with equal one-week values are ordered by their 48-hour value.}
 \label{fig:C2}
-\end{figure}
+\end{figure*}
 
 \textbf{How strict the nearby-station check should be.} We repeated the scoring with a temperature limit of 2 °C or 1.5 °C instead of 3 °C. Each case that would then be rejected was given the ERA5 fill instead. This is an approximation, because the real method would try daily patterns first. Of the cases that used a nearby station for temperature, a 2 °C limit rejected about a quarter and a 1.5 °C limit about two in five. For 48-hour gaps, the stricter limits cut the worst cooling error from 8.7\% to 4.9\% of annual cooling. At 1.5 °C, the worst regret for the cooling peak fell from 20\% to 16\%, the same as with a one-day switch. For 12-hour gaps, stricter limits made the worst case worse (worst regret rose from 12\% to 16\%), because a good nearby station beats ERA5 over short gaps. The temperature limit and the switch point act on the same few weak cases: a stricter limit and an earlier switch both give up a little typical accuracy for a smaller worst case. We kept 3 °C, with the switch point as the main control.
 
@@ -82,7 +82,7 @@ Records were merged by DOI, or by title where no DOI was given. One reviewer scr
 
 \textbf{Check of the STRÅNG step.} We compared STRÅNG, without correction, and ERA5 with measured total radiation in the 12 region-years that have a radiation station within 50 km of the weather station (0.6--45 km), over daylight hours only (measured radiation above 5 W/m², about 4,400--4,500 hours per region-year). The mean absolute error was 47 W/m² for STRÅNG and 48 W/m² for ERA5, averaged over the 12 region-years, and STRÅNG was better in 6 of them. Where the radiation station sits next to the weather station (Luleå, 0.6 km), STRÅNG was clearly better: 32--37 W/m² against 39--41 W/m².
 
-\begin{table}[tbp]
+\begin{table*}[tbp]
 \centering
 \small
 \caption{Extra heating for each day of gap filled 1 °C too cold, by building, for general weather gaps that start in the heating season (October to April). One straight line through zero is fitted to 48-hour and week-long gaps together, over the gap and the following week. The slope divided by 24 hours is compared with each model's heat-loss coefficient H (fabric, infiltration, and ventilation after heat recovery; ground floor left out). Peak: change in the heating peak per °C of average error, for cases whose annual heating peak lies in the gap.}
@@ -99,4 +99,4 @@ Office, 60\% glazing & 0.017 & 0.93 & 0.72 & 0.89 & 0.42 \\
 School & 0.037 & 0.95 & 1.56 & 1.69 & 1.53 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}

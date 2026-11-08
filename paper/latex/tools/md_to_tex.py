@@ -162,9 +162,9 @@ def fig_file(n):
 
 def figure_block(n, caption):
     cap = inline(prep(caption))
-    return ("\\begin{figure}[tbp]\n\\centering\n"
+    return ("\\begin{figure*}[tbp]\n\\centering\n"
             f"\\paperfigure{{{fig_file(n)}}}\n"
-            f"\\caption{{{cap}}}\n\\label{{fig:{n}}}\n\\end{{figure}}\n")
+            f"\\caption{{{cap}}}\n\\label{{fig:{n}}}\n\\end{{figure*}}\n")
 
 
 def table_block(n, caption, rows):
@@ -196,10 +196,10 @@ def table_block(n, caption, rows):
     body_tex = [" & ".join(conv(c) for c in r) + " \\\\" for r in body]
     captex = f"\\caption{{{inline(prep(caption))}}}\n\\label{{tab:{n}}}\n" if caption else ""
     size = "\\footnotesize" if sum(len(c) for r in cells for c in r) > 1200 else "\\small"
-    return ("\\begin{table}[tbp]\n\\centering\n" + size + "\n" + captex +
+    return ("\\begin{table*}[tbp]\n\\centering\n" + size + "\n" + captex +
             f"\\begin{{tabular}}{{{spec}}}\n\\toprule\n"
             + lines[0] + "\n\\midrule\n" + "\n".join(body_tex) +
-            "\n\\bottomrule\n\\end{tabular}\n\\end{table}\n")
+            "\n\\bottomrule\n\\end{tabular}\n\\end{table*}\n")
 
 
 def heading(line):
