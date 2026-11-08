@@ -1,5 +1,7 @@
+all: jbps
+# make         JBPS PDF (main version from 8 Nov 2026)
 # make enb      Energy and Buildings PDF (elsarticle)
-# make jbps     JBPS PDF (needs interact.cls, see main-jbps.tex)
+# make jbps     JBPS PDF (Taylor & Francis Interact)
 # make text MD=path/to/manuscript.md   regenerate sections/ from the manuscript
 # make clean
 enb:

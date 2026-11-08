@@ -1,9 +1,7 @@
 % Journal of Building Performance Simulation (Taylor & Francis) version.
-% Needs the Taylor & Francis "Interact" LaTeX template files, which are not
-% part of TeX Live. Download the APA (author-date) variant from
-% https://www.tandf.co.uk/journals/authors/InteractAPALaTeX.zip and copy
-% interact.cls and apacite.sty (or the .bst it ships) into this folder.
-% Build: latexmk -pdf main-jbps.tex   (or: make jbps)
+% Uses the Taylor & Francis "Interact" class (interact.cls v1.05, in this
+% folder) with APA author-date references via apacite (TeX Live:
+% texlive-bibtex-extra). Build: latexmk -pdf main-jbps.tex  (or: make jbps)
 \documentclass{interact}
 
 \input{preamble}
@@ -29,6 +27,7 @@ Chalmers University of Technology, Gothenburg, Sweden}
 \input{sections/abstract}
 \end{abstract}
 
+\providecommand{\sep}{\unskip; }
 \begin{keywords}
 \input{sections/keywords}
 \end{keywords}

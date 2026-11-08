@@ -1,13 +1,14 @@
 # Paper in LaTeX
 
-The gap-filling paper, typeset for **Energy and Buildings** (Elsevier,
-`elsarticle`), with a second wrapper for the **Journal of Building Performance
-Simulation** (Taylor & Francis, `interact`).
+The gap-filling paper, typeset for the **Journal of Building Performance
+Simulation** (Taylor & Francis, `interact`, APA author-date references) — the
+target journal since 8 November 2026. The **Energy and Buildings** (Elsevier,
+`elsarticle`) wrappers are kept.
 
 | File | What it is |
 | --- | --- |
 | `main-enb.tex` | Energy and Buildings: front matter, graphical abstract, highlights, numbered references |
-| `main-jbps.tex` | JBPS: same text, T&F front matter, author-date references (needs `interact.cls`) |
+| `main-jbps.tex` | **Main version.** JBPS: T&F Interact class (`interact.cls` v1.05, included), APA references via `apacite` |
 | `preamble.tex` | Packages and macros shared by both |
 | `sections/` | Abstract, highlights, keywords, body, appendices, back matter |
 | `refs.bib` | References (BibTeX) |
