@@ -1,6 +1,6 @@
 # Manuscript figures, round 7
 
-Numbered as in the manuscript (Claude Doc revision 456). 600 dpi PNG and vector PDF.
+Numbered as in the manuscript (Claude Doc revision 458). 600 dpi PNG and vector PDF.
 
 | File | Manuscript | Script |
 |---|---|---|
@@ -16,12 +16,14 @@ Numbered as in the manuscript (Claude Doc revision 456). 600 dpi PNG and vector 
 | fig10_gap_position | Figure 10 | src/fig_results.py |
 | fig11_regret | Figure 11 | src/fig_round5.py |
 | fig12_story_weeks | Figure 12 | src/fig11_story_weeks.py (Mac data) |
-| fig13_heating_per_degree | Figure 13 | src/fig15_temperature_to_heating.py (Mac data) |
-| fig14_monthly | Figure 14 | src/fig_round5.py |
-| fig15_checklist | Figure 15 | src/fig_round5.py |
+| fig13_switch_choice | Figure 13 | src/fig_switch_choice.py |
+| fig14_heating_per_degree | Figure 14 | src/fig15_temperature_to_heating.py (Mac data) |
+| fig15_monthly | Figure 15 | src/fig_round5.py |
+| fig16_checklist | Figure 16 | src/fig_round5.py |
 | figA1_fill_steps | Figure A1 | src/fig_steps_share.py |
+| figB1_lit_flow | Figure B1 | src/fig_lit_flow.py |
 | figC1_solar_error | Figure C1 | src/fig_round5.py |
 | figC2_monthly_subsets | Figure C2 | src/fig_round5.py |
 | graphical_abstract | Graphical abstract (240 x 100 mm, 5669 x 2362 px) | src/fig_graphical_abstract.py |
 
-Tables: 1–8 in the main text, Table C1 in Appendix C. Old Table 4 (gap census) is now Figure 2; old Table A1 is now Figure A1; old Table 9 is now Table C1.
+Figures 1-16, A1, B1, C1, C2. Tables: 1–8 in the main text, Table C1 in Appendix C. Old Table 4 (gap census) is now Figure 2; old Table A1 is now Figure A1; old Table 9 is now Table C1.
