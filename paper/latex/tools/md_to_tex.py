@@ -128,7 +128,7 @@ def convert_refs(text):
     text = re.sub(r"\bSections (\d+(?:\.\d+)?) and (\d+(?:\.\d+)?)",
                   lambda m: f"Sections\u00a0\\ref{{sec:{m.group(1)}}} and\u00a0\\ref{{sec:{m.group(2)}}}", text)
     text = re.sub(r"\bSection (\d+(?:\.\d+)?)", lambda m: f"Section\u00a0\\ref{{sec:{m.group(1)}}}", text)
-    text = re.sub(r"\bAppendix ([A-C])\b", lambda m: f"\\ref{{app:{m.group(1)}}}", text)
+    text = re.sub(r"\bAppendix ([A-C])\b", lambda m: f"\\appref{{app:{m.group(1)}}}", text)
     return text
 
 

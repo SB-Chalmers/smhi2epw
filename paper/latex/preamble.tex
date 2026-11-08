@@ -65,3 +65,7 @@
   \IfFileExists{figures/graphical_abstract.pdf}{\includegraphics[width=\textwidth]{graphical_abstract}}{%
   \IfFileExists{figures/graphical_abstract.png}{\includegraphics[width=\textwidth]{graphical_abstract}}{%
   \fbox{\parbox[c][6cm][c]{0.9\linewidth}{\centering Graphical abstract: add \texttt{figures/graphical\_abstract.pdf}\\(Elsevier: 1328 $\times$ 531 px or larger, readable at 5 $\times$ 13 cm)}}}}}
+
+% Cross-reference to an appendix. elsarticle's \ref already prints
+% "Appendix B"; interact.cls prints only "B", so main-jbps.tex adds the word.
+\providecommand{\appref}[1]{\ref{#1}}

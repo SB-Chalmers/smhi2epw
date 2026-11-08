@@ -4,6 +4,7 @@
 % texlive-bibtex-extra). Build: latexmk -pdf main-jbps.tex  (or: make jbps)
 \documentclass{interact}
 
+\newcommand{\appref}[1]{Appendix~\ref{#1}}  % interact.cls \ref gives only the letter
 \input{preamble}
 \captionsetup{labelsep=space}  % interact.cls already ends the label with a full stop
 \usepackage[natbibapa,doi]{apacite}  % author-date (APA) citations, as JBPS asks
