@@ -162,10 +162,17 @@ def fig_file(n):
     return f"fig{int(n):02d}" if n.isdigit() else f"fig{n}"
 
 
+# Small figures drawn at their print size; shown at natural size, not
+# stretched to the text width (the flow chart in Appendix B).
+NATURAL_SIZE = {"figB1"}
+
+
 def figure_block(n, caption):
     cap = inline(prep(caption))
+    f = fig_file(n)
+    opt = "[scale=1]" if f in NATURAL_SIZE else ""
     return ("\\begin{figure*}[tbp]\n\\centering\n"
-            f"\\paperfigure{{{fig_file(n)}}}\n"
+            f"\\paperfigure{opt}{{{f}}}\n"
             f"\\caption{{{cap}}}\n\\label{{fig:{n}}}\n\\end{{figure*}}\n")
 
 
