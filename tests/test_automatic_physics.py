@@ -381,10 +381,22 @@ def test_week_long_solar_outage_uses_reanalysis_not_repeated_days(monkeypatch):
     assert len(requests) == 1
 
 
-def test_short_solar_gap_still_uses_daily_profiles(monkeypatch):
+def test_three_hour_solar_gap_still_uses_temporal_filling(monkeypatch):
     frame = weather_frame(24 * 20)
-    frame.iloc[24 * 6 + 10 : 24 * 6 + 14, frame.columns.get_indexer(["ghi"])] = np.nan
+    frame.iloc[24 * 6 + 10 : 24 * 6 + 13, frame.columns.get_indexer(["ghi"])] = np.nan
     _, requests = mock_model(monkeypatch, frame)
     _, tags, _ = prepare(frame)
-    assert (tags.ghi.iloc[24 * 6 + 10 : 24 * 6 + 14] == "temporal").all()
+    assert (tags.ghi.iloc[24 * 6 + 10 : 24 * 6 + 13] == "temporal").all()
     assert not requests
+
+
+def test_solar_gap_over_three_hours_uses_reanalysis(monkeypatch):
+    frame = weather_frame(24 * 20)
+    hidden = slice(24 * 6 + 6, 24 * 6 + 18)
+    frame.iloc[hidden, frame.columns.get_indexer(["ghi", "dni", "dirh"])] = np.nan
+    _, requests = mock_model(monkeypatch, frame.fillna(321.0))
+    _, tags, _ = prepare(frame)
+    gap_tags = tags.ghi.iloc[hidden]
+    assert set(gap_tags) <= {"reanalysis", "physical"}
+    assert (gap_tags == "reanalysis").any()
+    assert len(requests) == 1

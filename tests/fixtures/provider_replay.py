@@ -135,9 +135,10 @@ class ReplaySession:
             values += 0.8  # Local held-out assessment should select a median offset.
         if self.scenario == "reconstructed":
             if column == "dry_bulb" and station_id == PRIMARY_STATION:
+                # 48 hours: the longest outage automatic mode gives to donors.
                 quality[
                     (self.index >= f"{self.year}-04-10")
-                    & (self.index < f"{self.year}-04-13")
+                    & (self.index < f"{self.year}-04-12")
                 ] = "R"
             if column == "pressure":
                 # Neither station has this 96-hour block; ERA5 must complete it.

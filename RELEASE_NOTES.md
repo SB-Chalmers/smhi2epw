@@ -1,8 +1,13 @@
 # Unreleased
 
-- Solar outages longer than 48 hours now go to ERA5. Their length is measured
-  before fully dark hours are zeroed; previously night split a week-long outage
-  into daytime pieces that were each filled by repeating a nearby day.
+- Automatic mode: solar outages longer than 3 hours go to the next source
+  (STRÅNG for a measured-GHI outage, otherwise ERA5) instead of daily profiles.
+  Their length is measured before fully dark hours are zeroed; previously night
+  split a week-long outage into daytime pieces that were each filled by
+  repeating a nearby day, so ERA5 was never reached.
+- Automatic mode: general-weather outages longer than 48 hours skip assessed
+  donors and go to ERA5. Strict mode keeps donors at any length.
+- Both limits are set in `constants.py`; see `docs/weather_recovery.rst`.
 
 # Release 1.3.0 — batch weather and morphing
 
