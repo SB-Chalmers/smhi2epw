@@ -11,13 +11,15 @@ from 1999 onward. Required meteorological variables follow this order:
 
 1. Accepted-quality primary observations.
 2. Interpolation for gaps up to three hours, circularly for wind direction.
-3. Assessed same-year nearby observations for longer gaps or unfillable short
-   wind gaps.
+3. Assessed same-year nearby observations for gaps of more than three and at
+   most 48 hours, or unfillable short wind gaps. In automatic mode, outages
+   longer than 48 hours skip donors and go to ERA5.
 4. Bounded daily-profile reconstruction for remaining gaps up to 48 hours.
 5. Same-year ERA5 at the requested coordinates, supplied through Open-Meteo.
 
-Solar recovery remains donor-free: usable primary radiation, bounded solar
-filling or GHI decomposition, then same-year ERA5 for unresolved GHI.
+Solar recovery remains donor-free: usable primary radiation (measured GHI,
+then STRÅNG), interpolation for outages of up to three hours or GHI
+decomposition, then same-year ERA5 for unresolved GHI.
 
 ``weather_policy="strict"`` retains source and gap failures instead of enabling
 reanalysis. In strict mode, ``metobs_gap_fallback=True`` permits assessed donors;
@@ -34,8 +36,12 @@ After assessed donors are tried, remaining gaps of up to 48 hours use
 endpoint-adjusted daily profiles, searching independently on each side within
 seven days. Usable sides receive equal weight; one side is sufficient. Profiles
 can include earlier reconstructions. Wind direction uses sine/cosine components.
-Solar gaps use day-aware profiles without donor transfer. Longer gaps are filled
-from another source, never by extending interpolation.
+Solar gaps use day-aware profiles without donor transfer only in strict mode;
+automatic mode sends solar outages longer than three hours to the next source.
+Longer gaps are filled from another source, never by extending interpolation.
+
+The automatic-mode limits are ``DONOR_MAX_GAP_HOURS = 48`` and
+``SOLAR_TEMPORAL_MAX_GAP_HOURS = 3`` in ``constants.py``.
 
 The frozen sensitivity campaign covered 17 weather-years, six regions and
 six building profiles. For its 3--12-hour gaps, the largest group-level 95th
@@ -147,6 +153,10 @@ ranges, dew point consistent with dry bulb, nonnegative solar fields, solar
 closure and the existing extraterrestrial DNI cap. Positive solar data during
 fully dark intervals is treated as inconsistent. Darkness checks use interval
 geometry so sunrise and sunset hours are not mistaken for complete darkness.
+The length of a solar outage is measured before dark hours are set to zero,
+so an outage longer than three hours goes to the next source (STRÅNG for a
+measured-GHI outage, otherwise ERA5) rather than being split into short
+daytime pieces that are each filled from a nearby day.
 Reconstructed humidity, wind and cloud estimates obey representable limits;
 valid observations are not clipped merely because they are unusual.
 

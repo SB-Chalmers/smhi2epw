@@ -201,6 +201,33 @@ def test_automatic_medium_gap_uses_assessed_donor_before_profiles(
     assert read_epw(result.output_path).dry_bulb.eq(23).sum() == 48
 
 
+def test_automatic_gap_over_48_hours_skips_donor_for_reanalysis(
+    primary, tmp_path, monkeypatch
+):
+    # A donor that matches ordinary hours can be badly biased through a
+    # week-long extreme, so long general-weather outages go to ERA5.
+    primary.iloc[2000:2072, primary.columns.get_loc("dry_bulb")] = np.nan
+    donor = pd.Series(14.0, index=primary.index)
+    donor.iloc[2000:2072] = 25.0
+    monkeypatch.setattr(
+        ingestion,
+        "_stations_for_parameter",
+        lambda parameter, client: (
+            {2: (LAT, LON, 0, 9999999999999)} if parameter == 1 else {}
+        ),
+    )
+    monkeypatch.setattr(
+        ingestion,
+        "get_station_metadata",
+        lambda *a, **k: StationMeta(2, "Donor", LAT, LON, 100),
+    )
+    monkeypatch.setattr(ingestion, "fetch_metobs_parameter", lambda *a, **k: donor)
+    result = compiler.compile_epw(_config(tmp_path), client=ArchiveClient())
+    assert not result.report.cross_station_filled_hours.get("dry_bulb")
+    assert result.report.reanalysis_filled_hours["dry_bulb"] == 72
+    assert "donor" not in result.report.source_fractions["dry_bulb"]
+
+
 def test_era5_clouds_do_not_change_unmasked_epw_hours(primary, tmp_path):
     primary["cloud_cover"] = np.nan
     baseline_dir, candidate_dir = tmp_path / "baseline", tmp_path / "candidate"
